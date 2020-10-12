@@ -7,3 +7,13 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+actix-rt = "1.1.1"
+actix-threadpool = "0.3.3"
+actix-web-httpauth = "0.4.2"
+actix-web = { version = "2.0.0", features = ["openssl"] }
+serde = { version = "1.0", features = ["derive"] }
+log = "0.4.0"
+env_logger = "0.7"
+nanoid = "0.3.0"
+dotenv = "0.15.0"
+openssl = { version = "0.10", features = ["vendored"] }

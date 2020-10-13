@@ -17,3 +17,6 @@ env_logger = "0.7"
 nanoid = "0.3.0"
 dotenv = "0.15.0"
 openssl = { version = "0.10", features = ["vendored"] }
+r2d2 = "0.8.9"
+diesel = { version = "1.4.5", features = ["postgres", "r2d2", "chrono"] }
+chrono = { version = "0.4.13", features = ["serde"] }

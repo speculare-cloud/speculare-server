@@ -1,0 +1,1 @@
+DROP TABLE Data,Sensors,DataSensors;

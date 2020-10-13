@@ -116,3 +116,23 @@ where
         }
     }
 }
+
+impl From<r2d2::Error> for AppError {
+    fn from(error: r2d2::Error) -> AppError {
+        AppError {
+            message: None,
+            cause: Some(error.to_string()),
+            error_type: AppErrorType::PoolError,
+        }
+    }
+}
+
+impl From<diesel::result::Error> for AppError {
+    fn from(error: diesel::result::Error) -> AppError {
+        AppError {
+            message: None,
+            cause: Some(error.to_string()),
+            error_type: AppErrorType::DbError,
+        }
+    }
+}

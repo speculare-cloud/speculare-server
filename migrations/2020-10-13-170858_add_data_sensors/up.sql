@@ -14,8 +14,20 @@ CREATE TABLE sensors (
 	label VARCHAR(128) NOT NULL,
 	temp FLOAT NOT NULL
 );
+CREATE TABLE disks (
+	id SERIAL NOT NULL PRIMARY KEY,
+	disk_name VARCHAR(128) NOT NULL,
+	mount_point VARCHAR(128) NOT NULL,
+	total_space BIGINT NOT NULL,
+	avail_space BIGINT NOT NULL
+);
 CREATE TABLE datasensors (
 	id SERIAL NOT NULL PRIMARY KEY,
 	data_id INT NOT NULL,
 	sensors_id INT NOT NULL
+);
+CREATE TABLE datadisks (
+	id SERIAL NOT NULL PRIMARY KEY,
+	data_id INT NOT NULL,
+	disks_id INT NOT NULL
 );

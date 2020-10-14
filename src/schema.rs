@@ -13,10 +13,28 @@ table! {
 }
 
 table! {
+    datadisks (id) {
+        id -> Int4,
+        data_id -> Int4,
+        disks_id -> Int4,
+    }
+}
+
+table! {
     datasensors (id) {
         id -> Int4,
         data_id -> Int4,
         sensors_id -> Int4,
+    }
+}
+
+table! {
+    disks (id) {
+        id -> Int4,
+        disk_name -> Varchar,
+        mount_point -> Varchar,
+        total_space -> Int8,
+        avail_space -> Int8,
     }
 }
 
@@ -28,4 +46,10 @@ table! {
     }
 }
 
-allow_tables_to_appear_in_same_query!(data, datasensors, sensors,);
+allow_tables_to_appear_in_same_query!(
+    data,
+    datadisks,
+    datasensors,
+    disks,
+    sensors,
+);

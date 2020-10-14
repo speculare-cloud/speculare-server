@@ -1,1 +1,1 @@
-DROP TABLE Data,Sensors,DataSensors;
+DROP TABLE Data,Sensors,DataSensors,Disks,DataDisks;

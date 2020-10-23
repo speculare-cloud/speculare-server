@@ -14,7 +14,7 @@ pub struct SDisks {
     pub name: String,
     pub mount_point: String,
     pub total_space: i64,
-    pub avail_space: i64
+    pub avail_space: i64,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -53,7 +53,7 @@ pub struct Disks {
     pub disk_name: String,
     pub mount_point: String,
     pub total_space: i64,
-    pub avail_space: i64
+    pub avail_space: i64,
 }
 
 #[derive(Insertable)]
@@ -62,7 +62,7 @@ pub struct NewDisks<'a> {
     pub disk_name: &'a str,
     pub mount_point: &'a str,
     pub total_space: i64,
-    pub avail_space: i64
+    pub avail_space: i64,
 }
 
 #[derive(Identifiable, Queryable, Debug, Serialize, Deserialize)]
@@ -79,7 +79,7 @@ pub struct Data {
     pub created_at: chrono::NaiveDateTime,
 }
 
-#[derive(Insertable)]
+#[derive(Insertable, AsChangeset)]
 #[table_name = "data"]
 pub struct NewData<'a> {
     pub os: &'a str,
@@ -125,4 +125,3 @@ pub struct NewDataDisks {
     pub data_id: i32,
     pub disks_id: i32,
 }
-

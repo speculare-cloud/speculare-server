@@ -46,10 +46,4 @@ table! {
     }
 }
 
-allow_tables_to_appear_in_same_query!(
-    data,
-    datadisks,
-    datasensors,
-    disks,
-    sensors,
-);
+allow_tables_to_appear_in_same_query!(data, datadisks, datasensors, disks, sensors,);

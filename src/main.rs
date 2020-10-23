@@ -40,7 +40,13 @@ async fn endpoints(db: web::Data<Pool>, item: web::Json<SData>) -> Result<HttpRe
             mac_address: &item.mac_address,
             created_at: Utc::now().naive_local(),
         };
-        let mdata: Data = insert_into(data).values(&new_data).get_result(&conn)?;
+
+        let mdata: Data = insert_into(data)
+            .values(&new_data)
+            .on_conflict(uuid)
+            .do_update()
+            .set(&new_data)
+            .get_result(&conn)?;
 
         let mut new_sensors: Vec<NewSensors> = Vec::new();
         for s in &item.sensors {

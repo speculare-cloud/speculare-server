@@ -4,7 +4,6 @@ use std::fmt;
 
 #[derive(Debug)]
 pub enum AppErrorType {
-    RusotoError,
     DbError,
     PoolError,
     InvalidCrendetials,
@@ -32,11 +31,6 @@ impl AppError {
                 error_type: AppErrorType::KeyAlreadyExists,
                 ..
             } => "The requested item is already present".to_string(),
-            AppError {
-                message: None,
-                error_type: AppErrorType::RusotoError,
-                ..
-            } => "There was an error communicating with S3".to_string(),
             AppError {
                 message: None,
                 error_type: AppErrorType::PoolError,

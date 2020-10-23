@@ -4,20 +4,22 @@ extern crate diesel;
 extern crate log;
 
 mod errors;
-mod models;
+mod models_db;
+mod models_http;
 mod schema;
 
 use schema::data::dsl::*;
-use schema::datasensors::dsl::*;
+use schema::disks::dsl::*;
 use schema::sensors::dsl::*;
 
 use actix_web::{middleware, post, web, App, HttpResponse, HttpServer};
 use chrono::prelude::*;
-use diesel::dsl::{exists, insert_into, select};
+use diesel::dsl::insert_into;
 use diesel::prelude::*;
 use diesel::r2d2::ConnectionManager;
 use errors::AppError;
-use models::*;
+use models_db::*;
+use models_http::*;
 
 pub type Pool = r2d2::Pool<ConnectionManager<PgConnection>>;
 
@@ -29,8 +31,10 @@ async fn endpoints(db: web::Data<Pool>, item: web::Json<SData>) -> Result<HttpRe
         info!("endpoints : {:?}", item);
     }
 
+    // We use a transaction so that if one of the below fail, the previous will be reverted
     conn.transaction::<_, AppError, _>(|| {
-        let new_data = NewData {
+        // Construct the data to insert into the db
+        let new_data = Data {
             os: &item.os,
             hostname: &item.hostname,
             uptime: item.uptime,
@@ -40,50 +44,53 @@ async fn endpoints(db: web::Data<Pool>, item: web::Json<SData>) -> Result<HttpRe
             mac_address: &item.mac_address,
             created_at: Utc::now().naive_local(),
         };
-
-        let mdata: Data = insert_into(data)
+        // Insert or update if conflict
+        insert_into(data)
             .values(&new_data)
             .on_conflict(uuid)
             .do_update()
             .set(&new_data)
-            .get_result(&conn)?;
-
-        let mut new_sensors: Vec<NewSensors> = Vec::new();
+            .execute(&conn)?;
+        // Retrieve sensors list from the item
+        let mut new_sensors: Vec<InsSensors> = Vec::new();
         for s in &item.sensors {
-            new_sensors.push(NewSensors {
+            new_sensors.push(InsSensors {
                 label: &s.label,
                 temp: s.temp,
+                data_uuid: &item.uuid,
             });
         }
-        let msensors: Vec<Sensors> = insert_into(sensors)
-            .values(&new_sensors)
-            .get_results(&conn)?;
-
-        let mut new_data_sensors: Vec<NewDataSensors> = Vec::new();
-        for s in msensors {
-            new_data_sensors.push(NewDataSensors {
-                data_id: mdata.id,
-                sensors_id: s.id,
+        // Insert the sensors
+        insert_into(sensors).values(&new_sensors).execute(&conn)?;
+        // Retrieve disks list from the item
+        let mut new_disks: Vec<InsDisks> = Vec::new();
+        for s in &item.disks {
+            new_disks.push(InsDisks {
+                disk_name: &s.name,
+                mount_point: &s.mount_point,
+                total_space: s.total_space,
+                avail_space: s.avail_space,
+                data_uuid: &item.uuid,
             });
         }
-        insert_into(datasensors)
-            .values(&new_data_sensors)
-            .execute(&conn)?;
+        // Insert the disks
+        insert_into(disks).values(&new_disks).execute(&conn)?;
         Ok(())
     })?;
-
+    // Return a 200 status code as everything went well
     Ok(HttpResponse::Ok().finish())
 }
 
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
+    // Load env variable from .env
+    dotenv::dotenv().ok();
+    // Define the verbose of the logs - info for general and actix
     std::env::set_var("RUST_LOG", "info,actix_server=info,actix_web=info");
+    // Init the log module
     env_logger::init();
 
-    dotenv::dotenv().ok();
-
     let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-
     let manager = ConnectionManager::<PgConnection>::new(database_url);
     let pool: Pool = r2d2::Pool::builder()
         .build(manager)
@@ -96,7 +103,7 @@ async fn main() -> std::io::Result<()> {
             .data(pool.clone())
             .service(endpoints)
     })
-    .bind("10.9.1.138:8081")?
+    .bind(std::env::var("BINDING").expect("Missing binding"))?
     .run()
     .await
 }

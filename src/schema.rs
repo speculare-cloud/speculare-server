@@ -52,10 +52,4 @@ table! {
     }
 }
 
-allow_tables_to_appear_in_same_query!(
-    cpu_info,
-    data,
-    disks,
-    load_avg,
-    sensors,
-);
+allow_tables_to_appear_in_same_query!(cpu_info, data, disks, load_avg, sensors,);

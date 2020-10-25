@@ -8,8 +8,10 @@ mod models_db;
 mod models_http;
 mod schema;
 
+use schema::cpu_info::dsl::*;
 use schema::data::dsl::*;
 use schema::disks::dsl::*;
+use schema::load_avg::dsl::*;
 use schema::sensors::dsl::*;
 
 use actix_web::{middleware, post, web, App, HttpResponse, HttpServer};
@@ -28,8 +30,7 @@ async fn endpoints(db: web::Data<Pool>, item: web::Json<SData>) -> Result<HttpRe
     if log_enabled!(log::Level::Info) {
         info!("endpoints : {:?}", item);
     }
-
-    // Construct the data to insert into the db
+    // Construct Data struct
     let mcreated_at = Utc::now().naive_local();
     let new_data = Data {
         os: &item.os,
@@ -38,6 +39,20 @@ async fn endpoints(db: web::Data<Pool>, item: web::Json<SData>) -> Result<HttpRe
         uuid: &item.uuid,
         active_user: &item.user,
         mac_address: &item.mac_address,
+        created_at: mcreated_at,
+    };
+    // Construct CpuInfo struct
+    let new_cpuinfo = InsCpuInfo {
+        cpu_freq: item.cpu_freq,
+        data_uuid: &item.uuid,
+        created_at: mcreated_at,
+    };
+    // Construct LoadAvg struct
+    let new_loadavg = InsLoadAvg {
+        one: item.load_avg.one,
+        five: item.load_avg.five,
+        fifteen: item.load_avg.fifteen,
+        data_uuid: &item.uuid,
         created_at: mcreated_at,
     };
     // Retrieve sensors list from the item
@@ -62,7 +77,7 @@ async fn endpoints(db: web::Data<Pool>, item: web::Json<SData>) -> Result<HttpRe
             created_at: mcreated_at,
         });
     }
-
+    // Get a connection from the pool
     let conn = db.get()?;
     // We use a transaction so that if one of the below fail, the previous will be reverted
     conn.transaction::<_, AppError, _>(|| {
@@ -73,6 +88,10 @@ async fn endpoints(db: web::Data<Pool>, item: web::Json<SData>) -> Result<HttpRe
             .do_update()
             .set(&new_data)
             .execute(&conn)?;
+        // Insert cpu_info
+        insert_into(cpu_info).values(&new_cpuinfo).execute(&conn)?;
+        // Insert load_avg
+        insert_into(load_avg).values(&new_loadavg).execute(&conn)?;
         // Insert the sensors
         insert_into(sensors).values(&new_sensors).execute(&conn)?;
         // Insert the disks
@@ -92,11 +111,13 @@ async fn main() -> std::io::Result<()> {
     // Init the log module
     env_logger::init();
 
+    // Init the connection to the postgresql
     let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let manager = ConnectionManager::<PgConnection>::new(database_url);
+    // Create a pool of connection
     let pool: Pool = r2d2::Pool::builder()
         .build(manager)
-        .expect("Failed to create pool.");
+        .expect("Failed to create pool");
 
     HttpServer::new(move || {
         App::new()

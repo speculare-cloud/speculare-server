@@ -3,7 +3,6 @@ CREATE TABLE data (
 	hostname VARCHAR(64) NOT NULL,
 	uptime BIGINT NOT NULL,
     uuid VARCHAR(48) PRIMARY KEY NOT NULL,
-    cpu_freq BIGINT NOT NULL,
     active_user VARCHAR(32) NOT NULL,
     mac_address VARCHAR(64) NOT NULL,
 	created_at TIMESTAMP NOT NULL
@@ -12,7 +11,8 @@ CREATE TABLE sensors (
 	id SERIAL PRIMARY KEY,
 	label VARCHAR(128) NOT NULL,
 	temp FLOAT NOT NULL,
-	data_uuid VARCHAR(48) NOT NULL
+	data_uuid VARCHAR(48) NOT NULL,
+	created_at TIMESTAMP NOT NULL
 );
 CREATE TABLE disks (
 	id SERIAL PRIMARY KEY,
@@ -20,5 +20,6 @@ CREATE TABLE disks (
 	mount_point VARCHAR(128) NOT NULL,
 	total_space BIGINT NOT NULL,
 	avail_space BIGINT NOT NULL,
-	data_uuid VARCHAR(48) NOT NULL
+	data_uuid VARCHAR(48) NOT NULL,
+	created_at TIMESTAMP NOT NULL
 );

@@ -12,6 +12,7 @@ pub struct Sensors {
     pub label: String,
     pub temp: f64,
     pub data_uuid: String,
+    pub created_at: chrono::NaiveDateTime,
 }
 
 #[derive(Identifiable, Queryable, Debug, Serialize, Deserialize, Associations)]
@@ -24,6 +25,29 @@ pub struct Disks {
     pub total_space: i64,
     pub avail_space: i64,
     pub data_uuid: String,
+    pub created_at: chrono::NaiveDateTime,
+}
+
+#[derive(Identifiable, Queryable, Debug, Serialize, Deserialize, Associations)]
+#[belongs_to(Data<'__a>, foreign_key = "data_uuid")]
+#[table_name = "load_avg"]
+pub struct LoadAvg {
+    pub id: i32,
+    pub one: f64,
+    pub five: f64,
+    pub fifteen: f64,
+    pub data_uuid: String,
+    pub created_at: chrono::NaiveDateTime,
+}
+
+#[derive(Identifiable, Queryable, Debug, Serialize, Deserialize, Associations)]
+#[belongs_to(Data<'__a>, foreign_key = "data_uuid")]
+#[table_name = "cpu_info"]
+pub struct CpuInfo {
+    pub id: i32,
+    pub cpu_freq: i64,
+    pub data_uuid: String,
+    pub created_at: chrono::NaiveDateTime,
 }
 
 #[derive(Identifiable, Queryable, Debug, Serialize, Deserialize, Insertable, AsChangeset)]
@@ -34,7 +58,6 @@ pub struct Data<'a> {
     pub hostname: &'a str,
     pub uptime: i64,
     pub uuid: &'a str,
-    pub cpu_freq: i64,
     pub active_user: &'a str,
     pub mac_address: &'a str,
     pub created_at: chrono::NaiveDateTime,
@@ -47,6 +70,7 @@ pub struct InsSensors<'a> {
     pub label: &'a str,
     pub temp: f64,
     pub data_uuid: &'a str,
+    pub created_at: chrono::NaiveDateTime,
 }
 
 #[derive(Insertable)]
@@ -57,4 +81,23 @@ pub struct InsDisks<'a> {
     pub total_space: i64,
     pub avail_space: i64,
     pub data_uuid: &'a str,
+    pub created_at: chrono::NaiveDateTime,
+}
+
+#[derive(Insertable)]
+#[table_name = "load_avg"]
+pub struct InsLoadAvg<'a> {
+    pub one: f64,
+    pub five: f64,
+    pub fifteen: f64,
+    pub data_uuid: &'a str,
+    pub created_at: chrono::NaiveDateTime,
+}
+
+#[derive(Insertable)]
+#[table_name = "cpu_info"]
+pub struct InsCpuInfo<'a> {
+    pub cpu_freq: i64,
+    pub data_uuid: &'a str,
+    pub created_at: chrono::NaiveDateTime,
 }

@@ -1,0 +1,8 @@
+CREATE TABLE load_avg (
+	id SERIAL PRIMARY KEY,
+	one FLOAT NOT NULL,
+	five FLOAT NOT NULL,
+    fifteen FLOAT NOT NULL,
+	data_uuid VARCHAR(48) NOT NULL,
+    created_at TIMESTAMP NOT NULL
+);

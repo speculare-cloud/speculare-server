@@ -30,15 +30,15 @@ async fn endpoints(db: web::Data<Pool>, item: web::Json<SData>) -> Result<HttpRe
     }
 
     // Construct the data to insert into the db
+    let mcreated_at = Utc::now().naive_local();
     let new_data = Data {
         os: &item.os,
         hostname: &item.hostname,
         uptime: item.uptime,
         uuid: &item.uuid,
-        cpu_freq: item.cpu_freq,
         active_user: &item.user,
         mac_address: &item.mac_address,
-        created_at: Utc::now().naive_local(),
+        created_at: mcreated_at,
     };
     // Retrieve sensors list from the item
     let mut new_sensors: Vec<InsSensors> = Vec::with_capacity(item.sensors.len());
@@ -47,6 +47,7 @@ async fn endpoints(db: web::Data<Pool>, item: web::Json<SData>) -> Result<HttpRe
             label: &s.label,
             temp: s.temp,
             data_uuid: &item.uuid,
+            created_at: mcreated_at,
         });
     }
     // Retrieve disks list from the item
@@ -58,6 +59,7 @@ async fn endpoints(db: web::Data<Pool>, item: web::Json<SData>) -> Result<HttpRe
             total_space: s.total_space,
             avail_space: s.avail_space,
             data_uuid: &item.uuid,
+            created_at: mcreated_at,
         });
     }
 

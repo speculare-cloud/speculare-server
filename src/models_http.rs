@@ -16,12 +16,20 @@ pub struct SDisks {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+pub struct SLoadAvg {
+    pub one: f64,
+    pub five: f64,
+    pub fifteen: f64,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct SData {
     pub os: String,
     pub hostname: String,
     pub uptime: i64,
     pub uuid: String,
     pub cpu_freq: i64,
+    pub load_avg: SLoadAvg,
     pub sensors: Vec<SSensors>,
     pub disks: Vec<SDisks>,
     pub user: String,

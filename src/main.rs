@@ -22,8 +22,19 @@ use diesel::r2d2::ConnectionManager;
 use errors::AppError;
 use models_db::*;
 use models_http::*;
+use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
 
 pub type Pool = r2d2::Pool<ConnectionManager<PgConnection>>;
+
+fn get_ssl_builder() -> openssl::ssl::SslAcceptorBuilder {
+    let key = std::env::var("KEY_PRIV").expect("BINDING must be set");
+    let cert = std::env::var("KEY_CERT").expect("BINDING must be set");
+    let mut builder = SslAcceptor::mozilla_intermediate(SslMethod::tls()).unwrap();
+    builder.set_private_key_file(key, SslFiletype::PEM).unwrap();
+    builder.set_certificate_chain_file(cert).unwrap();
+
+    builder
+}
 
 #[post("/endpoints")]
 async fn endpoints(db: web::Data<Pool>, item: web::Json<SData>) -> Result<HttpResponse, AppError> {
@@ -126,7 +137,10 @@ async fn main() -> std::io::Result<()> {
             .data(pool.clone())
             .service(endpoints)
     })
-    .bind(std::env::var("BINDING").expect("Missing binding"))?
+    .bind_openssl(
+        std::env::var("BINDING").expect("Missing binding"),
+        get_ssl_builder(),
+    )?
     .run()
     .await
 }

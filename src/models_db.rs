@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 // DATABASE Specific struct
 #[derive(Identifiable, Queryable, Debug, Serialize, Deserialize, Associations)]
-#[belongs_to(Data<'__a>, foreign_key = "data_uuid")]
+#[belongs_to(Data, foreign_key = "data_uuid")]
 #[table_name = "sensors"]
 pub struct Sensors {
     pub id: i32,
@@ -16,7 +16,7 @@ pub struct Sensors {
 }
 
 #[derive(Identifiable, Queryable, Debug, Serialize, Deserialize, Associations)]
-#[belongs_to(Data<'__a>, foreign_key = "data_uuid")]
+#[belongs_to(Data, foreign_key = "data_uuid")]
 #[table_name = "disks"]
 pub struct Disks {
     pub id: i32,
@@ -29,7 +29,7 @@ pub struct Disks {
 }
 
 #[derive(Identifiable, Queryable, Debug, Serialize, Deserialize, Associations)]
-#[belongs_to(Data<'__a>, foreign_key = "data_uuid")]
+#[belongs_to(Data, foreign_key = "data_uuid")]
 #[table_name = "load_avg"]
 pub struct LoadAvg {
     pub id: i32,
@@ -41,7 +41,7 @@ pub struct LoadAvg {
 }
 
 #[derive(Identifiable, Queryable, Debug, Serialize, Deserialize, Associations)]
-#[belongs_to(Data<'__a>, foreign_key = "data_uuid")]
+#[belongs_to(Data, foreign_key = "data_uuid")]
 #[table_name = "cpu_info"]
 pub struct CpuInfo {
     pub id: i32,

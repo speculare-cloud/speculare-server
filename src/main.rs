@@ -53,6 +53,8 @@ async fn main() -> std::io::Result<()> {
             .service(endpoints::receiver::index)
             // GET -> /speculare
             .service(endpoints::all_host::index)
+            // GET -> /speculare/{uuid}
+            .service(endpoints::one_host::index)
     });
 
     if cfg!(debug_assertions) {

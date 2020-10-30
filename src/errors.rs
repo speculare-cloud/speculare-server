@@ -7,7 +7,6 @@ pub enum AppErrorType {
     DbError,
     PoolError,
     InvalidCrendetials,
-    KeyAlreadyExists,
     InvalidToken,
     InvalidRequest,
 }
@@ -26,11 +25,6 @@ impl AppError {
                 message: Some(message),
                 ..
             } => message.clone(),
-            AppError {
-                message: None,
-                error_type: AppErrorType::KeyAlreadyExists,
-                ..
-            } => "The requested item is already present".to_string(),
             AppError {
                 message: None,
                 error_type: AppErrorType::PoolError,
@@ -70,7 +64,6 @@ pub struct AppErrorResponse {
 impl ResponseError for AppError {
     fn status_code(&self) -> StatusCode {
         match self.error_type {
-            AppErrorType::KeyAlreadyExists => StatusCode::CONFLICT,
             AppErrorType::InvalidToken => StatusCode::UNAUTHORIZED,
             AppErrorType::InvalidCrendetials => StatusCode::FORBIDDEN,
             AppErrorType::InvalidRequest => StatusCode::BAD_REQUEST,

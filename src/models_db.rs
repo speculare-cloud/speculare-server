@@ -53,13 +53,13 @@ pub struct CpuInfo {
 #[derive(Identifiable, Queryable, Debug, Serialize, Deserialize, Insertable, AsChangeset)]
 #[table_name = "data"]
 #[primary_key(uuid)]
-pub struct Data<'a> {
-    pub os: &'a str,
-    pub hostname: &'a str,
+pub struct Data {
+    pub os: String,
+    pub hostname: String,
     pub uptime: i64,
-    pub uuid: &'a str,
-    pub active_user: &'a str,
-    pub mac_address: &'a str,
+    pub uuid: String,
+    pub active_user: String,
+    pub mac_address: String,
     pub created_at: chrono::NaiveDateTime,
 }
 

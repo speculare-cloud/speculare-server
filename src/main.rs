@@ -50,11 +50,11 @@ async fn main() -> std::io::Result<()> {
             .wrap(middleware::Logger::default())
             .data(pool.clone())
             // POST -> /speculare
-            .service(endpoints::receiver::index)
+            .service(endpoints::post_one::index)
             // GET -> /speculare
-            .service(endpoints::all_host::index)
+            .service(endpoints::get_all_host::index)
             // GET -> /speculare/{uuid}
-            .service(endpoints::one_host::index)
+            .service(endpoints::get_details_one::index)
     });
 
     if cfg!(debug_assertions) {

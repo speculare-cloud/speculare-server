@@ -9,15 +9,20 @@ mod models_db;
 mod models_http;
 mod schema;
 
-use actix_web::{middleware, App, HttpServer};
+use actix_identity::{CookieIdentityPolicy, IdentityService};
+use actix_session::CookieSession;
+use actix_web::{middleware, web, App, HttpServer};
 use diesel::prelude::PgConnection;
 use diesel::r2d2::ConnectionManager;
 use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
-use actix_identity::{CookieIdentityPolicy, IdentityService};
 use rand::Rng;
+use time::Duration;
 
 pub type Pool = r2d2::Pool<ConnectionManager<PgConnection>>;
 
+/// Return the SslAcceptorBuilder needed for Actix to be binded on HTTPS.
+/// Use KEY_PRIV and KEY_CERT environement variable for the path to find
+/// the files.
 fn get_ssl_builder() -> openssl::ssl::SslAcceptorBuilder {
     let key = std::env::var("KEY_PRIV").expect("BINDING must be set");
     let cert = std::env::var("KEY_CERT").expect("BINDING must be set");
@@ -50,18 +55,21 @@ async fn main() -> std::io::Result<()> {
     // authentication cookies for any user!
     let private_key = rand::thread_rng().gen::<[u8; 32]>();
 
-    let is_secure = if cfg!(debug_assertions) {
-        false
-    } else {
-        true
-    };
+    // Force the Cookie to be sent ONLY over HTTPS if we're in the release mode.
+    let is_secure = if cfg!(debug_assertions) { false } else { true };
+
+    // Get the domain
+    let domain = std::env::var("DOMAIN").expect("Missing domain");
 
     // Starting the HTTP server for dev and HTTPS for release
     let serv = HttpServer::new(move || {
         App::new()
             .wrap(IdentityService::new(
                 CookieIdentityPolicy::new(&private_key)
-                    .name("unswayed-server")
+                    .name("speculare-server")
+                    .path("/")
+                    .domain(domain.as_str())
+                    .max_age_time(Duration::days(1))
                     .secure(is_secure),
             ))
             .wrap(middleware::Compress::default())
@@ -73,8 +81,23 @@ async fn main() -> std::io::Result<()> {
             .service(endpoints::get_all_host::index)
             // GET -> /speculare/{uuid}
             .service(endpoints::get_details_one::index)
+            // GET -> /me
+            .service(endpoints::auth_me::index)
+            .service(
+                // GET -> /auth/login
+                // GET -> /auth/callback
+                // GET -> /auth/user
+                web::scope("/auth")
+                    // Wrap the CookieSession cause it's used only for the state
+                    // of the Oauth request.
+                    .wrap(CookieSession::signed(&[0; 32]).secure(is_secure))
+                    .service(endpoints::auth::login)
+                    .service(endpoints::auth::oauth_callback)
+                    .service(endpoints::auth::logout),
+            )
     });
 
+    // Bind and run the server on HTTP or HTTPS depending on the mode of compilation.
     if cfg!(debug_assertions) {
         serv.bind(std::env::var("BINDING").expect("Missing binding"))?
             .run()

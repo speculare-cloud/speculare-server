@@ -123,3 +123,23 @@ impl From<diesel::result::Error> for AppError {
         }
     }
 }
+
+impl From<actix_web::Error> for AppError {
+    fn from(error: actix_web::Error) -> AppError {
+        AppError {
+            message: None,
+            cause: Some(error.to_string()),
+            error_type: AppErrorType::DbError,
+        }
+    }
+}
+
+impl From<reqwest::Error> for AppError {
+    fn from(error: reqwest::Error) -> AppError {
+        AppError {
+            message: None,
+            cause: Some(error.to_string()),
+            error_type: AppErrorType::DbError,
+        }
+    }
+}

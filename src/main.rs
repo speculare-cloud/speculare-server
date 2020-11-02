@@ -9,9 +9,10 @@ mod models_db;
 mod models_http;
 mod schema;
 
+use actix_cors::Cors;
 use actix_identity::{CookieIdentityPolicy, IdentityService};
 use actix_session::CookieSession;
-use actix_web::{middleware, web, App, HttpServer};
+use actix_web::{http::header, middleware, web, App, HttpServer};
 use diesel::prelude::PgConnection;
 use diesel::r2d2::ConnectionManager;
 use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
@@ -64,6 +65,15 @@ async fn main() -> std::io::Result<()> {
     // Starting the HTTP server for dev and HTTPS for release
     let serv = HttpServer::new(move || {
         App::new()
+            .wrap(
+                Cors::default()
+                    .allowed_origin("http://localhost:8080")
+                    .allowed_methods(vec!["GET", "POST"])
+                    .allowed_headers(vec![header::AUTHORIZATION, header::ACCEPT])
+                    .allowed_header(header::CONTENT_TYPE)
+                    .supports_credentials()
+                    .max_age(3600),
+            )
             .wrap(IdentityService::new(
                 CookieIdentityPolicy::new(&private_key)
                     .name("speculare-server")

@@ -1,26 +1,22 @@
-use crate::errors::{AppError};
+use crate::errors::AppError;
 use crate::models_db::*;
 use crate::models_http::*;
 use crate::schema::data::dsl::*;
 use crate::Pool;
 
-
-use actix_web::{get, web, HttpResponse, HttpRequest};
+use actix_web::{get, web, HttpRequest, HttpResponse};
 use diesel::prelude::*;
 
 #[get("/speculare/{uuid}")]
-pub async fn index(
-    req: HttpRequest,
-    db: web::Data<Pool>
-) -> Result<HttpResponse, AppError> {
+pub async fn index(req: HttpRequest, db: web::Data<Pool>) -> Result<HttpResponse, AppError> {
     let data_uuid_i = sanitize_filename::sanitize(req.match_info().query("uuid"));
     if log_enabled!(log::Level::Info) {
         info!("Route GET /speculare/{}", data_uuid_i);
     }
-    
+
     // Get a connection from the pool
     let conn = db.get()?;
-    
+
     // Get all MTM
     let data_f = data.filter(uuid.eq(&data_uuid_i)).first::<Data>(&conn)?;
     let sensors_f: Vec<Sensors> = Sensors::belonging_to(&data_f).limit(500).load(&conn)?;
@@ -41,6 +37,6 @@ pub async fn index(
         user: data_f.active_user,
         mac_address: data_f.mac_address,
     };
-    
+
     Ok(HttpResponse::Ok().json(&rdata))
 }

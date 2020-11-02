@@ -10,6 +10,7 @@ This project is meant to evolve in something more complete and more complexe in 
 ```bash
 $ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 $ sudo apt-get install postgresql-12 libpq-dev
+$ (optional) pg_ctlcluster 12 main start
 $ cargo install diesel_cli --no-default-features --features postgres
 ```
 

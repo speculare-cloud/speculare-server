@@ -13,6 +13,8 @@ use actix_web::{middleware, App, HttpServer};
 use diesel::prelude::PgConnection;
 use diesel::r2d2::ConnectionManager;
 use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
+use actix_identity::{CookieIdentityPolicy, IdentityService};
+use rand::Rng;
 
 pub type Pool = r2d2::Pool<ConnectionManager<PgConnection>>;
 
@@ -43,9 +45,25 @@ async fn main() -> std::io::Result<()> {
         .build(manager)
         .expect("Failed to create pool");
 
+    // Generate a random 32 byte key. Note that it is important to use a unique
+    // private key for every project. Anyone with access to the key can generate
+    // authentication cookies for any user!
+    let private_key = rand::thread_rng().gen::<[u8; 32]>();
+
+    let is_secure = if cfg!(debug_assertions) {
+        false
+    } else {
+        true
+    };
+
     // Starting the HTTP server for dev and HTTPS for release
     let serv = HttpServer::new(move || {
         App::new()
+            .wrap(IdentityService::new(
+                CookieIdentityPolicy::new(&private_key)
+                    .name("unswayed-server")
+                    .secure(is_secure),
+            ))
             .wrap(middleware::Compress::default())
             .wrap(middleware::Logger::default())
             .data(pool.clone())
@@ -59,8 +77,8 @@ async fn main() -> std::io::Result<()> {
 
     if cfg!(debug_assertions) {
         serv.bind(std::env::var("BINDING").expect("Missing binding"))?
-        .run()
-        .await
+            .run()
+            .await
     } else {
         serv.bind_openssl(
             std::env::var("BINDING").expect("Missing binding"),

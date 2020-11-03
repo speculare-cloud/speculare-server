@@ -38,20 +38,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "actix-cors"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aaf0c4345c9663a2822d42602391418fd5766f269109ec6bf1784b056a9356a7"
-dependencies = [
- "actix-web",
- "derive_more",
- "futures-util",
- "log",
- "once_cell",
- "tinyvec 1.0.1",
-]
-
-[[package]]
 name = "actix-http"
 version = "2.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2095,7 +2081,6 @@ dependencies = [
 name = "speculare-server"
 version = "0.1.1"
 dependencies = [
- "actix-cors",
  "actix-identity",
  "actix-rt",
  "actix-session",

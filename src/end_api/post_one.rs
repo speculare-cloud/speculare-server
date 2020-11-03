@@ -72,7 +72,6 @@ async fn construct_disks<'a>(item: &'a SData, now: &'a chrono::NaiveDateTime) ->
             created_at: *now,
         });
     }
-
     new_disks
 }
 

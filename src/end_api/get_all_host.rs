@@ -1,11 +1,9 @@
+use crate::data_func::db_helpers::get_data_vec;
 use crate::errors::{AppError, AppErrorType};
-use crate::models_db::*;
-use crate::schema::data::dsl::*;
 use crate::Pool;
 
 use actix_identity::Identity;
 use actix_web::{get, web, HttpResponse};
-use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -35,22 +33,15 @@ pub async fn index(
 
     // If size is over 500 or less than 30, return error
     let size = info.size.unwrap_or(100);
+    let page = info.page.unwrap_or(0);
     if size > 500 || size < 30 {
         Err(AppError {
-            message: Some(
-                "The size parameters can't be bigger than 500 and lesser than 30".to_string(),
-            ),
+            message: Some("The size parameters must be 30 < size < 500".to_string()),
             cause: None,
             error_type: AppErrorType::InvalidRequest,
         })
     } else {
-        // Get a connection from the pool
-        let conn = db.get()?;
-        // Retreive the datas
-        let ret: Vec<Data> = data
-            .limit(size)
-            .offset(info.page.unwrap_or(0) * size)
-            .load(&conn)?;
-        Ok(HttpResponse::Ok().json(ret))
+        // Return the data as form of JSON
+        Ok(HttpResponse::Ok().json(get_data_vec(size, page, db.get()?)?))
     }
 }

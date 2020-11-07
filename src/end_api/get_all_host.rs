@@ -2,8 +2,7 @@ use crate::data_func::db_helpers::get_data_vec;
 use crate::errors::{AppError, AppErrorType};
 use crate::Pool;
 
-use actix_identity::Identity;
-use actix_web::{get, web, HttpResponse};
+use actix_web::{web, HttpResponse};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -12,21 +11,12 @@ pub struct PagedInfo {
     pub page: Option<i64>,
 }
 
-#[get("/speculare")]
+/// GET /api/speculare
+/// Return all host basic informations
 pub async fn index(
-    id: Identity,
     db: web::Data<Pool>,
     info: web::Query<PagedInfo>,
 ) -> Result<HttpResponse, AppError> {
-    // If the user is not identified, restrict access
-    if !id.identity().is_some() {
-        return Err(AppError {
-            cause: None,
-            message: Some("You're not allowed to access this resource".to_string()),
-            error_type: AppErrorType::InvalidRequest,
-        });
-    }
-
     if log_enabled!(log::Level::Info) {
         info!("Route GET /speculare");
     }

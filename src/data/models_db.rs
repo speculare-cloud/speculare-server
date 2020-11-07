@@ -1,4 +1,4 @@
-use crate::schema::*;
+use crate::data::schema::*;
 
 use diesel::*;
 use serde::{Deserialize, Serialize};

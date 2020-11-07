@@ -1,4 +1,4 @@
-use crate::models_db::*;
+use crate::data::models_db::*;
 
 use serde::{Deserialize, Serialize};
 

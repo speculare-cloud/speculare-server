@@ -1,7 +1,7 @@
+use crate::data::models_db::*;
+use crate::data::models_http::*;
+use crate::data::schema::data::dsl::*;
 use crate::errors::AppError;
-use crate::models_db::*;
-use crate::models_http::*;
-use crate::schema::data::dsl::*;
 use crate::ConnType;
 
 use diesel::prelude::*;

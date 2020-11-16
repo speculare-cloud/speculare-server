@@ -73,23 +73,6 @@ impl From<std::num::ParseIntError> for AppError {
     }
 }
 
-impl<E> From<actix_threadpool::BlockingError<E>> for AppError
-where
-    E: std::fmt::Debug,
-    E: Into<AppError>,
-{
-    fn from(error: actix_threadpool::BlockingError<E>) -> AppError {
-        match error {
-            actix_threadpool::BlockingError::Error(e) => e.into(),
-            actix_threadpool::BlockingError::Canceled => AppError {
-                message: None,
-                cause: None,
-                error_type: AppErrorType::DbError,
-            },
-        }
-    }
-}
-
 impl From<r2d2::Error> for AppError {
     fn from(error: r2d2::Error) -> AppError {
         AppError {
@@ -112,16 +95,6 @@ impl From<diesel::result::Error> for AppError {
 
 impl From<actix_web::Error> for AppError {
     fn from(error: actix_web::Error) -> AppError {
-        AppError {
-            message: None,
-            cause: Some(error.to_string()),
-            error_type: AppErrorType::DbError,
-        }
-    }
-}
-
-impl From<reqwest::Error> for AppError {
-    fn from(error: reqwest::Error) -> AppError {
         AppError {
             message: None,
             cause: Some(error.to_string()),

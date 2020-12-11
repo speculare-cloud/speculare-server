@@ -18,7 +18,7 @@ $ (optional) pg_ctlcluster 12 main start
 $ cargo install diesel_cli --no-default-features --features postgres
 ```
 
-- Create a .env file based on .env.exemple
+- Create a .env file based on .env.example
 ```bash
 $ diesel setup
 ```

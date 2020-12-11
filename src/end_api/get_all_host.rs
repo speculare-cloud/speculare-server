@@ -24,7 +24,7 @@ pub async fn index(
     // If size is over 500 or less than 30, return error
     let size = info.size.unwrap_or(100);
     let page = info.page.unwrap_or(0);
-    if size > 500 || size < 30 {
+    if !(30..=500).contains(&size) {
         Err(AppError {
             message: Some("The size parameters must be 30 < size < 500".to_string()),
             cause: None,

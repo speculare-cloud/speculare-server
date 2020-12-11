@@ -66,7 +66,7 @@ pub struct Data {
 // Insertable models
 #[derive(Insertable)]
 #[table_name = "sensors"]
-pub struct InsSensors<'a> {
+pub struct NewSensors<'a> {
     pub label: &'a str,
     pub temp: f64,
     pub data_uuid: &'a str,
@@ -75,7 +75,7 @@ pub struct InsSensors<'a> {
 
 #[derive(Insertable)]
 #[table_name = "disks"]
-pub struct InsDisks<'a> {
+pub struct NewDisks<'a> {
     pub disk_name: &'a str,
     pub mount_point: &'a str,
     pub total_space: i64,
@@ -86,7 +86,7 @@ pub struct InsDisks<'a> {
 
 #[derive(Insertable)]
 #[table_name = "load_avg"]
-pub struct InsLoadAvg<'a> {
+pub struct NewLoadAvg<'a> {
     pub one: f64,
     pub five: f64,
     pub fifteen: f64,
@@ -96,7 +96,7 @@ pub struct InsLoadAvg<'a> {
 
 #[derive(Insertable)]
 #[table_name = "cpu_info"]
-pub struct InsCpuInfo<'a> {
+pub struct NewCpuInfo<'a> {
     pub cpu_freq: i64,
     pub data_uuid: &'a str,
     pub created_at: chrono::NaiveDateTime,

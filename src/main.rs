@@ -25,7 +25,7 @@ async fn main() -> std::io::Result<()> {
     std::env::set_var("RUST_LOG", "info,actix_server=info,actix_web=info");
     // Init the log module
     env_logger::init();
-
     // Continue the initialization of the actix web server
+    // And wait indefinietly for it <3
     server::server().await
 }

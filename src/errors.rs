@@ -7,6 +7,7 @@ pub enum AppErrorType {
     DbError,
     PoolError,
     InvalidRequest,
+    BlockingError,
 }
 
 #[derive(Debug)]
@@ -99,6 +100,16 @@ impl From<actix_web::Error> for AppError {
             message: None,
             cause: Some(error.to_string()),
             error_type: AppErrorType::DbError,
+        }
+    }
+}
+
+impl From<actix_web::error::BlockingError<AppError>> for AppError {
+    fn from(error: actix_web::error::BlockingError<AppError>) -> AppError {
+        AppError {
+            message: None,
+            cause: Some(error.to_string()),
+            error_type: AppErrorType::BlockingError,
         }
     }
 }

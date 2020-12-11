@@ -1,3 +1,3 @@
-pub mod get_all_host;
-pub mod get_details_one;
+pub mod get_all;
+pub mod get_one;
 pub mod post_one;

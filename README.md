@@ -1,10 +1,14 @@
-# Speculare server
+Speculare server
+========
+[![AGPL License](https://img.shields.io/badge/license-AGPL-blue.svg)](LICENSE)
+[![CI](https://github.com/Martichou/speculare-server/workflows/CI/badge.svg)](https://github.com/Martichou/speculare-server/actions)
 
 Speculare server is intended to recieve data from speculare-client childrens.
 
 This project is meant to evolve in something more complete and more complexe in a somewhat near future.
 
-## Server setup / Dev setup
+Server setup / Dev setup
+--------------------------
 
 - Install all deps
 ```bash
@@ -19,5 +23,7 @@ $ cargo install diesel_cli --no-default-features --features postgres
 $ diesel setup
 ```
 
-## Contributing
+Contributing
+--------------------------
+
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.

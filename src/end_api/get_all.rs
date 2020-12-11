@@ -31,7 +31,9 @@ pub async fn index(
             error_type: AppErrorType::InvalidRequest,
         })
     } else {
+        // use web::block to offload blocking Diesel code without blocking server thread
+        let data = web::block(move || get_data_vec(size, page, db.get()?)).await?;
         // Return the data as form of JSON
-        Ok(HttpResponse::Ok().json(get_data_vec(size, page, db.get()?)?))
+        Ok(HttpResponse::Ok().json(data))
     }
 }

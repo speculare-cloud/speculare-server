@@ -15,11 +15,11 @@ pub fn get_data_vec(size: i64, page: i64, conn: ConnType) -> Result<Vec<Data>, A
     Ok(data.limit(size).offset(page * size).load(&conn)?)
 }
 
-/// Return a Vector of RData
+/// Return a Vector of HttpGetData
 /// # Params
 /// * `mmuid` - Which object you want to get info from
 /// * `conn` - The r2d2 connection needed to fetch the data from the db
-pub fn get_rdata(muuid: String, conn: ConnType) -> Result<RData, AppError> {
+pub fn get_data_from(muuid: String, conn: ConnType) -> Result<HttpGetData, AppError> {
     // Retrieve all the Many to Many relation to construct the RData
     let data_f = data.filter(uuid.eq(muuid)).first::<Data>(&conn)?;
     let sensors_f: Vec<Sensors> = Sensors::belonging_to(&data_f).limit(500).load(&conn)?;
@@ -27,8 +27,8 @@ pub fn get_rdata(muuid: String, conn: ConnType) -> Result<RData, AppError> {
     let loadavg_f: Vec<LoadAvg> = LoadAvg::belonging_to(&data_f).limit(500).load(&conn)?;
     let cpuinfo_f: Vec<CpuInfo> = CpuInfo::belonging_to(&data_f).limit(500).load(&conn)?;
 
-    // Retreive the RData
-    Ok(RData {
+    // Retreive the HttpGetData
+    Ok(HttpGetData {
         os: data_f.os,
         hostname: data_f.hostname,
         uptime: data_f.uptime,

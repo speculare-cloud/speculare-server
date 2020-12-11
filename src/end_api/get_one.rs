@@ -1,4 +1,4 @@
-use crate::data_func::db_helpers::get_rdata;
+use crate::data_func::db_helpers::get_data_from;
 use crate::errors::AppError;
 use crate::Pool;
 
@@ -20,6 +20,8 @@ pub async fn index(params: Path<GetParams>, db: web::Data<Pool>) -> Result<HttpR
         info!("Route GET /speculare/{}", muuid);
     }
 
+    // use web::block to offload blocking Diesel code without blocking server thread
+    let data = web::block(move || get_data_from(muuid, db.get()?)).await?;
     // Return the data as form of JSON
-    Ok(HttpResponse::Ok().json(get_rdata(muuid, db.get()?)?))
+    Ok(HttpResponse::Ok().json(data))
 }

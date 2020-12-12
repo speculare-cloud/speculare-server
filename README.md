@@ -1,6 +1,6 @@
 Speculare server
 ========
-[![AGPL License](https://img.shields.io/badge/license-AGPL-blue.svg)](LICENSE)
+[![Apache 2 License](https://img.shields.io/badge/license-Apache%202-blue.svg)](LICENSE)
 [![CI](https://github.com/Martichou/speculare-server/workflows/CI/badge.svg)](https://github.com/Martichou/speculare-server/actions)
 
 Speculare server is intended to recieve data from speculare-client childrens.

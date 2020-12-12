@@ -15,11 +15,11 @@ CMD [ "cargo", "test", "--offline" ]
 
 FROM base AS builder
 
-RUN cargo build --release --offline
+RUN cargo build --offline
 
 FROM rust:1-slim-buster
 
-COPY --from=builder /code/target/release/speculare-server /usr/bin/speculare-server
+COPY --from=builder /code/target/debug/speculare-server /usr/bin/speculare-server
 
 EXPOSE 8080
 

@@ -1,7 +1,15 @@
-Speculare server
-========
+<div align="center">
+  <h1>Speculare Server</h1>
+  <p>
+    <strong>Metrics for your servers</strong>
+  </p>
+  <p>
+
 [![Apache 2 License](https://img.shields.io/badge/license-Apache%202-blue.svg)](LICENSE)
 [![CI](https://github.com/Martichou/speculare-server/workflows/CI/badge.svg)](https://github.com/Martichou/speculare-server/actions)
+
+  </p>
+</div>
 
 Speculare server is intended to recieve data from speculare-client childrens.
 

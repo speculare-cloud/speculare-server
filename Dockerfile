@@ -21,6 +21,8 @@ FROM rust:1-slim-buster
 
 COPY --from=builder /code/target/debug/speculare-server /usr/bin/speculare-server
 
+RUN apt-get update && apt-get install -y libpq-dev
+
 EXPOSE 8080
 
 ENTRYPOINT [ "/usr/bin/speculare-server" ]

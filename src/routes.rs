@@ -10,6 +10,7 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
         // Bind the /api/* route
         .service(
             web::scope("/api")
+                // TODO - These routes should be secured behind a token verification
                 .route("/speculare", web::post().to(end_api::post_one::index))
                 .route("/speculare", web::get().to(end_api::get_all::index))
                 .route("/speculare/{uuid}", web::get().to(end_api::get_one::index)),

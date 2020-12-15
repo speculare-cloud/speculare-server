@@ -1,1 +1,0 @@
-ALTER TABLE cpu_info ADD CONSTRAINT data_uuid_fkey FOREIGN KEY (data_uuid) REFERENCES data (uuid) DEFERRABLE;

@@ -1,1 +1,0 @@
-ALTER TABLE disks DROP CONSTRAINT data_uuid_fkey;

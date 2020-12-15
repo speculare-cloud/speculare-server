@@ -1,1 +1,0 @@
-ALTER TABLE sensors ADD CONSTRAINT data_uuid_fkey FOREIGN KEY (data_uuid) REFERENCES data (uuid) DEFERRABLE;

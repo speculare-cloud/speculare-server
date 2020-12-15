@@ -1,4 +1,4 @@
-use crate::data_func::db_helpers::get_data_vec;
+use crate::data::db_helpers::get_data_vec;
 use crate::errors::{AppError, AppErrorType};
 use crate::Pool;
 

@@ -4,12 +4,6 @@ use serde::{Deserialize, Serialize};
 
 // HTTP Specific struct
 #[derive(Debug, Serialize, Deserialize)]
-pub struct HttpSensors {
-    pub label: String,
-    pub temp: f64,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
 pub struct HttpDisks {
     pub name: String,
     pub mount_point: String,
@@ -25,17 +19,24 @@ pub struct HttpLoadAvg {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+pub struct HttpMemory {
+    pub total_virt: u64,
+    pub avail_virt: u64,
+    pub total_swap: u64,
+    pub avail_swap: u64,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct HttpPostData {
+    pub uuid: String,
     pub os: String,
     pub hostname: String,
     pub uptime: i64,
-    pub uuid: String,
     pub cpu_freq: i64,
     pub load_avg: HttpLoadAvg,
-    pub sensors: Vec<HttpSensors>,
     pub disks: Vec<HttpDisks>,
-    pub user: String,
-    pub mac_address: String,
+    //pub user: Option<Vec<String>>,
+    pub memory: HttpMemory,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -44,10 +45,9 @@ pub struct HttpGetData {
     pub hostname: String,
     pub uptime: i64,
     pub uuid: String,
-    pub cpu_freq: Vec<CpuInfo>,
-    pub load_avg: Vec<LoadAvg>,
-    pub sensors: Vec<Sensors>,
-    pub disks: Vec<Disks>,
-    pub user: String,
-    pub mac_address: String,
+    pub cpu_freq: CpuInfo,
+    pub load_avg: LoadAvg,
+    pub disks: Disks,
+    pub memory: Memory,
+    //pub user: String,
 }

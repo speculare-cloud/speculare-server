@@ -1,0 +1,1 @@
+DROP TABLE Hosts,Disks,load_avg,cpu_info,Memory;

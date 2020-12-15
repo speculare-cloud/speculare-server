@@ -1,1 +1,0 @@
-DROP TABLE Data,Sensors,DataSensors,Disks,DataDisks;

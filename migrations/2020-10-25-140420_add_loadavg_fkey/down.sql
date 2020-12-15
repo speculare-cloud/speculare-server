@@ -1,1 +1,0 @@
-ALTER TABLE sensors DROP CONSTRAINT data_uuid_fkey;

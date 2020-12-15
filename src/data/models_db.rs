@@ -5,18 +5,7 @@ use serde::{Deserialize, Serialize};
 
 // DATABASE Specific struct
 #[derive(Identifiable, Queryable, Debug, Serialize, Deserialize, Associations)]
-#[belongs_to(Data, foreign_key = "data_uuid")]
-#[table_name = "sensors"]
-pub struct Sensors {
-    pub id: i32,
-    pub label: String,
-    pub temp: f64,
-    pub data_uuid: String,
-    pub created_at: chrono::NaiveDateTime,
-}
-
-#[derive(Identifiable, Queryable, Debug, Serialize, Deserialize, Associations)]
-#[belongs_to(Data, foreign_key = "data_uuid")]
+#[belongs_to(Host, foreign_key = "host_uuid")]
 #[table_name = "disks"]
 pub struct Disks {
     pub id: i32,
@@ -24,55 +13,57 @@ pub struct Disks {
     pub mount_point: String,
     pub total_space: i64,
     pub avail_space: i64,
-    pub data_uuid: String,
+    pub host_uuid: String,
     pub created_at: chrono::NaiveDateTime,
 }
 
 #[derive(Identifiable, Queryable, Debug, Serialize, Deserialize, Associations)]
-#[belongs_to(Data, foreign_key = "data_uuid")]
+#[belongs_to(Host, foreign_key = "host_uuid")]
 #[table_name = "load_avg"]
 pub struct LoadAvg {
     pub id: i32,
     pub one: f64,
     pub five: f64,
     pub fifteen: f64,
-    pub data_uuid: String,
+    pub host_uuid: String,
     pub created_at: chrono::NaiveDateTime,
 }
 
 #[derive(Identifiable, Queryable, Debug, Serialize, Deserialize, Associations)]
-#[belongs_to(Data, foreign_key = "data_uuid")]
+#[belongs_to(Host, foreign_key = "host_uuid")]
 #[table_name = "cpu_info"]
 pub struct CpuInfo {
     pub id: i32,
     pub cpu_freq: i64,
-    pub data_uuid: String,
+    pub host_uuid: String,
+    pub created_at: chrono::NaiveDateTime,
+}
+
+#[derive(Identifiable, Queryable, Debug, Serialize, Deserialize, Associations)]
+#[belongs_to(Host, foreign_key = "host_uuid")]
+#[table_name = "memory"]
+pub struct Memory {
+    pub id: i32,
+    pub total_virt: i64,
+    pub avail_virt: i64,
+    pub total_swap: i64,
+    pub avail_swap: i64,
+    pub host_uuid: String,
     pub created_at: chrono::NaiveDateTime,
 }
 
 #[derive(Identifiable, Queryable, Debug, Serialize, Deserialize, Insertable, AsChangeset)]
-#[table_name = "data"]
+#[table_name = "hosts"]
 #[primary_key(uuid)]
-pub struct Data {
+pub struct Host {
     pub os: String,
     pub hostname: String,
     pub uptime: i64,
     pub uuid: String,
-    pub active_user: String,
-    pub mac_address: String,
     pub created_at: chrono::NaiveDateTime,
 }
 
 // Insertable models
-#[derive(Insertable)]
-#[table_name = "sensors"]
-pub struct NewSensors<'a> {
-    pub label: &'a str,
-    pub temp: f64,
-    pub data_uuid: &'a str,
-    pub created_at: chrono::NaiveDateTime,
-}
-
 #[derive(Insertable)]
 #[table_name = "disks"]
 pub struct NewDisks<'a> {
@@ -80,7 +71,7 @@ pub struct NewDisks<'a> {
     pub mount_point: &'a str,
     pub total_space: i64,
     pub avail_space: i64,
-    pub data_uuid: &'a str,
+    pub host_uuid: &'a str,
     pub created_at: chrono::NaiveDateTime,
 }
 
@@ -90,7 +81,7 @@ pub struct NewLoadAvg<'a> {
     pub one: f64,
     pub five: f64,
     pub fifteen: f64,
-    pub data_uuid: &'a str,
+    pub host_uuid: &'a str,
     pub created_at: chrono::NaiveDateTime,
 }
 
@@ -98,6 +89,17 @@ pub struct NewLoadAvg<'a> {
 #[table_name = "cpu_info"]
 pub struct NewCpuInfo<'a> {
     pub cpu_freq: i64,
-    pub data_uuid: &'a str,
+    pub host_uuid: &'a str,
+    pub created_at: chrono::NaiveDateTime,
+}
+
+#[derive(Insertable)]
+#[table_name = "memory"]
+pub struct NewMemory<'a> {
+    pub total_virt: i64,
+    pub avail_virt: i64,
+    pub total_swap: i64,
+    pub avail_swap: i64,
+    pub host_uuid: &'a str,
     pub created_at: chrono::NaiveDateTime,
 }

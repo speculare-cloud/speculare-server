@@ -1,10 +1,9 @@
 use crate::data::models_db::*;
 use crate::data::models_http::*;
 use crate::data::schema::cpu_info::dsl::*;
-use crate::data::schema::data::dsl::*;
 use crate::data::schema::disks::dsl::*;
+use crate::data::schema::hosts::dsl::*;
 use crate::data::schema::load_avg::dsl::*;
-use crate::data::schema::sensors::dsl::*;
 use crate::errors::AppError;
 use crate::{ConnType, Pool};
 
@@ -35,10 +34,9 @@ fn insert_all_block(item: web::Json<HttpPostData>, conn: ConnType) -> Result<(),
     let new_data = construct_data(&item, &mcreated_at);
     let new_cpuinfo = construct_cpuinfo(&item, &mcreated_at);
     let new_loadavg = construct_loadavg(&item, &mcreated_at);
-    let new_sensors = construct_sensors(&item, &mcreated_at);
     let new_disks = construct_disks(&item, &mcreated_at);
     // Insert or update if conflict
-    insert_into(data)
+    insert_into(hosts)
         .values(&new_data)
         .on_conflict(uuid)
         .do_update()
@@ -48,22 +46,18 @@ fn insert_all_block(item: web::Json<HttpPostData>, conn: ConnType) -> Result<(),
     insert_into(cpu_info).values(&new_cpuinfo).execute(&conn)?;
     // Insert load_avg
     insert_into(load_avg).values(&new_loadavg).execute(&conn)?;
-    // Insert the sensors
-    insert_into(sensors).values(&new_sensors).execute(&conn)?;
     // Insert the disks
     insert_into(disks).values(&new_disks).execute(&conn)?;
     // Return Ok(()) as everything went fine
     Ok(())
 }
 
-fn construct_data<'a>(item: &'a HttpPostData, now: &'a chrono::NaiveDateTime) -> Data {
-    Data {
+fn construct_data<'a>(item: &'a HttpPostData, now: &'a chrono::NaiveDateTime) -> Host {
+    Host {
         os: item.os.to_string(),
         hostname: item.hostname.to_string(),
         uptime: item.uptime,
         uuid: item.uuid.to_string(),
-        active_user: item.user.to_string(),
-        mac_address: item.mac_address.to_string(),
         created_at: *now,
     }
 }
@@ -71,7 +65,7 @@ fn construct_data<'a>(item: &'a HttpPostData, now: &'a chrono::NaiveDateTime) ->
 fn construct_cpuinfo<'a>(item: &'a HttpPostData, now: &'a chrono::NaiveDateTime) -> NewCpuInfo<'a> {
     NewCpuInfo {
         cpu_freq: item.cpu_freq,
-        data_uuid: &item.uuid,
+        host_uuid: &item.uuid,
         created_at: *now,
     }
 }
@@ -81,25 +75,9 @@ fn construct_loadavg<'a>(item: &'a HttpPostData, now: &'a chrono::NaiveDateTime)
         one: item.load_avg.one,
         five: item.load_avg.five,
         fifteen: item.load_avg.fifteen,
-        data_uuid: &item.uuid,
+        host_uuid: &item.uuid,
         created_at: *now,
     }
-}
-
-fn construct_sensors<'a>(
-    item: &'a HttpPostData,
-    now: &'a chrono::NaiveDateTime,
-) -> Vec<NewSensors<'a>> {
-    let mut new_sensors: Vec<NewSensors> = Vec::with_capacity(item.sensors.len());
-    for s in &item.sensors {
-        new_sensors.push(NewSensors {
-            label: &s.label,
-            temp: s.temp,
-            data_uuid: &item.uuid,
-            created_at: *now,
-        });
-    }
-    new_sensors
 }
 
 fn construct_disks<'a>(
@@ -113,7 +91,7 @@ fn construct_disks<'a>(
             mount_point: &s.mount_point,
             total_space: s.total_space,
             avail_space: s.avail_space,
-            data_uuid: &item.uuid,
+            host_uuid: &item.uuid,
             created_at: *now,
         });
     }

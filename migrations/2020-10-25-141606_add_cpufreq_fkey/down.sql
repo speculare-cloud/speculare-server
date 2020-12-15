@@ -1,1 +1,0 @@
-ALTER TABLE cpu_info DROP CONSTRAINT data_uuid_fkey;

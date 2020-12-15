@@ -4,7 +4,6 @@ extern crate diesel;
 extern crate log;
 
 mod data;
-mod data_func;
 mod end_api;
 mod errors;
 mod handlers;

@@ -42,10 +42,18 @@ pub async fn server() -> std::io::Result<()> {
     });
     // Bind and run the server on HTTP or HTTPS depending on the mode of compilation.
     let binding = std::env::var("BINDING").expect("Missing binding");
-    // If it's a debug build, run without SSL, else run with it.
-    if cfg!(debug_assertions) {
+    // Check if we should enable https
+    let https = std::env::var("HTTPS");
+    // Bind the server (https or no)
+    if https.is_err() || https.unwrap() == "NO" {
+        if !cfg!(debug_assertions) {
+            warn!("You're starting speculare-server as HTTP on a production build")
+        } else {
+            info!("Server started as HTTP");
+        }
         serv.bind(binding)?.run().await
     } else {
+        info!("Server started as HTTPS");
         serv.bind_openssl(binding, get_ssl_builder())?.run().await
     }
 }

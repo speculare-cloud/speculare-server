@@ -1,4 +1,4 @@
-use crate::data::models_db::*;
+use super::{CpuInfo, Disks, LoadAvg, Memory};
 
 use serde::{Deserialize, Serialize};
 
@@ -27,7 +27,7 @@ pub struct HttpMemory {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct HttpPostData {
+pub struct HttpPostHost {
     pub uuid: String,
     pub os: String,
     pub hostname: String,
@@ -35,12 +35,12 @@ pub struct HttpPostData {
     pub cpu_freq: i64,
     pub load_avg: HttpLoadAvg,
     pub disks: Vec<HttpDisks>,
-    //pub user: Option<Vec<String>>,
     pub memory: HttpMemory,
+    pub created_at: chrono::NaiveDateTime,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct HttpGetData {
+pub struct HttpGetHost {
     pub os: String,
     pub hostname: String,
     pub uptime: i64,
@@ -49,5 +49,4 @@ pub struct HttpGetData {
     pub load_avg: LoadAvg,
     pub disks: Disks,
     pub memory: Memory,
-    //pub user: String,
 }

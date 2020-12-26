@@ -3,18 +3,12 @@ extern crate diesel;
 #[macro_use]
 extern crate log;
 
-mod data;
-mod end_api;
 mod errors;
 mod handlers;
+mod models;
 mod routes;
 mod server;
-
-use diesel::prelude::PgConnection;
-use diesel::r2d2::ConnectionManager;
-
-pub type Pool = r2d2::Pool<ConnectionManager<PgConnection>>;
-pub type ConnType = r2d2::PooledConnection<diesel::r2d2::ConnectionManager<diesel::PgConnection>>;
+mod types;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {

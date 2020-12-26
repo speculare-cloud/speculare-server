@@ -1,10 +1,7 @@
-use super::Pool;
-
-use crate::routes;
+use crate::{routes, types::Pool};
 
 use actix_web::{middleware, App, HttpServer};
-use diesel::prelude::PgConnection;
-use diesel::r2d2::ConnectionManager;
+use diesel::{prelude::PgConnection, r2d2::ConnectionManager};
 use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
 
 /// Return the SslAcceptorBuilder needed for Actix to be binded on HTTPS

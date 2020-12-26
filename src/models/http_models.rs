@@ -2,13 +2,25 @@ use super::{CpuInfo, Disks, LoadAvg, Memory};
 
 use serde::{Deserialize, Serialize};
 
-// HTTP Specific struct
+// ====================
+// Http specific struct
+// Meaning those are used whenever
+// there is a POST/GET request
+// ====================
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct HttpDisks {
     pub name: String,
     pub mount_point: String,
     pub total_space: i64,
     pub avail_space: i64,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct HttpIoStats {
+    pub device_name: String,
+    pub bytes_read: i64,
+    pub bytes_wrtn: i64,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -33,9 +45,10 @@ pub struct HttpPostHost {
     pub hostname: String,
     pub uptime: i64,
     pub cpu_freq: i64,
-    pub load_avg: HttpLoadAvg,
-    pub disks: Vec<HttpDisks>,
-    pub memory: HttpMemory,
+    pub load_avg: Option<HttpLoadAvg>,
+    pub disks: Option<Vec<HttpDisks>>,
+    pub iostats: Option<Vec<HttpIoStats>>,
+    pub memory: Option<HttpMemory>,
     pub created_at: chrono::NaiveDateTime,
 }
 

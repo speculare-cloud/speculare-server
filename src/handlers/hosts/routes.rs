@@ -6,8 +6,8 @@ use super::{HostUuid, PagedInfo};
 
 use actix_web::{web, web::Path, HttpResponse};
 
-/// GET /api/speculare
-/// Return all host basic informations
+/// GET /api/hosts
+/// Return all hosts's basic informations
 pub async fn host_all(
     db: web::Data<Pool>,
     info: web::Query<PagedInfo>,
@@ -33,17 +33,17 @@ pub async fn host_all(
     }
 }
 
-/// GET /speculare/uuid
+/// GET /hosts/{uuid}
 /// Return all details for a particular host
 pub async fn host_info(
     params: Path<HostUuid>,
     db: web::Data<Pool>,
 ) -> Result<HttpResponse, AppError> {
-    // Retrieve the uuid from the query
-    let muuid = params.uuid.to_string();
+    // Retrieve the uuid from the query (within the Path)
+    let muuid = params.uuid.to_owned();
 
     if log_enabled!(log::Level::Info) {
-        info!("Route GET /speculare/{}", muuid);
+        info!("Route GET /hosts/{}", muuid);
     }
 
     // use web::block to offload blocking Diesel code without blocking server thread
@@ -52,14 +52,14 @@ pub async fn host_info(
     Ok(HttpResponse::Ok().json(data))
 }
 
-/// POST /speculare
+/// POST /hosts
 /// Save data from a host into the db under his uuid
 pub async fn host_ingest(
     db: web::Data<Pool>,
     item: web::Json<HttpPostHost>,
 ) -> Result<HttpResponse, AppError> {
     if log_enabled!(log::Level::Info) {
-        info!("Route POST /speculare : {:?}", item);
+        info!("POST /hosts : {:?}", item);
     }
     // make all insert taking advantage of web::block to offload the request thread
     web::block(move || Host::insert(&db.get()?, &item.into_inner())).await?;

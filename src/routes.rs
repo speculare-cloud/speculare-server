@@ -10,8 +10,8 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
         .service(
             web::scope("/api")
                 // TODO - These routes should be secured behind a token verification
-                .route("/host", web::post().to(handlers::hosts::host_ingest))
-                .route("/host", web::get().to(handlers::hosts::host_all))
-                .route("/host/{uuid}", web::get().to(handlers::hosts::host_info)),
+                .route("/hosts", web::post().to(handlers::hosts::host_ingest))
+                .route("/hosts", web::get().to(handlers::hosts::host_all))
+                .route("/hosts/{uuid}", web::get().to(handlers::hosts::host_info)),
         );
 }

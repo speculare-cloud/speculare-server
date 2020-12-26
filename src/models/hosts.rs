@@ -1,5 +1,5 @@
 use crate::errors::AppError;
-use crate::types::{ConnType, NewDisksList};
+use crate::types::ConnType;
 
 use super::schema::{
     cpu_info::dsl::created_at as co_created,
@@ -12,13 +12,19 @@ use super::schema::{
     load_avg::dsl::created_at as lg_created,
     load_avg::dsl::*,
     memory::dsl::created_at as my_created,
+    memory::dsl::*,
 };
-use super::{CpuInfo, Disks, HttpGetHost, HttpPostHost, LoadAvg, Memory, NewCpuInfo, NewLoadAvg};
+use super::{
+    CpuInfo, Disks, HttpGetHost, HttpPostHost, LoadAvg, Memory, NewCpuInfo, NewDisksList,
+    NewLoadAvg, NewMemory,
+};
 
 use diesel::*;
 use serde::{Deserialize, Serialize};
 
+// ========================
 // DATABASE Specific struct
+// ========================
 #[derive(Identifiable, Queryable, Debug, Serialize, Deserialize, Insertable, AsChangeset)]
 #[table_name = "hosts"]
 #[primary_key(uuid)]
@@ -72,8 +78,9 @@ impl Host {
         // Construct the new Struct from item
         let new_data = Host::from(item);
         let new_cpuinfo = NewCpuInfo::from(item);
-        let new_loadavg = NewLoadAvg::from(item);
-        let new_disks = NewDisksList::from(item);
+        let new_loadavg = Option::<NewLoadAvg>::from(item);
+        let new_disks = Option::<NewDisksList>::from(item);
+        let new_memory = Option::<NewMemory>::from(item);
 
         // Insert all the Host data
         // for Host, if conflict, only update uptime
@@ -85,8 +92,20 @@ impl Host {
             .execute(conn)?;
         insert_into(cpu_info).values(&new_cpuinfo).execute(conn)?;
         insert_into(load_avg).values(&new_loadavg).execute(conn)?;
-        insert_into(disks).values(&new_disks).execute(conn)?;
+        // Need this check as Diesel use a BatchInsert for vec which does not handle
+        // None for option as it does not implement the Default constructor
+        if new_disks.is_some() {
+            insert_into(disks)
+                .values(&new_disks.unwrap())
+                .execute(conn)?;
+        }
+        if new_memory.is_none() {
+            insert_into(memory)
+                .values(&new_memory.unwrap())
+                .execute(conn)?;
+        }
         // If we reached this point, everything went well
+        // So return Ok(())
         Ok(())
     }
 }
@@ -113,7 +132,7 @@ impl HostList {
     /// * `size` - The number of elements to fetch
     /// * `page` - How many items you want to skip (page * size)
     pub fn list(conn: &ConnType, size: i64, page: i64) -> Result<Self, AppError> {
-        Ok(HostList {
+        Ok(Self {
             0: dsl_host.limit(size).offset(page * size).load(conn)?,
         })
     }

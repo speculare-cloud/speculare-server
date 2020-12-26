@@ -15,6 +15,15 @@ CREATE TABLE disks (
 	created_at TIMESTAMP NOT NULL,
 	CONSTRAINT host_uuid_fkey FOREIGN KEY (host_uuid) REFERENCES hosts (uuid) DEFERRABLE
 );
+CREATE TABLE iostats (
+	id SERIAL PRIMARY KEY,
+	device_name VARCHAR(128) NOT NULL,
+	bytes_read BIGINT NOT NULL,
+	bytes_wrtn BIGINT NOT NULL,
+	host_uuid VARCHAR(48) NOT NULL,
+	created_at TIMESTAMP NOT NULL,
+	CONSTRAINT host_uuid_fkey FOREIGN KEY (host_uuid) REFERENCES hosts (uuid) DEFERRABLE
+);
 CREATE TABLE load_avg (
 	id SERIAL PRIMARY KEY,
 	one FLOAT NOT NULL,

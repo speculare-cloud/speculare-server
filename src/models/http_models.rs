@@ -1,4 +1,4 @@
-use super::{CpuInfo, Disks, LoadAvg, Memory};
+use super::{CpuInfo, Disks, IoStats, LoadAvg, Memory};
 
 use serde::{Deserialize, Serialize};
 
@@ -54,12 +54,13 @@ pub struct HttpPostHost {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct HttpGetHost {
+    pub uuid: String,
     pub os: String,
     pub hostname: String,
     pub uptime: i64,
-    pub uuid: String,
     pub cpu_freq: CpuInfo,
     pub load_avg: LoadAvg,
     pub disks: Disks,
+    pub iostats: IoStats,
     pub memory: Memory,
 }

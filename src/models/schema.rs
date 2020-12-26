@@ -30,6 +30,17 @@ table! {
 }
 
 table! {
+    iostats (id) {
+        id -> Int4,
+        device_name -> Varchar,
+        bytes_read -> Int8,
+        bytes_wrtn -> Int8,
+        host_uuid -> Varchar,
+        created_at -> Timestamp,
+    }
+}
+
+table! {
     load_avg (id) {
         id -> Int4,
         one -> Float8,
@@ -52,4 +63,4 @@ table! {
     }
 }
 
-allow_tables_to_appear_in_same_query!(cpu_info, disks, hosts, load_avg, memory,);
+allow_tables_to_appear_in_same_query!(cpu_info, disks, hosts, iostats, load_avg, memory,);

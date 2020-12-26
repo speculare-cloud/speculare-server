@@ -9,14 +9,16 @@ use super::schema::{
     hosts,
     hosts::dsl::*,
     hosts::dsl::{hosts as dsl_host, uuid},
+    iostats::dsl::created_at as is_created,
+    iostats::dsl::*,
     load_avg::dsl::created_at as lg_created,
     load_avg::dsl::*,
     memory::dsl::created_at as my_created,
     memory::dsl::*,
 };
 use super::{
-    CpuInfo, Disks, HttpGetHost, HttpPostHost, LoadAvg, Memory, NewCpuInfo, NewDisksList,
-    NewLoadAvg, NewMemory,
+    CpuInfo, Disks, HttpGetHost, HttpPostHost, IoStats, LoadAvg, Memory, NewCpuInfo, NewDisksList,
+    NewIostatsList, NewLoadAvg, NewMemory,
 };
 
 use diesel::*;
@@ -45,18 +47,23 @@ impl Host {
         // Retrieve the main host from the uuid
         let data_f = dsl_host.filter(uuid.eq(muuid)).first::<Host>(conn)?;
         // Retrieve the last Many to Many relation foreach to construct the HttpGetHost
-        let disks_f = Disks::belonging_to(&data_f)
-            .order(ds_created.desc())
-            .first(conn)?;
         let loadavg_f = LoadAvg::belonging_to(&data_f)
             .order(lg_created.desc())
-            .first(conn)?;
+            .first::<LoadAvg>(conn)?;
         let cpuinfo_f = CpuInfo::belonging_to(&data_f)
             .order(co_created.desc())
-            .first(conn)?;
+            .first::<CpuInfo>(conn)?;
         let memory_f = Memory::belonging_to(&data_f)
             .order(my_created.desc())
-            .first(conn)?;
+            .first::<Memory>(conn)?;
+        // Might change to not only get the last one, but rather all previous one
+        // with the same time
+        let disks_f = Disks::belonging_to(&data_f)
+            .order(ds_created.desc())
+            .first::<Disks>(conn)?;
+        let iostats_f = IoStats::belonging_to(&data_f)
+            .order(is_created.desc())
+            .first::<IoStats>(conn)?;
         // Return the HttpGetHost struct
         Ok(HttpGetHost {
             os: data_f.os,
@@ -66,6 +73,7 @@ impl Host {
             cpu_freq: cpuinfo_f,
             load_avg: loadavg_f,
             disks: disks_f,
+            iostats: iostats_f,
             memory: memory_f,
         })
     }
@@ -81,6 +89,7 @@ impl Host {
         let new_loadavg = Option::<NewLoadAvg>::from(item);
         let new_disks = Option::<NewDisksList>::from(item);
         let new_memory = Option::<NewMemory>::from(item);
+        let new_iostats = Option::<NewIostatsList>::from(item);
 
         // Insert all the Host data
         // for Host, if conflict, only update uptime
@@ -92,6 +101,7 @@ impl Host {
             .execute(conn)?;
         insert_into(cpu_info).values(&new_cpuinfo).execute(conn)?;
         insert_into(load_avg).values(&new_loadavg).execute(conn)?;
+        insert_into(memory).values(&new_memory).execute(conn)?;
         // Need this check as Diesel use a BatchInsert for vec which does not handle
         // None for option as it does not implement the Default constructor
         if new_disks.is_some() {
@@ -99,9 +109,9 @@ impl Host {
                 .values(&new_disks.unwrap())
                 .execute(conn)?;
         }
-        if new_memory.is_none() {
-            insert_into(memory)
-                .values(&new_memory.unwrap())
+        if new_iostats.is_none() {
+            insert_into(iostats)
+                .values(&new_iostats.unwrap())
                 .execute(conn)?;
         }
         // If we reached this point, everything went well

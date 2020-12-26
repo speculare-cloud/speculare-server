@@ -17,3 +17,6 @@ pub use memory::*;
 
 mod http_models;
 pub use http_models::*;
+
+mod iostats;
+pub use iostats::*;

@@ -59,8 +59,8 @@ pub struct HttpGetHost {
     pub hostname: String,
     pub uptime: i64,
     pub cpu_freq: CpuInfo,
-    pub load_avg: LoadAvg,
-    pub disks: Disks,
-    pub iostats: IoStats,
-    pub memory: Memory,
+    pub load_avg: Option<LoadAvg>,
+    pub disks: Option<Disks>,
+    pub iostats: Option<IoStats>,
+    pub memory: Option<Memory>,
 }

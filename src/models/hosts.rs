@@ -47,23 +47,27 @@ impl Host {
         // Retrieve the main host from the uuid
         let data_f = dsl_host.filter(uuid.eq(muuid)).first::<Host>(conn)?;
         // Retrieve the last Many to Many relation foreach to construct the HttpGetHost
-        let loadavg_f = LoadAvg::belonging_to(&data_f)
-            .order(lg_created.desc())
-            .first::<LoadAvg>(conn)?;
         let cpuinfo_f = CpuInfo::belonging_to(&data_f)
             .order(co_created.desc())
             .first::<CpuInfo>(conn)?;
+        let loadavg_f = LoadAvg::belonging_to(&data_f)
+            .order(lg_created.desc())
+            .first::<LoadAvg>(conn)
+            .optional()?;
         let memory_f = Memory::belonging_to(&data_f)
             .order(my_created.desc())
-            .first::<Memory>(conn)?;
+            .first::<Memory>(conn)
+            .optional()?;
         // Might change to not only get the last one, but rather all previous one
         // with the same time
         let disks_f = Disks::belonging_to(&data_f)
             .order(ds_created.desc())
-            .first::<Disks>(conn)?;
+            .first::<Disks>(conn)
+            .optional()?;
         let iostats_f = IoStats::belonging_to(&data_f)
             .order(is_created.desc())
-            .first::<IoStats>(conn)?;
+            .first::<IoStats>(conn)
+            .optional()?;
         // Return the HttpGetHost struct
         Ok(HttpGetHost {
             os: data_f.os,

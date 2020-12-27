@@ -2,9 +2,9 @@ use crate::errors::{AppError, AppErrorType};
 use crate::models::{Host, HostList, HttpPostHost};
 use crate::types::Pool;
 
-use super::{HostUuid, PagedInfo};
+use super::PagedInfo;
 
-use actix_web::{web, web::Path, HttpResponse};
+use actix_web::{web, HttpResponse};
 
 /// GET /api/hosts
 /// Return all hosts's basic informations
@@ -28,21 +28,6 @@ pub async fn host_all(
         // Return the data as form of JSON
         Ok(HttpResponse::Ok().json(data))
     }
-}
-
-/// GET /hosts/{uuid}
-/// Return all details for a particular host
-pub async fn host_info(
-    params: Path<HostUuid>,
-    db: web::Data<Pool>,
-) -> Result<HttpResponse, AppError> {
-    // Retrieve the uuid from the query (within the Path)
-    let muuid = params.uuid.to_owned();
-    info!("Route GET /hosts/{}", muuid);
-    // use web::block to offload blocking Diesel code without blocking server thread
-    let data = web::block(move || Host::get(&db.get()?, &muuid)).await?;
-    // Return the data as form of JSON
-    Ok(HttpResponse::Ok().json(data))
 }
 
 /// POST /hosts

@@ -2,23 +2,18 @@ use crate::errors::AppError;
 use crate::types::ConnType;
 
 use super::schema::{
-    cpu_info::dsl::created_at as co_created,
     cpu_info::dsl::*,
-    disks::dsl::created_at as ds_created,
     disks::dsl::*,
     hosts,
     hosts::dsl::*,
     hosts::dsl::{hosts as dsl_host, uuid},
-    iostats::dsl::created_at as is_created,
     iostats::dsl::*,
-    load_avg::dsl::created_at as lg_created,
     load_avg::dsl::*,
-    memory::dsl::created_at as my_created,
     memory::dsl::*,
 };
 use super::{
-    CpuInfo, Disks, HttpGetHost, HttpPostHost, IoStats, LoadAvg, Memory, NewCpuInfo, NewDisks,
-    NewDisksList, NewIoStats, NewIostatsList, NewLoadAvg, NewMemory,
+    HttpPostHost, NewCpuInfo, NewDisks, NewDisksList, NewIoStats, NewIostatsList, NewLoadAvg,
+    NewMemory,
 };
 
 use diesel::*;
@@ -39,49 +34,6 @@ pub struct Host {
 }
 
 impl Host {
-    /// Return a Vector of HttpGetHost
-    /// # Params
-    /// * `mmuid` - Which object you want to get info from
-    /// * `conn` - The r2d2 connection needed to fetch the data from the db
-    pub fn get(conn: &ConnType, muuid: &str) -> Result<HttpGetHost, AppError> {
-        // Retrieve the main host from the uuid
-        let data_f = dsl_host.filter(uuid.eq(muuid)).first::<Host>(conn)?;
-        // Retrieve the last Many to Many relation foreach to construct the HttpGetHost
-        let cpuinfo_f = CpuInfo::belonging_to(&data_f)
-            .order(co_created.desc())
-            .first::<CpuInfo>(conn)?;
-        let loadavg_f = LoadAvg::belonging_to(&data_f)
-            .order(lg_created.desc())
-            .first::<LoadAvg>(conn)
-            .optional()?;
-        let memory_f = Memory::belonging_to(&data_f)
-            .order(my_created.desc())
-            .first::<Memory>(conn)
-            .optional()?;
-        // Might change to not only get the last one, but rather all previous one
-        // with the same time
-        let disks_f = Disks::belonging_to(&data_f)
-            .order(ds_created.desc())
-            .first::<Disks>(conn)
-            .optional()?;
-        let iostats_f = IoStats::belonging_to(&data_f)
-            .order(is_created.desc())
-            .first::<IoStats>(conn)
-            .optional()?;
-        // Return the HttpGetHost struct
-        Ok(HttpGetHost {
-            os: data_f.os,
-            hostname: data_f.hostname,
-            uptime: data_f.uptime,
-            uuid: data_f.uuid,
-            cpu_freq: cpuinfo_f,
-            load_avg: loadavg_f,
-            disks: disks_f,
-            iostats: iostats_f,
-            memory: memory_f,
-        })
-    }
-
     /// Insert the host data (update or create)
     /// # Params
     /// * `conn` - The r2d2 connection needed to fetch the data from the db

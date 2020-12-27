@@ -1,5 +1,3 @@
-use super::{CpuInfo, Disks, IoStats, LoadAvg, Memory};
-
 use serde::{Deserialize, Serialize};
 
 // ====================
@@ -7,7 +5,6 @@ use serde::{Deserialize, Serialize};
 // Meaning those are used whenever
 // there is a POST/GET request
 // ====================
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct HttpDisks {
     pub name: String,
@@ -50,17 +47,4 @@ pub struct HttpPostHost {
     pub iostats: Option<Vec<HttpIoStats>>,
     pub memory: Option<HttpMemory>,
     pub created_at: chrono::NaiveDateTime,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct HttpGetHost {
-    pub uuid: String,
-    pub os: String,
-    pub hostname: String,
-    pub uptime: i64,
-    pub cpu_freq: CpuInfo,
-    pub load_avg: Option<LoadAvg>,
-    pub disks: Option<Disks>,
-    pub iostats: Option<IoStats>,
-    pub memory: Option<Memory>,
 }

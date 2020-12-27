@@ -12,10 +12,7 @@ pub async fn host_all(
     db: web::Data<Pool>,
     info: web::Query<PagedInfo>,
 ) -> Result<HttpResponse, AppError> {
-    if log_enabled!(log::Level::Info) {
-        info!("Route GET /speculare");
-    }
-
+    info!("Route GET /speculare");
     // If size is over 500 or less than 30, return error
     let size = info.size.unwrap_or(100);
     let page = info.page.unwrap_or(0);
@@ -41,11 +38,7 @@ pub async fn host_info(
 ) -> Result<HttpResponse, AppError> {
     // Retrieve the uuid from the query (within the Path)
     let muuid = params.uuid.to_owned();
-
-    if log_enabled!(log::Level::Info) {
-        info!("Route GET /hosts/{}", muuid);
-    }
-
+    info!("Route GET /hosts/{}", muuid);
     // use web::block to offload blocking Diesel code without blocking server thread
     let data = web::block(move || Host::get(&db.get()?, &muuid)).await?;
     // Return the data as form of JSON
@@ -56,11 +49,9 @@ pub async fn host_info(
 /// Save data from a host into the db under his uuid
 pub async fn host_ingest(
     db: web::Data<Pool>,
-    item: web::Json<HttpPostHost>,
+    item: web::Json<Vec<HttpPostHost>>,
 ) -> Result<HttpResponse, AppError> {
-    if log_enabled!(log::Level::Info) {
-        info!("POST /hosts : {:?}", item);
-    }
+    info!("POST /hosts : {:?}", item);
     // make all insert taking advantage of web::block to offload the request thread
     web::block(move || Host::insert(&db.get()?, &item.into_inner())).await?;
     // Return a 200 status code as everything went well

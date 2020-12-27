@@ -113,7 +113,7 @@ impl Host {
                 .values(&new_disks.unwrap())
                 .execute(conn)?;
         }
-        if new_iostats.is_none() {
+        if new_iostats.is_some() {
             insert_into(iostats)
                 .values(&new_iostats.unwrap())
                 .execute(conn)?;

@@ -89,10 +89,12 @@ impl Host {
     pub fn insert(conn: &ConnType, items: &[HttpPostHost]) -> Result<(), AppError> {
         // TODO - Maybe we can optimize this by specifying a capacity (if possible)
         // Even if this method is more memory hungry, it prefer speed over RAM usage.
-        // __free ram is wasted ram__
+        // For the first three (v_ncpuinfo, v_nloadavg, v_nmemory) we init them with a capacity
+        // as in the best case, there will only be items.len() elements for each.
+        // For v_ndisks and v_niostats we cannot predict the numbers of elements.
         let mut v_ncpuinfo: Vec<NewCpuInfo> = Vec::with_capacity(items.len());
-        let mut v_nloadavg: Vec<NewLoadAvg> = Vec::new();
-        let mut v_nmemory: Vec<NewMemory> = Vec::new();
+        let mut v_nloadavg: Vec<NewLoadAvg> = Vec::with_capacity(items.len());
+        let mut v_nmemory: Vec<NewMemory> = Vec::with_capacity(items.len());
         let mut v_ndisks: Vec<NewDisks> = Vec::new();
         let mut v_niostats: Vec<NewIoStats> = Vec::new();
 

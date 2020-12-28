@@ -1,4 +1,4 @@
-use crate::{routes, types::Pool};
+use crate::routes;
 
 use actix_web::{middleware, App, HttpServer};
 use diesel::{prelude::PgConnection, r2d2::ConnectionManager};
@@ -25,11 +25,22 @@ pub async fn server() -> std::io::Result<()> {
     let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let manager = ConnectionManager::<PgConnection>::new(database_url);
     // Create a pool of connection
-    let pool: Pool = r2d2::Pool::builder()
+    let pool = r2d2::Pool::builder()
         .build(manager)
         .expect("Failed to create pool");
+
+    // TODO implement a wss (Websocket) for realtime data flow for graph and such
+    // - Why Websocket and not SSE ?
+    //      -> SSE is limited to 6 tabs per browser
+    //      -> Websocket receive more support recently
+    //      -> The size limit of 64Kb for websocket is ok
+    //      -> Allow for future interesting features initiated by the client
+    // docs:
+    // - https://actix.rs/docs/websockets
+    // - https://github.com/actix/examples/tree/master/websocket-chat-broker
+
     // Construct the HttpServer instance.
-    // Passing the pool of PgConnection and defining the logger and compress middleware.
+    // Passing the pool of PgConnection and defining the logger / compress middleware.
     let serv = HttpServer::new(move || {
         App::new()
             .wrap(middleware::Compress::default())

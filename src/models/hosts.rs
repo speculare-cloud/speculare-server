@@ -42,7 +42,7 @@ impl Host {
         // If there is only one item, it's faster to only insert one
         // == avoid allocation of vector
         if items.len() == 1 {
-            return Host::insert_one(conn, &items[0]);
+            return Self::insert_one(conn, &items[0]);
         }
         // Even if this method (using Vec) use more memory, it prefer speed over low RAM usage.
         // For the first three (v_ncpuinfo, v_nloadavg, v_nmemory) we init them with a capacity
@@ -136,6 +136,15 @@ impl Host {
         // If we reached this point, everything went well so return an empty Closure
         Ok(())
     }
+
+    /// Return a Vector of Host
+    /// # Params
+    /// * `conn` - The r2d2 connection needed to fetch the data from the db
+    /// * `size` - The number of elements to fetch
+    /// * `page` - How many items you want to skip (page * size)
+    pub fn list_hosts(conn: &ConnType, size: i64, page: i64) -> Result<Vec<Self>, AppError> {
+        Ok(dsl_host.limit(size).offset(page * size).load(conn)?)
+    }
 }
 
 impl From<&HttpPostHost> for Host {
@@ -147,21 +156,5 @@ impl From<&HttpPostHost> for Host {
             uuid: item.uuid.to_string(),
             created_at: item.created_at,
         }
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct HostList(pub Vec<Host>);
-
-impl HostList {
-    /// Return a Vector of Host
-    /// # Params
-    /// * `conn` - The r2d2 connection needed to fetch the data from the db
-    /// * `size` - The number of elements to fetch
-    /// * `page` - How many items you want to skip (page * size)
-    pub fn list(conn: &ConnType, size: i64, page: i64) -> Result<Self, AppError> {
-        Ok(Self {
-            0: dsl_host.limit(size).offset(page * size).load(conn)?,
-        })
     }
 }

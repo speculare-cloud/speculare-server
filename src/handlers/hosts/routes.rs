@@ -1,5 +1,5 @@
 use crate::errors::{AppError, AppErrorType};
-use crate::models::{Host, HostList, HttpPostHost};
+use crate::models::{Host, HttpPostHost};
 use crate::types::Pool;
 
 use super::PagedInfo;
@@ -24,7 +24,7 @@ pub async fn host_all(
         })
     } else {
         // use web::block to offload blocking Diesel code without blocking server thread
-        let data = web::block(move || HostList::list(&db.get()?, size, page)).await?;
+        let data = web::block(move || Host::list_hosts(&db.get()?, size, page)).await?;
         // Return the data as form of JSON
         Ok(HttpResponse::Ok().json(data))
     }

@@ -1,8 +1,0 @@
-spec:
-  name: speculare-server
-  services:
-  - dockerfile_path: Dockerfile
-    git:
-      branch: master
-      repo_clone_url: https://github.com/Martichou/speculare-server.git
-    name: speculare-server

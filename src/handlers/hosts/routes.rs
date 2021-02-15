@@ -18,7 +18,7 @@ pub async fn host_all(
     let page = info.page.unwrap_or(0);
     if !(30..=500).contains(&size) {
         Err(AppError {
-            message: Some("The size parameters must be 30 < size < 500".to_string()),
+            message: Some("The size parameters must be 30 < size <= 500".to_string()),
             cause: None,
             error_type: AppErrorType::InvalidRequest,
         })

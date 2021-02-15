@@ -1,5 +1,5 @@
 use crate::errors::AppError;
-use crate::types::ConnType;
+use crate::ConnType;
 
 use super::schema::{
     cpu_info::dsl::*,
@@ -125,8 +125,13 @@ impl Host {
             .execute(conn)?;
         // Insert data from the previous Struct we constructed
         insert_into(cpu_info).values(&new_cpuinfo).execute(conn)?;
-        insert_into(load_avg).values(&new_loadavg).execute(conn)?;
-        insert_into(memory).values(&new_memory).execute(conn)?;
+        // Only insert Option if they are present
+        if let Some(value) = new_loadavg {
+            insert_into(load_avg).values(&value).execute(conn)?;
+        }
+        if let Some(value) = new_memory {
+            insert_into(memory).values(&value).execute(conn)?;
+        }
         if let Some(value) = new_disks {
             insert_into(disks).values(&value).execute(conn)?;
         }
@@ -150,7 +155,7 @@ impl Host {
 impl From<&HttpPostHost> for Host {
     fn from(item: &HttpPostHost) -> Host {
         Host {
-            os: item.os.to_string(),
+            os: item.os.to_owned(),
             hostname: item.hostname.to_string(),
             uptime: item.uptime,
             uuid: item.uuid.to_string(),

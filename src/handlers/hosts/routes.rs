@@ -1,13 +1,13 @@
 use crate::errors::{AppError, AppErrorType};
 use crate::models::{Host, HttpPostHost};
-use crate::types::Pool;
+use crate::Pool;
 
 use super::PagedInfo;
 
 use actix_web::{web, HttpResponse};
 
 /// GET /api/hosts
-/// Return all hosts's basic informations
+/// Return all hosts
 pub async fn host_all(
     db: web::Data<Pool>,
     info: web::Query<PagedInfo>,

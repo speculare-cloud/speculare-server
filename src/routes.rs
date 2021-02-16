@@ -10,6 +10,7 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
         .service(
             web::scope("/api")
                 // TODO - These routes should be secured behind a token verification
+                // Or at least just the ingest (POST)
                 .route("/hosts", web::post().to(handlers::hosts::host_ingest))
                 .route("/hosts", web::get().to(handlers::hosts::host_all)),
         );

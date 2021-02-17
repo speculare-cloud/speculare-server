@@ -40,13 +40,12 @@ export default {
 		let store = vm.$store;
 		
 		if (vm.connection == null) {
-			console.log("Starting connection to WebSocket Server");
+			console.log("[HOSTS] Starting connection to WebSocket Server");
 			vm.connection = new WebSocket("wss://cdc.speculare.cloud:9641/ws?change_table=hosts");
 		}
 
 		vm.connection.onmessage = function(event) {
 			let json = JSON.parse(event.data);
-			// Update hosts_values
 			let newValues = json["columnvalues"];
 			// Construct the newObj from the values (it's the hosts table)
 			let newObj = {
@@ -69,14 +68,10 @@ export default {
 				store.state.hosts_loading = false;
 			}
 		}
-
-		// vm.connection.onopen = function(event) {
-		// 	console.log(event);
-		// }
 	},
 
 	beforeDestroy: function() {
-		console.log("Closing the WebSocket connection");
+		console.log("[HOSTS] Closing the WebSocket connection");
 		this.connection.close();
 		this.connection = null;
 	}

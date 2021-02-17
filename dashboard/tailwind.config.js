@@ -1,6 +1,6 @@
 module.exports = {
     purge: {
-        enabled: true,
+        enabled: false,
         content: ['./index.html', './src/**/*.{vue,js,ts,jsx,tsx}']
     },
     theme: {

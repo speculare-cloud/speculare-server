@@ -1,6 +1,6 @@
 <template>
 	<div class="cpufreq">
-		<LineChart :chartdata="datacollection" :options="chartOptions"/>
+		<LineChart :chartdata="datacollection" :options="chartOptions" :minvalue="chartMinval"/>
 	</div>
 </template>
 
@@ -20,6 +20,7 @@ export default {
 			datacollection: null,
 			chartLabels: [],
 			chartDataObj: null,
+			chartMinval: null,
 			chartOptions: {
 				legend: {
             		display: false
@@ -27,22 +28,40 @@ export default {
 				elements: {
       				line: {
         				tension: 0
-      				}
+      				},
+					point:{
+                        radius: 0,
+                    }
     			},
+				hover: {
+					mode: 'nearest',
+					intersect: true
+				},
+				tooltips: {
+					mode: 'index',
+					intersect: false,
+				},
 				scales: {
             		xAxes: [{
                 		type: 'time',
                 		time: {
-                    		unit: 'second'
+                    		unit: 'second',
+							unitStepSize: 30
                 		},
 						gridLines: {
     						display: false,
   						},
+						ticks: {
+        					min : null,
+						}
             		}],
 					yAxes: [{
       					gridLines: {
-        					drawBorder: false,
+							display: false,
       					},
+            			ticks: {
+                			beginAtZero: true
+            			}
     				}]
         		},
 				responsive: true,
@@ -59,11 +78,19 @@ export default {
 			vm.connection = new WebSocket("wss://cdc.speculare.cloud:9641/ws?change_table=cpu_info&specific_filter=host_uuid.eq." + vm.uuid);
 		}
 
+		let count = 0;
+
 		this.connection.onmessage = function(event) {
 			let json = JSON.parse(event.data);
 			let newValues = json["columnvalues"];
 
-			vm.chartLabels.push(newValues[3]);
+			let date_with_no_ms = newValues[3].replace(/\.\d+/, "");
+			vm.chartLabels.push(date_with_no_ms);
+
+			// Update the min date
+			let tmp = new Date(date_with_no_ms);
+			tmp.setMinutes(tmp.getMinutes() - 5);
+			vm.chartMinval = tmp;
 
 			if (vm.chartDataObj == null) {
 				vm.chartDataObj = {
@@ -73,6 +100,11 @@ export default {
             	};
 			} else {
 				vm.chartDataObj.data.push(newValues[1]);
+			}
+
+			if (vm.chartDataObj.data.length > (60 * 5) + 15) {
+				vm.chartDataObj.data.shift();
+				vm.chartLabels.shift();
 			}
 
 			vm.datacollection = {

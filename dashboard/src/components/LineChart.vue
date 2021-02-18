@@ -15,7 +15,11 @@ export default {
 		chartdata: {
 			type: Object,
 			default: null
-    	}
+    	},
+		minvalue: {
+			type: Date,
+			default: null
+		}
   	},
 
 	data () {
@@ -43,6 +47,10 @@ export default {
 				}
 			}
 		},
+		minvalue: function (newData, oldData) {
+			this.chart.options.scales.xAxes[0].ticks.min = newData;
+			this.chart.update();
+		}
 	},
 
 	mounted () {

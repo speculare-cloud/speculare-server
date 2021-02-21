@@ -1,21 +1,18 @@
 <template>
 	<div class="cpufreq">
 		<LineChart :chartdata="datacollection" />
-		<SteppedChart :chartdata="datacollection" />
 	</div>
 </template>
 
 <script>
 import LineChart from '@/components/LineChart'
-import SteppedChart from '@/components/SteppedChart'
 
 export default {
 	name: 'cpufreq',
 	props: ['uuid'],
 	connection: null,
 	components: {
-		LineChart,
-		SteppedChart
+		LineChart
 	},
 
 	data () {

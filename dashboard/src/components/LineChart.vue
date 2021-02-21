@@ -1,5 +1,5 @@
 <template>
-	<div id="lineChart" class="w-100" @mouseover="hover=true" @mouseleave="hover=false"></div>
+	<div ref="uniqueName" class="w-100" @mouseover="hover=true" @mouseleave="hover=false"></div>
 </template>
 
 <script>
@@ -16,7 +16,6 @@ export default {
 
 	data () {
 		return {
-			ctx: null,
 			chart: null,
 			hover: false,
 			max: 0
@@ -32,7 +31,7 @@ export default {
 				// https://medium.com/coding-at-dawn/the-fastest-way-to-find-minimum-and-maximum-values-in-an-array-in-javascript-2511115f8621
 				let max = Math.max.apply(null, newData[1]);
 				if (this.max != max) {
-					this.chart.setScale('y', { min: 0, max: (max + (max / 10)) });
+					this.chart.setScale('y', { min: 0, max: (max + (max / 10) + 10) });
 				}
 				this.chart.setData(newData);
 			}
@@ -40,10 +39,6 @@ export default {
 	},
 
 	mounted () {
-		if (this.ctx == null) {
-			this.ctx = document.getElementById('lineChart');
-		}
-
 		this.$nextTick(function() {
 			window.addEventListener('resize', this.setChartSize);
 		});
@@ -85,15 +80,15 @@ export default {
 					},
 				}
 			};
-			this.chart = new uPlot(opts, data, this.ctx);
+			this.chart = new uPlot(opts, data, this.$refs.uniqueName);
 		},
 		getSize: function() {
 			return {
-				width: window.innerWidth,
+				width: this.$refs.uniqueName.clientWidth,
 				height: 200,
 			}
 		},
-		setChartSize: function (event) {
+		setChartSize: function (_event) {
 			if (this.chart) {
 				this.chart.setSize(this.getSize());
 			}
@@ -105,18 +100,3 @@ export default {
 	}
 }
 </script>
-
-<style>
-.u-legend {
-	text-align: left;
-	padding-left: 50px;
-}
-
-.u-inline tr {
-	margin-right: 8px;
-}
-
-.u-label {
-	font-size: 10px;
-}
-</style>

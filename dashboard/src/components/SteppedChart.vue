@@ -59,7 +59,7 @@ export default {
 					}
 				},
 				legend: {
-					live: false,
+					live: true,
 				},
 				select: {
 					show: false,

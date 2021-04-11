@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 #[belongs_to(Host, foreign_key = "host_uuid")]
 #[table_name = "disks"]
 pub struct Disks {
-    pub id: i32,
+    pub id: i64,
     pub disk_name: String,
     pub mount_point: String,
     pub total_space: i64,

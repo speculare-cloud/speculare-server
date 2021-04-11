@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 #[belongs_to(Host, foreign_key = "host_uuid")]
 #[table_name = "memory"]
 pub struct Memory {
-    pub id: i32,
+    pub id: i64,
     pub total_virt: i64,
     pub avail_virt: i64,
     pub total_swap: i64,

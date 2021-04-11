@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 #[belongs_to(Host, foreign_key = "host_uuid")]
 #[table_name = "load_avg"]
 pub struct LoadAvg {
-    pub id: i32,
+    pub id: i64,
     pub one: f64,
     pub five: f64,
     pub fifteen: f64,

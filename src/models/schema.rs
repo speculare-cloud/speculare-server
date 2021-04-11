@@ -1,6 +1,6 @@
 table! {
     cpu_info (id) {
-        id -> Int4,
+        id -> Int8,
         cpu_freq -> Int8,
         host_uuid -> Varchar,
         created_at -> Timestamp,
@@ -9,7 +9,7 @@ table! {
 
 table! {
     disks (id) {
-        id -> Int4,
+        id -> Int8,
         disk_name -> Varchar,
         mount_point -> Varchar,
         total_space -> Int8,
@@ -31,7 +31,7 @@ table! {
 
 table! {
     iostats (id) {
-        id -> Int4,
+        id -> Int8,
         device_name -> Varchar,
         bytes_read -> Int8,
         bytes_wrtn -> Int8,
@@ -42,7 +42,7 @@ table! {
 
 table! {
     load_avg (id) {
-        id -> Int4,
+        id -> Int8,
         one -> Float8,
         five -> Float8,
         fifteen -> Float8,
@@ -53,7 +53,7 @@ table! {
 
 table! {
     memory (id) {
-        id -> Int4,
+        id -> Int8,
         total_virt -> Int8,
         avail_virt -> Int8,
         total_swap -> Int8,

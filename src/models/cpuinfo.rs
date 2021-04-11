@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 #[belongs_to(Host, foreign_key = "host_uuid")]
 #[table_name = "cpu_info"]
 pub struct CpuInfo {
-    pub id: i32,
+    pub id: i64,
     pub cpu_freq: i64,
     pub host_uuid: String,
     pub created_at: chrono::NaiveDateTime,

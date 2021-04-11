@@ -6,7 +6,7 @@ CREATE TABLE hosts (
 	created_at TIMESTAMP NOT NULL
 );
 CREATE TABLE disks (
-	id SERIAL PRIMARY KEY,
+	id BIGSERIAL PRIMARY KEY,
 	disk_name VARCHAR(128) NOT NULL,
 	mount_point VARCHAR(128) NOT NULL,
 	total_space BIGINT NOT NULL,
@@ -16,7 +16,7 @@ CREATE TABLE disks (
 	CONSTRAINT host_uuid_fkey FOREIGN KEY (host_uuid) REFERENCES hosts (uuid) DEFERRABLE
 );
 CREATE TABLE iostats (
-	id SERIAL PRIMARY KEY,
+	id BIGSERIAL PRIMARY KEY,
 	device_name VARCHAR(128) NOT NULL,
 	bytes_read BIGINT NOT NULL,
 	bytes_wrtn BIGINT NOT NULL,
@@ -25,7 +25,7 @@ CREATE TABLE iostats (
 	CONSTRAINT host_uuid_fkey FOREIGN KEY (host_uuid) REFERENCES hosts (uuid) DEFERRABLE
 );
 CREATE TABLE load_avg (
-	id SERIAL PRIMARY KEY,
+	id BIGSERIAL PRIMARY KEY,
 	one FLOAT NOT NULL,
 	five FLOAT NOT NULL,
     fifteen FLOAT NOT NULL,
@@ -34,14 +34,14 @@ CREATE TABLE load_avg (
 	CONSTRAINT host_uuid_fkey FOREIGN KEY (host_uuid) REFERENCES hosts (uuid) DEFERRABLE
 );
 CREATE TABLE cpu_info (
-	id SERIAL PRIMARY KEY,
+	id BIGSERIAL PRIMARY KEY,
 	cpu_freq BIGINT NOT NULL,
 	host_uuid VARCHAR(48) NOT NULL,
     created_at TIMESTAMP NOT NULL,
 	CONSTRAINT host_uuid_fkey FOREIGN KEY (host_uuid) REFERENCES hosts (uuid) DEFERRABLE
 );
 CREATE TABLE memory (
-	id SERIAL PRIMARY KEY,
+	id BIGSERIAL PRIMARY KEY,
 	total_virt BIGINT NOT NULL,
 	avail_virt BIGINT NOT NULL,
 	total_swap BIGINT NOT NULL,

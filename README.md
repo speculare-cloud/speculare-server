@@ -22,14 +22,13 @@ Server setup / Dev setup
 ```bash
 $ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 # postgresql-12 is optional
-$ sudo apt-get install libpq-dev postgresql-13
-# start the pg server only if you installed it in the prev step
-$ pg_ctlcluster 13 main start
+$ sudo apt-get install libpq-dev pkg-config
 $ cargo install diesel_cli --no-default-features --features postgres
 ```
 
 - Create a .env file based on .env.example
 ```bash
+# You first need to setup a postgresql 13 instance
 $ diesel setup
 ```
 

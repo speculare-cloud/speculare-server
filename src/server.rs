@@ -1,5 +1,6 @@
 use crate::routes;
 
+use actix_cors::Cors;
 use actix_web::{middleware, App, HttpServer};
 use diesel::{prelude::PgConnection, r2d2::ConnectionManager};
 use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
@@ -32,6 +33,7 @@ pub async fn server() -> std::io::Result<()> {
     // Passing the pool of PgConnection and defining the logger / compress middleware.
     let serv = HttpServer::new(move || {
         App::new()
+            .wrap(Cors::permissive())
             .wrap(middleware::Compress::default())
             .wrap(middleware::Logger::default())
             .data(pool.clone())

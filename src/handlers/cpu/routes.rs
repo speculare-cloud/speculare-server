@@ -13,9 +13,9 @@ pub async fn cpu_info(
     info: web::Query<PagedInfoSpecific>,
 ) -> Result<HttpResponse, AppError> {
     info!("Route GET /api/cpu_info : {:?}", info);
-    
-	let uuid = info.uuid.to_owned();
-	// If size is over 500 or less than 30, return error
+
+    let uuid = info.uuid.to_owned();
+    // If size is over 500 or less than 30, return error
     let size = info.size.unwrap_or(100);
     let page = info.page.unwrap_or(0);
     if !(30..=500).contains(&size) {

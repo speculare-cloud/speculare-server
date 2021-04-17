@@ -1,3 +1,7 @@
+use crate::errors::AppError;
+use crate::ConnType;
+
+use super::schema::disks::dsl::{created_at, disks as dsl_disks, host_uuid};
 use super::schema::*;
 use super::{Host, HttpPostHost};
 
@@ -18,6 +22,28 @@ pub struct Disks {
     pub avail_space: i64,
     pub host_uuid: String,
     pub created_at: chrono::NaiveDateTime,
+}
+
+impl Disks {
+    /// Return a Vector of Disks
+    /// # Params
+    /// * `conn` - The r2d2 connection needed to fetch the data from the db
+    /// * `uuid` - The host's uuid we want to get Disks of
+    /// * `size` - The number of elements to fetch
+    /// * `page` - How many items you want to skip (page * size)
+    pub fn get_data(
+        conn: &ConnType,
+        uuid: &str,
+        size: i64,
+        page: i64,
+    ) -> Result<Vec<Self>, AppError> {
+        Ok(dsl_disks
+            .filter(host_uuid.eq(uuid))
+            .limit(size)
+            .offset(page * size)
+            .order_by(created_at.desc())
+            .load(conn)?)
+    }
 }
 
 // ================

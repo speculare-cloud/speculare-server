@@ -1,3 +1,7 @@
+use crate::errors::AppError;
+use crate::ConnType;
+
+use super::schema::load_avg::dsl::{created_at, host_uuid, load_avg as dsl_loadavg};
 use super::schema::*;
 use super::{Host, HttpPostHost};
 
@@ -17,6 +21,28 @@ pub struct LoadAvg {
     pub fifteen: f64,
     pub host_uuid: String,
     pub created_at: chrono::NaiveDateTime,
+}
+
+impl LoadAvg {
+    /// Return a Vector of LoadAvg
+    /// # Params
+    /// * `conn` - The r2d2 connection needed to fetch the data from the db
+    /// * `uuid` - The host's uuid we want to get LoadAvg of
+    /// * `size` - The number of elements to fetch
+    /// * `page` - How many items you want to skip (page * size)
+    pub fn get_data(
+        conn: &ConnType,
+        uuid: &str,
+        size: i64,
+        page: i64,
+    ) -> Result<Vec<Self>, AppError> {
+        Ok(dsl_loadavg
+            .filter(host_uuid.eq(uuid))
+            .limit(size)
+            .offset(page * size)
+            .order_by(created_at.desc())
+            .load(conn)?)
+    }
 }
 
 // ================

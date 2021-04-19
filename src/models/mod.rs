@@ -1,5 +1,8 @@
 pub mod schema;
 
+mod cpustats;
+pub use cpustats::{CpuStats, NewCpuStats};
+
 mod disks;
 pub use disks::*;
 

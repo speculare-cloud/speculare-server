@@ -16,6 +16,22 @@ CREATE TABLE disks (
 	created_at TIMESTAMP NOT NULL,
 	CONSTRAINT host_uuid_fkey FOREIGN KEY (host_uuid) REFERENCES hosts (uuid) DEFERRABLE
 );
+CREATE TABLE cpustats (
+	id BIGSERIAL PRIMARY KEY,
+	cuser BIGINT NOT NULL,
+	nice BIGINT NOT NULL,
+	system BIGINT NOT NULL,
+	idle BIGINT NOT NULL,
+	iowait BIGINT NOT NULL,
+	irq BIGINT NOT NULL,
+	softirq BIGINT NOT NULL,
+	steal BIGINT NOT NULL,
+	guest BIGINT NOT NULL,
+	guest_nice BIGINT NOT NULL,
+	host_uuid VARCHAR(48) NOT NULL,
+	created_at TIMESTAMP NOT NULL,
+	CONSTRAINT host_uuid_fkey FOREIGN KEY (host_uuid) REFERENCES hosts (uuid) DEFERRABLE
+);
 CREATE TABLE iostats (
 	id BIGSERIAL PRIMARY KEY,
 	device_name VARCHAR(128) NOT NULL,

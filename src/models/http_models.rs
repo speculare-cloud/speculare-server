@@ -14,6 +14,20 @@ pub struct HttpDisks {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+pub struct CpuStats {
+    pub user: i64,
+    pub nice: i64,
+    pub system: i64,
+    pub idle: i64,
+    pub iowait: i64,
+    pub irq: i64,
+    pub softirq: i64,
+    pub steal: i64,
+    pub guest: i64,
+    pub guest_nice: i64,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct HttpIoStats {
     pub device_name: String,
     pub bytes_read: i64,
@@ -42,6 +56,7 @@ pub struct HttpPostHost {
     pub os_version: String,
     pub hostname: String,
     pub uptime: i64,
+    pub cpu_stats: Option<CpuStats>,
     pub load_avg: Option<HttpLoadAvg>,
     pub disks: Option<Vec<HttpDisks>>,
     pub iostats: Option<Vec<HttpIoStats>>,

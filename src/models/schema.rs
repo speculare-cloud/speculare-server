@@ -1,4 +1,22 @@
 table! {
+    cpustats (id) {
+        id -> Int8,
+        cuser -> Int8,
+        nice -> Int8,
+        system -> Int8,
+        idle -> Int8,
+        iowait -> Int8,
+        irq -> Int8,
+        softirq -> Int8,
+        steal -> Int8,
+        guest -> Int8,
+        guest_nice -> Int8,
+        host_uuid -> Varchar,
+        created_at -> Timestamp,
+    }
+}
+
+table! {
     disks (id) {
         id -> Int8,
         disk_name -> Varchar,
@@ -55,4 +73,4 @@ table! {
     }
 }
 
-allow_tables_to_appear_in_same_query!(disks, hosts, iostats, load_avg, memory,);
+allow_tables_to_appear_in_same_query!(cpustats, disks, hosts, iostats, load_avg, memory,);

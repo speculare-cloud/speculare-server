@@ -6,6 +6,7 @@ use actix_web::web;
 pub fn routes(cfg: &mut web::ServiceConfig) {
     // The /ping is used only to get a status over the server
     cfg.route("/ping", web::get().to(|| async { "zpour" }))
+        .route("/ping", web::head().to(|| async { "zpour" }))
         // Bind the /api/* route
         .service(
             web::scope("/api")

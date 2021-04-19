@@ -1,5 +1,6 @@
 CREATE TABLE hosts (
-	os VARCHAR(128) NOT NULL,
+	system VARCHAR(128) NOT NULL,
+	os_version VARCHAR(128) NOT NULL,
 	hostname VARCHAR(64) NOT NULL,
 	uptime BIGINT NOT NULL,
     uuid VARCHAR(48) PRIMARY KEY NOT NULL,
@@ -29,13 +30,6 @@ CREATE TABLE load_avg (
 	one FLOAT NOT NULL,
 	five FLOAT NOT NULL,
     fifteen FLOAT NOT NULL,
-	host_uuid VARCHAR(48) NOT NULL,
-    created_at TIMESTAMP NOT NULL,
-	CONSTRAINT host_uuid_fkey FOREIGN KEY (host_uuid) REFERENCES hosts (uuid) DEFERRABLE
-);
-CREATE TABLE cpu_info (
-	id BIGSERIAL PRIMARY KEY,
-	cpu_freq BIGINT NOT NULL,
 	host_uuid VARCHAR(48) NOT NULL,
     created_at TIMESTAMP NOT NULL,
 	CONSTRAINT host_uuid_fkey FOREIGN KEY (host_uuid) REFERENCES hosts (uuid) DEFERRABLE

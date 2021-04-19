@@ -1,8 +1,5 @@
 pub mod schema;
 
-mod cpuinfo;
-pub use cpuinfo::*;
-
 mod disks;
 pub use disks::*;
 

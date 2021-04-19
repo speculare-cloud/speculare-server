@@ -1,13 +1,4 @@
 table! {
-    cpu_info (id) {
-        id -> Int8,
-        cpu_freq -> Int8,
-        host_uuid -> Varchar,
-        created_at -> Timestamp,
-    }
-}
-
-table! {
     disks (id) {
         id -> Int8,
         disk_name -> Varchar,
@@ -21,7 +12,8 @@ table! {
 
 table! {
     hosts (uuid) {
-        os -> Varchar,
+        system -> Varchar,
+        os_version -> Varchar,
         hostname -> Varchar,
         uptime -> Int8,
         uuid -> Varchar,
@@ -63,4 +55,4 @@ table! {
     }
 }
 
-allow_tables_to_appear_in_same_query!(cpu_info, disks, hosts, iostats, load_avg, memory,);
+allow_tables_to_appear_in_same_query!(disks, hosts, iostats, load_avg, memory,);

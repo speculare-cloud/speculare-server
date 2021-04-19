@@ -38,10 +38,10 @@ pub struct HttpMemory {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct HttpPostHost {
     pub uuid: String,
-    pub os: String,
+    pub system: String,
+    pub os_version: String,
     pub hostname: String,
     pub uptime: i64,
-    pub cpu_freq: i64,
     pub load_avg: Option<HttpLoadAvg>,
     pub disks: Option<Vec<HttpDisks>>,
     pub iostats: Option<Vec<HttpIoStats>>,

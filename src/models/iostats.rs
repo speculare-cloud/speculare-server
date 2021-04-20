@@ -49,15 +49,16 @@ impl IoStats {
     /// * `conn` - The r2d2 connection needed to fetch the data from the db
     /// * `uuid` - The host's uuid we want to get the number of iostats of
     /// * `size` - The number of elements to fetch
-    pub fn count(conn: &ConnType, uuid: &str, size: i64) -> Result<i64, AppError> {
-        Ok(dsl_iostats
+    pub fn count(conn: &ConnType, uuid: &str, size: i64) -> Result<usize, AppError> {
+        let mut devices = dsl_iostats
+            .select(device_name)
             .filter(host_uuid.eq(uuid))
             .limit(size)
             .order_by(created_at.desc())
-            .then_order_by(device_name.desc())
-            .distinct_on(device_name)
-            .count()
-            .get_result::<i64>(conn)?)
+            .load::<String>(conn)?;
+        devices.sort();
+        devices.dedup();
+        Ok(devices.len())
     }
 }
 

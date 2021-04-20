@@ -55,6 +55,7 @@ impl Disks {
             .filter(host_uuid.eq(uuid))
             .limit(size)
             .order_by(created_at.desc())
+            .then_order_by(disk_name.desc())
             .distinct_on(disk_name)
             .count()
             .get_result::<i64>(conn)?)

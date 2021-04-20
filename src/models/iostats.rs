@@ -54,6 +54,7 @@ impl IoStats {
             .filter(host_uuid.eq(uuid))
             .limit(size)
             .order_by(created_at.desc())
+            .then_order_by(device_name.desc())
             .distinct_on(device_name)
             .count()
             .get_result::<i64>(conn)?)

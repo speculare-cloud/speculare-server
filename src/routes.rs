@@ -16,8 +16,13 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
                 .route("/hosts", web::get().to(handlers::hosts::host_all))
                 .route("/cpustats", web::get().to(handlers::cpu::cpustats))
                 .route("/loadavg", web::get().to(handlers::cpu::load_avg))
-                .route("/disks_info", web::get().to(handlers::disks::disks_info))
+                .route("/disks", web::get().to(handlers::disks::disks))
+                .route("/disks_count", web::get().to(handlers::disks::disks_count))
                 .route("/iostats", web::get().to(handlers::disks::iostats))
+                .route(
+                    "/iostats_count",
+                    web::get().to(handlers::disks::iostats_count),
+                )
                 .route("/memory", web::get().to(handlers::memory::memory)),
         );
 }

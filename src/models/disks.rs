@@ -1,7 +1,7 @@
 use crate::errors::AppError;
 use crate::ConnType;
 
-use super::schema::disks::dsl::{created_at, disks as dsl_disks, host_uuid};
+use super::schema::disks::dsl::{created_at, disk_name, disks as dsl_disks, host_uuid};
 use super::schema::*;
 use super::{Host, HttpPostHost};
 
@@ -43,6 +43,21 @@ impl Disks {
             .offset(page * size)
             .order_by(created_at.desc())
             .load(conn)?)
+    }
+
+    /// Return the numbers of disks the host have
+    /// # Params
+    /// * `conn` - The r2d2 connection needed to fetch the data from the db
+    /// * `uuid` - The host's uuid we want to get the number of disks of
+    /// * `size` - The number of elements to fetch
+    pub fn count(conn: &ConnType, uuid: &str, size: i64) -> Result<i64, AppError> {
+        Ok(dsl_disks
+            .filter(host_uuid.eq(uuid))
+            .limit(size)
+            .order_by(created_at.desc())
+            .distinct_on(disk_name)
+            .count()
+            .get_result::<i64>(conn)?)
     }
 }
 

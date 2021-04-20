@@ -1,7 +1,7 @@
 use crate::errors::AppError;
 use crate::ConnType;
 
-use super::schema::iostats::dsl::{created_at, host_uuid, iostats as dsl_iostats};
+use super::schema::iostats::dsl::{created_at, device_name, host_uuid, iostats as dsl_iostats};
 use super::schema::*;
 use super::{Host, HttpPostHost};
 
@@ -42,6 +42,21 @@ impl IoStats {
             .offset(page * size)
             .order_by(created_at.desc())
             .load(conn)?)
+    }
+
+    /// Return the numbers of iostats the host have
+    /// # Params
+    /// * `conn` - The r2d2 connection needed to fetch the data from the db
+    /// * `uuid` - The host's uuid we want to get the number of iostats of
+    /// * `size` - The number of elements to fetch
+    pub fn count(conn: &ConnType, uuid: &str, size: i64) -> Result<i64, AppError> {
+        Ok(dsl_iostats
+            .filter(host_uuid.eq(uuid))
+            .limit(size)
+            .order_by(created_at.desc())
+            .distinct_on(device_name)
+            .count()
+            .get_result::<i64>(conn)?)
     }
 }
 

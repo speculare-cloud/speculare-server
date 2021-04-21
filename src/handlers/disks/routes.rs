@@ -77,7 +77,10 @@ pub async fn iostats(
         })
     } else {
         // use web::block to offload blocking Diesel code without blocking server thread
-        let data = web::block(move || IoStats::get_data(&db.get()?, &uuid, size, page)).await?;
+        let data = web::block(move || {
+            IoStats::get_data(&db.get()?, &uuid, size, page, info.min_date, info.max_date)
+        })
+        .await?;
         // Return the data as form of JSON
         Ok(HttpResponse::Ok().json(data))
     }

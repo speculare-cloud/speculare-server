@@ -35,13 +35,30 @@ impl IoStats {
         uuid: &str,
         size: i64,
         page: i64,
+        min_date: Option<chrono::NaiveDateTime>,
+        max_date: Option<chrono::NaiveDateTime>,
     ) -> Result<Vec<Self>, AppError> {
-        Ok(dsl_iostats
-            .filter(host_uuid.eq(uuid))
-            .limit(size)
-            .offset(page * size)
-            .order_by(created_at.desc())
-            .load(conn)?)
+        if min_date.is_some() && max_date.is_some() {
+            Ok(dsl_iostats
+                .filter(
+                    host_uuid.eq(uuid).and(
+                        created_at
+                            .gt(min_date.unwrap())
+                            .and(created_at.le(max_date.unwrap())),
+                    ),
+                )
+                .limit(size)
+                .offset(page * size)
+                .order_by(created_at.desc())
+                .load(conn)?)
+        } else {
+            Ok(dsl_iostats
+                .filter(host_uuid.eq(uuid))
+                .limit(size)
+                .offset(page * size)
+                .order_by(created_at.desc())
+                .load(conn)?)
+        }
     }
 
     /// Return the numbers of iostats the host have

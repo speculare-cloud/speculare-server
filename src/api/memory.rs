@@ -25,8 +25,23 @@ pub async fn memory(
             error_type: AppErrorType::InvalidRequest,
         })
     } else {
+        // If min_date and max_date are specified, it's a dated request, otherwise, normal
         // use web::block to offload blocking Diesel code without blocking server thread
-        let data = web::block(move || Memory::get_data(&db.get()?, &uuid, size, page)).await?;
+        let data = if info.min_date.is_some() && info.max_date.is_some() {
+            web::block(move || {
+                Memory::get_data_dated(
+                    &db.get()?,
+                    &uuid,
+                    size,
+                    page,
+                    info.min_date.unwrap(),
+                    info.max_date.unwrap(),
+                )
+            })
+            .await?
+        } else {
+            web::block(move || Memory::get_data(&db.get()?, &uuid, size, page)).await?
+        };
         // Return the data as form of JSON
         Ok(HttpResponse::Ok().json(data))
     }

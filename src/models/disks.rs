@@ -1,8 +1,8 @@
 use crate::errors::AppError;
 use crate::ConnType;
 
+use super::schema::disks;
 use super::schema::disks::dsl::{created_at, disk_name, disks as dsl_disks, host_uuid};
-use super::schema::*;
 use super::{Host, HttpPostHost};
 
 use diesel::*;
@@ -68,7 +68,7 @@ impl Disks {
 // ================
 #[derive(Insertable)]
 #[table_name = "disks"]
-pub struct NewDisks<'a> {
+pub struct DisksDTO<'a> {
     pub disk_name: &'a str,
     pub mount_point: &'a str,
     pub total_space: i64,
@@ -77,13 +77,13 @@ pub struct NewDisks<'a> {
     pub created_at: chrono::NaiveDateTime,
 }
 
-pub type NewDisksList<'a> = Vec<NewDisks<'a>>;
-impl<'a> From<&'a HttpPostHost> for Option<NewDisksList<'a>> {
-    fn from(item: &'a HttpPostHost) -> Option<NewDisksList<'a>> {
+pub type DisksDTOList<'a> = Vec<DisksDTO<'a>>;
+impl<'a> From<&'a HttpPostHost> for Option<DisksDTOList<'a>> {
+    fn from(item: &'a HttpPostHost) -> Option<DisksDTOList<'a>> {
         let disks = item.disks.as_ref()?;
         let mut list = Vec::with_capacity(disks.len());
         for disk in disks {
-            list.push(NewDisks {
+            list.push(DisksDTO {
                 disk_name: &disk.name,
                 mount_point: &disk.mount_point,
                 total_space: disk.total_space,

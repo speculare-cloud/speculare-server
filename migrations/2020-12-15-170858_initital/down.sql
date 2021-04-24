@@ -1,1 +1,1 @@
-DROP TABLE hosts,disks,load_avg,memory,iostats,cpustats;
+DROP TABLE hosts,disks,loadavg,memory,iostats,cpustats,swap;

@@ -1,8 +1,8 @@
 use crate::errors::AppError;
 use crate::ConnType;
 
+use super::schema::cpustats;
 use super::schema::cpustats::dsl::{cpustats as dsl_cpustats, created_at, host_uuid};
-use super::schema::*;
 use super::{Host, HttpPostHost};
 
 use diesel::*;
@@ -74,7 +74,7 @@ impl CpuStats {
 // ================
 #[derive(Insertable)]
 #[table_name = "cpustats"]
-pub struct NewCpuStats<'a> {
+pub struct CpuStatsDTO<'a> {
     pub cuser: i64,
     pub nice: i64,
     pub system: i64,
@@ -89,10 +89,10 @@ pub struct NewCpuStats<'a> {
     pub created_at: chrono::NaiveDateTime,
 }
 
-impl<'a> From<&'a HttpPostHost> for Option<NewCpuStats<'a>> {
-    fn from(item: &'a HttpPostHost) -> Option<NewCpuStats<'a>> {
+impl<'a> From<&'a HttpPostHost> for Option<CpuStatsDTO<'a>> {
+    fn from(item: &'a HttpPostHost) -> Option<CpuStatsDTO<'a>> {
         let cpustats = item.cpu_stats.as_ref()?;
-        Some(NewCpuStats {
+        Some(CpuStatsDTO {
             cuser: cpustats.user,
             nice: cpustats.nice,
             system: cpustats.system,

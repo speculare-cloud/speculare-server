@@ -8,13 +8,10 @@ use super::schema::{
     hosts::dsl::*,
     hosts::dsl::{hosts as dsl_host, uuid},
     iostats::dsl::*,
-    load_avg::dsl::*,
+    loadavg::dsl::*,
     memory::dsl::*,
 };
-use super::{
-    HttpPostHost, NewCpuStats, NewDisks, NewDisksList, NewIoStats, NewIostatsList, NewLoadAvg,
-    NewMemory,
-};
+use super::{CpuStatsDTO, DisksDTOList, HttpPostHost, IostatsDTOList, LoadAvgDTO, MemoryDTO};
 
 use diesel::*;
 use serde::{Deserialize, Serialize};
@@ -56,20 +53,20 @@ impl Host {
         //      Doing so would be optimal to avoid allocations, and if they are .is_none()
         //      we could skip the construction of new_disks and new_iostats, as well as their
         //      respective insert.
-        let mut v_ncpustats: Vec<NewCpuStats> = Vec::with_capacity(items.len());
-        let mut v_nloadavg: Vec<NewLoadAvg> = Vec::with_capacity(items.len());
-        let mut v_nmemory: Vec<NewMemory> = Vec::with_capacity(items.len());
-        let mut v_ndisks: Vec<NewDisks> = Vec::new();
-        let mut v_niostats: Vec<NewIoStats> = Vec::new();
+        let mut v_ncpustats: Vec<CpuStatsDTO> = Vec::with_capacity(items.len());
+        let mut v_nloadavg: Vec<LoadAvgDTO> = Vec::with_capacity(items.len());
+        let mut v_nmemory: Vec<MemoryDTO> = Vec::with_capacity(items.len());
+        let mut v_ndisks: DisksDTOList = Vec::new();
+        let mut v_niostats: IostatsDTOList = Vec::new();
 
         for item in items {
             // Construct the new Struct from item
             let new_data = Host::from(item);
-            let new_cpustats = Option::<NewCpuStats>::from(item);
-            let new_loadavg = Option::<NewLoadAvg>::from(item);
-            let new_memory = Option::<NewMemory>::from(item);
-            let mut new_disks = Option::<NewDisksList>::from(item);
-            let mut new_iostats = Option::<NewIostatsList>::from(item);
+            let new_cpustats = Option::<CpuStatsDTO>::from(item);
+            let new_loadavg = Option::<LoadAvgDTO>::from(item);
+            let new_memory = Option::<MemoryDTO>::from(item);
+            let mut new_disks = Option::<DisksDTOList>::from(item);
+            let mut new_iostats = Option::<IostatsDTOList>::from(item);
 
             // Add some result in their vec for BatchInsert
             if let Some(value_cpustats) = new_cpustats {
@@ -98,7 +95,7 @@ impl Host {
         }
         // Insert Vec of Table from the for loop in one call (66% faster)
         insert_into(cpustats).values(&v_ncpustats).execute(conn)?;
-        insert_into(load_avg).values(&v_nloadavg).execute(conn)?;
+        insert_into(loadavg).values(&v_nloadavg).execute(conn)?;
         insert_into(memory).values(&v_nmemory).execute(conn)?;
         insert_into(disks).values(&v_ndisks).execute(conn)?;
         insert_into(iostats).values(&v_niostats).execute(conn)?;
@@ -113,11 +110,11 @@ impl Host {
     pub fn insert_one(conn: &ConnType, item: &HttpPostHost) -> Result<(), AppError> {
         // Construct the new Struct from item
         let new_data = Host::from(item);
-        let new_cpustats = Option::<NewCpuStats>::from(item);
-        let new_loadavg = Option::<NewLoadAvg>::from(item);
-        let new_memory = Option::<NewMemory>::from(item);
-        let new_disks = Option::<NewDisksList>::from(item);
-        let new_iostats = Option::<NewIostatsList>::from(item);
+        let new_cpustats = Option::<CpuStatsDTO>::from(item);
+        let new_loadavg = Option::<LoadAvgDTO>::from(item);
+        let new_memory = Option::<MemoryDTO>::from(item);
+        let new_disks = Option::<DisksDTOList>::from(item);
+        let new_iostats = Option::<IostatsDTOList>::from(item);
 
         // Insert Host data, if conflict, only update uptime
         insert_into(hosts)
@@ -131,7 +128,7 @@ impl Host {
             insert_into(cpustats).values(&value).execute(conn)?;
         }
         if let Some(value) = new_loadavg {
-            insert_into(load_avg).values(&value).execute(conn)?;
+            insert_into(loadavg).values(&value).execute(conn)?;
         }
         if let Some(value) = new_memory {
             insert_into(memory).values(&value).execute(conn)?;

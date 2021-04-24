@@ -3,8 +3,8 @@ extern crate diesel;
 #[macro_use]
 extern crate log;
 
+mod api;
 mod errors;
-mod handlers;
 mod logger;
 mod models;
 mod routes;

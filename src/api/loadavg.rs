@@ -1,18 +1,18 @@
 use crate::errors::{AppError, AppErrorType};
-use crate::models::Memory;
+use crate::models::LoadAvg;
 use crate::Pool;
 
-use crate::handlers::PagedInfoSpecific;
+use crate::api::PagedInfoSpecific;
 
 use actix_web::{web, HttpResponse};
 
-/// GET /api/memory
-/// Return memory for a particular host
-pub async fn memory(
+/// GET /api/load_avg
+/// Return load_avg for a particular host
+pub async fn loadavg(
     db: web::Data<Pool>,
     info: web::Query<PagedInfoSpecific>,
 ) -> Result<HttpResponse, AppError> {
-    info!("Route GET /api/memory : {:?}", info);
+    info!("Route GET /api/loadavg : {:?}", info);
 
     let uuid = info.uuid.to_owned();
     // If size is over 500 or less than 30, return error
@@ -25,8 +25,10 @@ pub async fn memory(
             error_type: AppErrorType::InvalidRequest,
         })
     } else {
-        // use web::block to offload blocking Diesel code without blocking server thread
-        let data = web::block(move || Memory::get_data(&db.get()?, &uuid, size, page)).await?;
+        let data = web::block(move || {
+            LoadAvg::get_data(&db.get()?, &uuid, size, page, info.min_date, info.max_date)
+        })
+        .await?;
         // Return the data as form of JSON
         Ok(HttpResponse::Ok().json(data))
     }

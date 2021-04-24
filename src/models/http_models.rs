@@ -3,18 +3,10 @@ use serde::{Deserialize, Serialize};
 // ====================
 // Http specific struct
 // Meaning those are used whenever
-// there is a POST/GET request
+// there is a POST request
 // ====================
 #[derive(Debug, Serialize, Deserialize)]
-pub struct HttpDisks {
-    pub name: String,
-    pub mount_point: String,
-    pub total_space: i64,
-    pub avail_space: i64,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct CpuStats {
+pub struct HttpCpuStats {
     pub user: i64,
     pub nice: i64,
     pub system: i64,
@@ -25,6 +17,30 @@ pub struct CpuStats {
     pub steal: i64,
     pub guest: i64,
     pub guest_nice: i64,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct HttpDisks {
+    pub name: String,
+    pub mount_point: String,
+    pub total_space: i64,
+    pub avail_space: i64,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct HttpPostHost {
+    pub uuid: String,
+    pub system: String,
+    pub os_version: String,
+    pub hostname: String,
+    pub uptime: i64,
+    pub cpu_stats: Option<HttpCpuStats>,
+    pub load_avg: Option<HttpLoadAvg>,
+    pub disks: Option<Vec<HttpDisks>>,
+    pub iostats: Option<Vec<HttpIoStats>>,
+    pub memory: Option<HttpMemory>,
+    pub swap: Option<HttpSwap>,
+    pub created_at: chrono::NaiveDateTime,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -43,23 +59,17 @@ pub struct HttpLoadAvg {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct HttpMemory {
-    pub total_virt: u64,
-    pub avail_virt: u64,
-    pub total_swap: u64,
-    pub avail_swap: u64,
+    pub total: u64,
+    pub free: u64,
+    pub used: u64,
+    pub shared: u64,
+    pub buffers: u64,
+    pub cached: u64,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct HttpPostHost {
-    pub uuid: String,
-    pub system: String,
-    pub os_version: String,
-    pub hostname: String,
-    pub uptime: i64,
-    pub cpu_stats: Option<CpuStats>,
-    pub load_avg: Option<HttpLoadAvg>,
-    pub disks: Option<Vec<HttpDisks>>,
-    pub iostats: Option<Vec<HttpIoStats>>,
-    pub memory: Option<HttpMemory>,
-    pub created_at: chrono::NaiveDateTime,
+pub struct HttpSwap {
+    pub total: u64,
+    pub free: u64,
+    pub used: u64,
 }

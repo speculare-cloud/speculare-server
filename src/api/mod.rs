@@ -1,16 +1,11 @@
 use serde::{Deserialize, Serialize};
 
-pub mod hosts;
-pub use hosts::*;
-
-pub mod cpu;
-pub use cpu::*;
-
+pub mod cpustats;
 pub mod disks;
-pub use disks::*;
-
+pub mod hosts;
+pub mod iostats;
+pub mod loadavg;
 pub mod memory;
-pub use memory::*;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PagedInfo {

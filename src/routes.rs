@@ -1,4 +1,4 @@
-use crate::handlers;
+use crate::api;
 
 use actix_web::web;
 
@@ -12,17 +12,14 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
             web::scope("/api")
                 // TODO - These routes should be secured behind a token verification
                 // Or at least just the ingest (POST)
-                .route("/hosts", web::post().to(handlers::hosts::host_ingest))
-                .route("/hosts", web::get().to(handlers::hosts::host_all))
-                .route("/cpustats", web::get().to(handlers::cpu::cpustats))
-                .route("/loadavg", web::get().to(handlers::cpu::load_avg))
-                .route("/disks", web::get().to(handlers::disks::disks))
-                .route("/disks_count", web::get().to(handlers::disks::disks_count))
-                .route("/iostats", web::get().to(handlers::disks::iostats))
-                .route(
-                    "/iostats_count",
-                    web::get().to(handlers::disks::iostats_count),
-                )
-                .route("/memory", web::get().to(handlers::memory::memory)),
+                .route("/hosts", web::post().to(api::hosts::host_ingest))
+                .route("/hosts", web::get().to(api::hosts::host_all))
+                .route("/cpustats", web::get().to(api::cpustats::cpustats))
+                .route("/loadavg", web::get().to(api::loadavg::loadavg))
+                .route("/disks", web::get().to(api::disks::disks))
+                .route("/disks_count", web::get().to(api::disks::disks_count))
+                .route("/iostats", web::get().to(api::iostats::iostats))
+                .route("/iostats_count", web::get().to(api::iostats::iostats_count))
+                .route("/memory", web::get().to(api::memory::memory)),
         );
 }

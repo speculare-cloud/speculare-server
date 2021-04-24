@@ -51,7 +51,7 @@ table! {
 }
 
 table! {
-    load_avg (id) {
+    loadavg (id) {
         id -> Int8,
         one -> Float8,
         five -> Float8,
@@ -64,13 +64,26 @@ table! {
 table! {
     memory (id) {
         id -> Int8,
-        total_virt -> Int8,
-        avail_virt -> Int8,
-        total_swap -> Int8,
-        avail_swap -> Int8,
+        total -> Int8,
+        free -> Int8,
+        used -> Int8,
+        shared -> Int8,
+        buffers -> Int8,
+        cached -> Int8,
         host_uuid -> Varchar,
         created_at -> Timestamp,
     }
 }
 
-allow_tables_to_appear_in_same_query!(cpustats, disks, hosts, iostats, load_avg, memory,);
+table! {
+    swap (id) {
+        id -> Int8,
+        total -> Int8,
+        free -> Int8,
+        used -> Int8,
+        host_uuid -> Varchar,
+        created_at -> Timestamp,
+    }
+}
+
+allow_tables_to_appear_in_same_query!(cpustats, disks, hosts, iostats, loadavg, memory, swap,);

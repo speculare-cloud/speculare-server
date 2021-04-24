@@ -1,8 +1,8 @@
 use crate::errors::AppError;
 use crate::ConnType;
 
+use super::schema::iostats;
 use super::schema::iostats::dsl::{created_at, device_name, host_uuid, iostats as dsl_iostats};
-use super::schema::*;
 use super::{Host, HttpPostHost};
 
 use diesel::*;
@@ -84,7 +84,7 @@ impl IoStats {
 // ================
 #[derive(Insertable)]
 #[table_name = "iostats"]
-pub struct NewIoStats<'a> {
+pub struct IoStatsDTO<'a> {
     pub device_name: &'a str,
     pub bytes_read: i64,
     pub bytes_wrtn: i64,
@@ -92,13 +92,13 @@ pub struct NewIoStats<'a> {
     pub created_at: chrono::NaiveDateTime,
 }
 
-pub type NewIostatsList<'a> = Vec<NewIoStats<'a>>;
-impl<'a> From<&'a HttpPostHost> for Option<NewIostatsList<'a>> {
-    fn from(item: &'a HttpPostHost) -> Option<NewIostatsList<'a>> {
+pub type IostatsDTOList<'a> = Vec<IoStatsDTO<'a>>;
+impl<'a> From<&'a HttpPostHost> for Option<IostatsDTOList<'a>> {
+    fn from(item: &'a HttpPostHost) -> Option<IostatsDTOList<'a>> {
         let iostats = item.iostats.as_ref()?;
         let mut list = Vec::with_capacity(iostats.len());
         for iostat in iostats {
-            list.push(NewIoStats {
+            list.push(IoStatsDTO {
                 device_name: &iostat.device_name,
                 bytes_read: iostat.bytes_read,
                 bytes_wrtn: iostat.bytes_wrtn,

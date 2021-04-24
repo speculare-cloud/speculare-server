@@ -1,8 +1,8 @@
 use crate::errors::AppError;
 use crate::ConnType;
 
-use super::schema::load_avg::dsl::{created_at, host_uuid, load_avg as dsl_loadavg};
-use super::schema::*;
+use super::schema::loadavg;
+use super::schema::loadavg::dsl::{created_at, host_uuid, loadavg as dsl_loadavg};
 use super::{Host, HttpPostHost};
 
 use diesel::*;
@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 // ========================
 #[derive(Identifiable, Queryable, Debug, Serialize, Deserialize, Associations)]
 #[belongs_to(Host, foreign_key = "host_uuid")]
-#[table_name = "load_avg"]
+#[table_name = "loadavg"]
 pub struct LoadAvg {
     pub id: i64,
     pub one: f64,
@@ -66,8 +66,8 @@ impl LoadAvg {
 // Insertable model
 // ================
 #[derive(Insertable)]
-#[table_name = "load_avg"]
-pub struct NewLoadAvg<'a> {
+#[table_name = "loadavg"]
+pub struct LoadAvgDTO<'a> {
     pub one: f64,
     pub five: f64,
     pub fifteen: f64,
@@ -75,10 +75,10 @@ pub struct NewLoadAvg<'a> {
     pub created_at: chrono::NaiveDateTime,
 }
 
-impl<'a> From<&'a HttpPostHost> for Option<NewLoadAvg<'a>> {
-    fn from(item: &'a HttpPostHost) -> Option<NewLoadAvg<'a>> {
+impl<'a> From<&'a HttpPostHost> for Option<LoadAvgDTO<'a>> {
+    fn from(item: &'a HttpPostHost) -> Option<LoadAvgDTO<'a>> {
         let load_avg = item.load_avg.as_ref()?;
-        Some(NewLoadAvg {
+        Some(LoadAvgDTO {
             one: load_avg.one,
             five: load_avg.five,
             fifteen: load_avg.fifteen,

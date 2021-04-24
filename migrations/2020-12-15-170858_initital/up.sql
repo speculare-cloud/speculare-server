@@ -41,7 +41,7 @@ CREATE TABLE iostats (
 	created_at TIMESTAMP NOT NULL,
 	CONSTRAINT host_uuid_fkey FOREIGN KEY (host_uuid) REFERENCES hosts (uuid) DEFERRABLE
 );
-CREATE TABLE load_avg (
+CREATE TABLE loadavg (
 	id BIGSERIAL PRIMARY KEY,
 	one FLOAT NOT NULL,
 	five FLOAT NOT NULL,
@@ -52,10 +52,21 @@ CREATE TABLE load_avg (
 );
 CREATE TABLE memory (
 	id BIGSERIAL PRIMARY KEY,
-	total_virt BIGINT NOT NULL,
-	avail_virt BIGINT NOT NULL,
-	total_swap BIGINT NOT NULL,
-	avail_swap BIGINT NOT NULL,
+	total BIGINT NOT NULL,
+	free BIGINT NOT NULL,
+	used BIGINT NOT NULL,
+	shared BIGINT NOT NULL,
+	buffers BIGINT NOT NULL,
+	cached BIGINT NOT NULL,
+	host_uuid VARCHAR(48) NOT NULL,
+    created_at TIMESTAMP NOT NULL,
+	CONSTRAINT host_uuid_fkey FOREIGN KEY (host_uuid) REFERENCES hosts (uuid) DEFERRABLE
+);
+CREATE TABLE swap (
+	id BIGSERIAL PRIMARY KEY,
+	total BIGINT NOT NULL,
+	free BIGINT NOT NULL,
+	used BIGINT NOT NULL,
 	host_uuid VARCHAR(48) NOT NULL,
     created_at TIMESTAMP NOT NULL,
 	CONSTRAINT host_uuid_fkey FOREIGN KEY (host_uuid) REFERENCES hosts (uuid) DEFERRABLE

@@ -149,7 +149,11 @@ impl Host {
     /// * `size` - The number of elements to fetch
     /// * `page` - How many items you want to skip (page * size)
     pub fn list_hosts(conn: &ConnType, size: i64, page: i64) -> Result<Vec<Self>, AppError> {
-        Ok(dsl_host.limit(size).offset(page * size).load(conn)?)
+        Ok(dsl_host
+            .limit(size)
+            .offset(page * size)
+            .order_by(hostname.asc())
+            .load(conn)?)
     }
 }
 

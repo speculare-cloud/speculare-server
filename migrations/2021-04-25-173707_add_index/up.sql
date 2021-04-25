@@ -1,0 +1,12 @@
+CREATE INDEX swap_idx_created_at ON swap(created_at);
+CREATE INDEX swap_idx_host_uuid ON swap(host_uuid);
+CREATE INDEX memory_idx_created_at ON memory(created_at);
+CREATE INDEX memory_idx_host_uuid ON memory(host_uuid);
+CREATE INDEX loadavg_idx_created_at ON loadavg(created_at);
+CREATE INDEX loadavg_idx_host_uuid ON loadavg(host_uuid);
+CREATE INDEX iostats_idx_created_at ON iostats(created_at);
+CREATE INDEX iostats_idx_host_uuid ON iostats(host_uuid);
+CREATE INDEX cpustats_idx_created_at ON cpustats(created_at);
+CREATE INDEX cpustats_idx_host_uuid ON cpustats(host_uuid);
+CREATE INDEX disks_idx_created_at ON disks(created_at);
+CREATE INDEX disks_idx_host_uuid ON disks(host_uuid);

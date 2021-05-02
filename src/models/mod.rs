@@ -3,6 +3,9 @@ pub mod schema;
 mod cpustats;
 pub use cpustats::*;
 
+mod cputimes;
+pub use cputimes::*;
+
 mod disks;
 pub use disks::*;
 
@@ -11,6 +14,9 @@ pub use hosts::*;
 
 mod http_models;
 pub use http_models::*;
+
+mod iocounters;
+pub use iocounters::*;
 
 mod iostats;
 pub use iostats::*;

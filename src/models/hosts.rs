@@ -2,16 +2,20 @@ use crate::errors::AppError;
 use crate::ConnType;
 
 use super::schema::{
-    cpustats::dsl::*,
+    cputimes::dsl::*,
     disks::dsl::*,
     hosts,
     hosts::dsl::*,
     hosts::dsl::{hosts as dsl_host, uuid},
+    iocounters::dsl::*,
     iostats::dsl::*,
     loadavg::dsl::*,
     memory::dsl::*,
 };
-use super::{CpuStatsDTO, DisksDTOList, HttpPostHost, IostatsDTOList, LoadAvgDTO, MemoryDTO};
+use super::{
+    CpuTimesDTO, DisksDTOList, HttpPostHost, IoCountersDTOList, IostatsDTOList, LoadAvgDTO,
+    MemoryDTO,
+};
 
 use diesel::*;
 use serde::{Deserialize, Serialize};
@@ -53,24 +57,26 @@ impl Host {
         //      Doing so would be optimal to avoid allocations, and if they are .is_none()
         //      we could skip the construction of new_disks and new_iostats, as well as their
         //      respective insert.
-        let mut v_ncpustats: Vec<CpuStatsDTO> = Vec::with_capacity(items.len());
+        let mut v_ncputimes: Vec<CpuTimesDTO> = Vec::with_capacity(items.len());
         let mut v_nloadavg: Vec<LoadAvgDTO> = Vec::with_capacity(items.len());
         let mut v_nmemory: Vec<MemoryDTO> = Vec::with_capacity(items.len());
         let mut v_ndisks: DisksDTOList = Vec::new();
         let mut v_niostats: IostatsDTOList = Vec::new();
+        let mut v_niocounters: IoCountersDTOList = Vec::new();
 
         for item in items {
             // Construct the new Struct from item
             let new_data = Host::from(item);
-            let new_cpustats = Option::<CpuStatsDTO>::from(item);
+            let new_cputimes = Option::<CpuTimesDTO>::from(item);
             let new_loadavg = Option::<LoadAvgDTO>::from(item);
             let new_memory = Option::<MemoryDTO>::from(item);
             let mut new_disks = Option::<DisksDTOList>::from(item);
             let mut new_iostats = Option::<IostatsDTOList>::from(item);
+            let mut new_iocounters = Option::<IoCountersDTOList>::from(item);
 
             // Add some result in their vec for BatchInsert
-            if let Some(value_cpustats) = new_cpustats {
-                v_ncpustats.push(value_cpustats);
+            if let Some(value_cputimes) = new_cputimes {
+                v_ncputimes.push(value_cputimes);
             }
             if let Some(value_loadavg) = new_loadavg {
                 v_nloadavg.push(value_loadavg);
@@ -84,6 +90,9 @@ impl Host {
             if let Some(value_iostats) = new_iostats.as_mut() {
                 v_niostats.append(value_iostats);
             }
+            if let Some(value_iocounters) = new_iocounters.as_mut() {
+                v_niocounters.append(value_iocounters);
+            }
 
             // Insert Host data, if conflict, only update uptime
             insert_into(hosts)
@@ -94,11 +103,14 @@ impl Host {
                 .execute(conn)?;
         }
         // Insert Vec of Table from the for loop in one call (66% faster)
-        insert_into(cpustats).values(&v_ncpustats).execute(conn)?;
+        insert_into(cputimes).values(&v_ncputimes).execute(conn)?;
         insert_into(loadavg).values(&v_nloadavg).execute(conn)?;
         insert_into(memory).values(&v_nmemory).execute(conn)?;
         insert_into(disks).values(&v_ndisks).execute(conn)?;
         insert_into(iostats).values(&v_niostats).execute(conn)?;
+        insert_into(iocounters)
+            .values(&v_niocounters)
+            .execute(conn)?;
         // If we reached this point, everything went well so return an empty Closure
         Ok(())
     }
@@ -110,11 +122,12 @@ impl Host {
     pub fn insert_one(conn: &ConnType, item: &HttpPostHost) -> Result<(), AppError> {
         // Construct the new Struct from item
         let new_data = Host::from(item);
-        let new_cpustats = Option::<CpuStatsDTO>::from(item);
+        let new_cputimes = Option::<CpuTimesDTO>::from(item);
         let new_loadavg = Option::<LoadAvgDTO>::from(item);
         let new_memory = Option::<MemoryDTO>::from(item);
         let new_disks = Option::<DisksDTOList>::from(item);
         let new_iostats = Option::<IostatsDTOList>::from(item);
+        let new_iocounters = Option::<IoCountersDTOList>::from(item);
 
         // Insert Host data, if conflict, only update uptime
         insert_into(hosts)
@@ -124,8 +137,8 @@ impl Host {
             .set(uptime.eq(item.uptime))
             .execute(conn)?;
         // Only insert Option if they are present
-        if let Some(value) = new_cpustats {
-            insert_into(cpustats).values(&value).execute(conn)?;
+        if let Some(value) = new_cputimes {
+            insert_into(cputimes).values(&value).execute(conn)?;
         }
         if let Some(value) = new_loadavg {
             insert_into(loadavg).values(&value).execute(conn)?;
@@ -138,6 +151,9 @@ impl Host {
         }
         if let Some(value) = new_iostats {
             insert_into(iostats).values(&value).execute(conn)?;
+        }
+        if let Some(value) = new_iocounters {
+            insert_into(iocounters).values(&value).execute(conn)?;
         }
         // If we reached this point, everything went well so return an empty Closure
         Ok(())

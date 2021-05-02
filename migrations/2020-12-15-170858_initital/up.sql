@@ -18,7 +18,7 @@ CREATE TABLE disks (
 	CONSTRAINT host_uuid_fkey FOREIGN KEY (host_uuid) REFERENCES hosts (uuid) DEFERRABLE
 );
 
-CREATE TABLE cpustats (
+CREATE TABLE cputimes (
 	id BIGSERIAL PRIMARY KEY,
 	cuser BIGINT NOT NULL,
 	nice BIGINT NOT NULL,
@@ -35,11 +35,24 @@ CREATE TABLE cpustats (
 	CONSTRAINT host_uuid_fkey FOREIGN KEY (host_uuid) REFERENCES hosts (uuid) DEFERRABLE
 );
 
+CREATE TABLE cpustats (
+	id BIGSERIAL PRIMARY KEY,
+	interrupts BIGINT NOT NULL,
+	ctx_switches BIGINT NOT NULL,
+	soft_interrupts BIGINT NOT NULL,
+	host_uuid VARCHAR(48) NOT NULL,
+	created_at TIMESTAMP NOT NULL,
+	CONSTRAINT host_uuid_fkey FOREIGN KEY (host_uuid) REFERENCES hosts (uuid) DEFERRABLE
+);
+
 CREATE TABLE iostats (
 	id BIGSERIAL PRIMARY KEY,
 	device_name VARCHAR(128) NOT NULL,
-	bytes_read BIGINT NOT NULL,
-	bytes_wrtn BIGINT NOT NULL,
+	read_count BIGINT NOT NULL,
+	read_bytes BIGINT NOT NULL,
+	write_count BIGINT NOT NULL,
+	write_bytes BIGINT NOT NULL,
+	busy_time BIGINT NOT NULL,
 	host_uuid VARCHAR(48) NOT NULL,
 	created_at TIMESTAMP NOT NULL,
 	CONSTRAINT host_uuid_fkey FOREIGN KEY (host_uuid) REFERENCES hosts (uuid) DEFERRABLE
@@ -75,5 +88,21 @@ CREATE TABLE swap (
 	used BIGINT NOT NULL,
 	host_uuid VARCHAR(48) NOT NULL,
     created_at TIMESTAMP NOT NULL,
+	CONSTRAINT host_uuid_fkey FOREIGN KEY (host_uuid) REFERENCES hosts (uuid) DEFERRABLE
+);
+
+CREATE TABLE iocounters (
+	id BIGSERIAL PRIMARY KEY,
+	interface VARCHAR(128) NOT NULL,
+	rx_bytes BIGINT NOT NULL,
+	rx_packets BIGINT NOT NULL,
+	rx_errs BIGINT NOT NULL,
+	rx_drop BIGINT NOT NULL,
+	tx_bytes BIGINT NOT NULL,
+	tx_packets BIGINT NOT NULL,
+	tx_errs BIGINT NOT NULL,
+	tx_drop BIGINT NOT NULL,
+	host_uuid VARCHAR(48) NOT NULL,
+	created_at TIMESTAMP NOT NULL,
 	CONSTRAINT host_uuid_fkey FOREIGN KEY (host_uuid) REFERENCES hosts (uuid) DEFERRABLE
 );

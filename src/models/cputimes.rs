@@ -1,8 +1,8 @@
 use crate::errors::AppError;
 use crate::ConnType;
 
-use super::schema::cpustats;
-use super::schema::cpustats::dsl::{cpustats as dsl_cpustats, created_at, host_uuid};
+use super::schema::cputimes;
+use super::schema::cputimes::dsl::{cputimes as dsl_cputimes, created_at, host_uuid};
 use super::{Host, HttpPostHost};
 
 use diesel::*;
@@ -13,21 +13,28 @@ use serde::{Deserialize, Serialize};
 // ========================
 #[derive(Identifiable, Queryable, Debug, Serialize, Deserialize, Associations)]
 #[belongs_to(Host, foreign_key = "host_uuid")]
-#[table_name = "cpustats"]
-pub struct CpuStats {
+#[table_name = "cputimes"]
+pub struct CpuTimes {
     pub id: i64,
-    pub interrupts: i64,
-    pub ctx_switches: i64,
-    pub soft_interrupts: i64,
+    pub cuser: i64,
+    pub nice: i64,
+    pub system: i64,
+    pub idle: i64,
+    pub iowait: i64,
+    pub irq: i64,
+    pub softirq: i64,
+    pub steal: i64,
+    pub guest: i64,
+    pub guest_nice: i64,
     pub host_uuid: String,
     pub created_at: chrono::NaiveDateTime,
 }
 
-impl CpuStats {
-    /// Return a Vector of CpuStats
+impl CpuTimes {
+    /// Return a Vector of CpuTimes
     /// # Params
     /// * `conn` - The r2d2 connection needed to fetch the data from the db
-    /// * `uuid` - The host's uuid we want to get CpuStats of
+    /// * `uuid` - The host's uuid we want to get CpuTimes of
     /// * `size` - The number of elements to fetch
     /// * `page` - How many items you want to skip (page * size)
     pub fn get_data(
@@ -36,7 +43,7 @@ impl CpuStats {
         size: i64,
         page: i64,
     ) -> Result<Vec<Self>, AppError> {
-        Ok(dsl_cpustats
+        Ok(dsl_cputimes
             .filter(host_uuid.eq(uuid))
             .limit(size)
             .offset(page * size)
@@ -60,7 +67,7 @@ impl CpuStats {
         min_date: chrono::NaiveDateTime,
         max_date: chrono::NaiveDateTime,
     ) -> Result<Vec<Self>, AppError> {
-        Ok(dsl_cpustats
+        Ok(dsl_cputimes
             .filter(
                 host_uuid
                     .eq(uuid)
@@ -77,22 +84,36 @@ impl CpuStats {
 // Insertable model
 // ================
 #[derive(Insertable)]
-#[table_name = "cpustats"]
-pub struct CpuStatsDTO<'a> {
-    pub interrupts: i64,
-    pub ctx_switches: i64,
-    pub soft_interrupts: i64,
+#[table_name = "cputimes"]
+pub struct CpuTimesDTO<'a> {
+    pub cuser: i64,
+    pub nice: i64,
+    pub system: i64,
+    pub idle: i64,
+    pub iowait: i64,
+    pub irq: i64,
+    pub softirq: i64,
+    pub steal: i64,
+    pub guest: i64,
+    pub guest_nice: i64,
     pub host_uuid: &'a str,
     pub created_at: chrono::NaiveDateTime,
 }
 
-impl<'a> From<&'a HttpPostHost> for Option<CpuStatsDTO<'a>> {
-    fn from(item: &'a HttpPostHost) -> Option<CpuStatsDTO<'a>> {
-        let cpustats = item.cpu_stats.as_ref()?;
-        Some(CpuStatsDTO {
-            interrupts: cpustats.interrupts,
-            ctx_switches: cpustats.ctx_switches,
-            soft_interrupts: cpustats.soft_interrupts,
+impl<'a> From<&'a HttpPostHost> for Option<CpuTimesDTO<'a>> {
+    fn from(item: &'a HttpPostHost) -> Option<CpuTimesDTO<'a>> {
+        let cputimes = item.cpu_times.as_ref()?;
+        Some(CpuTimesDTO {
+            cuser: cputimes.user,
+            nice: cputimes.nice,
+            system: cputimes.system,
+            idle: cputimes.idle,
+            iowait: cputimes.iowait,
+            irq: cputimes.irq,
+            softirq: cputimes.softirq,
+            steal: cputimes.steal,
+            guest: cputimes.guest,
+            guest_nice: cputimes.guest_nice,
             host_uuid: &item.uuid,
             created_at: item.created_at,
         })

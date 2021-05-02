@@ -1,6 +1,17 @@
 table! {
     cpustats (id) {
         id -> Int8,
+        interrupts -> Int8,
+        ctx_switches -> Int8,
+        soft_interrupts -> Int8,
+        host_uuid -> Varchar,
+        created_at -> Timestamp,
+    }
+}
+
+table! {
+    cputimes (id) {
+        id -> Int8,
         cuser -> Int8,
         nice -> Int8,
         system -> Int8,
@@ -40,11 +51,31 @@ table! {
 }
 
 table! {
+    iocounters (id) {
+        id -> Int8,
+        interface -> Varchar,
+        rx_bytes -> Int8,
+        rx_packets -> Int8,
+        rx_errs -> Int8,
+        rx_drop -> Int8,
+        tx_bytes -> Int8,
+        tx_packets -> Int8,
+        tx_errs -> Int8,
+        tx_drop -> Int8,
+        host_uuid -> Varchar,
+        created_at -> Timestamp,
+    }
+}
+
+table! {
     iostats (id) {
         id -> Int8,
         device_name -> Varchar,
-        bytes_read -> Int8,
-        bytes_wrtn -> Int8,
+        read_count -> Int8,
+        read_bytes -> Int8,
+        write_count -> Int8,
+        write_bytes -> Int8,
+        busy_time -> Int8,
         host_uuid -> Varchar,
         created_at -> Timestamp,
     }
@@ -86,4 +117,6 @@ table! {
     }
 }
 
-allow_tables_to_appear_in_same_query!(cpustats, disks, hosts, iostats, loadavg, memory, swap,);
+allow_tables_to_appear_in_same_query!(
+    cpustats, cputimes, disks, hosts, iocounters, iostats, loadavg, memory, swap,
+);

@@ -1,12 +1,9 @@
 use crate::api;
-use crate::validator;
 
-use actix_web::web;
-use actix_web_httpauth::middleware::HttpAuthentication;
+use actix_web::{guard, web};
 
 // Populate the ServiceConfig with all the route needed for the server
 pub fn routes(cfg: &mut web::ServiceConfig) {
-    let auth = HttpAuthentication::bearer(validator::validator);
     // The /ping is used only to get a status over the server
     cfg.route("/ping", web::get().to(|| async { "zpour" }))
         .route("/ping", web::head().to(|| async { "zpour" }))
@@ -16,7 +13,7 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
                 // Guarded route by API token
                 .service(
                     web::scope("/guard")
-                        .wrap(auth)
+                        .guard(guard::Header("SPTK", crate::TOKEN.as_ref().unwrap()))
                         .route("/hosts", web::post().to(api::hosts::host_ingest)),
                 )
                 .route("/hosts", web::get().to(api::hosts::host_all))

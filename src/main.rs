@@ -12,13 +12,12 @@ mod logger;
 mod models;
 mod routes;
 mod server;
-mod validator;
 
 use diesel::{prelude::PgConnection, r2d2::ConnectionManager};
 use std::env::VarError;
 
+// Helper types for less boilerplate code
 pub type Pool = r2d2::Pool<ConnectionManager<PgConnection>>;
-
 pub type ConnType = r2d2::PooledConnection<ConnectionManager<PgConnection>>;
 
 // Lazy static of the Token from .env to use in validator

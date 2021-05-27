@@ -27,14 +27,14 @@ $ cargo install diesel_cli --no-default-features --features postgres
 
 - Create a .env file based on .env.example
 
-- (Solutation A) Setup the database based on the migrations files (bash file)
+- (Solution A) Setup the database based on the migrations files (bash file)
 ```bash
 # For database_setup.sh to works, you need to have a folder migrations at the same
 # level of database_setup, containing folders containting up.sql and down.sql.
 $ env PGHOST=localhost PGUSER=postgres PGPASSWORD=password ./database_setup.sh
 ```
 
-- (Solutation B) Setup the database based on diesel
+- (Solution B) Setup the database based on diesel
 ```bash
 # You first need to setup a postgresql 13 instance
 # And you also need to install diesel cli

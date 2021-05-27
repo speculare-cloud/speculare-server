@@ -26,8 +26,12 @@ $ cargo install diesel_cli --no-default-features --features postgres
 ```
 
 - Create a .env file based on .env.example
+
+- Setup the database based on the schema.rs
 ```bash
 # You first need to setup a postgresql 13 instance
+# And you also need to install diesel cli
+$ cargo install diesel_cli
 $ diesel setup
 ```
 

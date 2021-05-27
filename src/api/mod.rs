@@ -8,6 +8,7 @@ pub mod iocounters;
 pub mod iostats;
 pub mod loadavg;
 pub mod memory;
+pub mod swap;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PagedInfo {

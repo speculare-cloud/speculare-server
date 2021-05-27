@@ -29,6 +29,7 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
                     "/iocounters_count",
                     web::get().to(api::iocounters::iocounters_count),
                 )
-                .route("/memory", web::get().to(api::memory::memory)),
+                .route("/memory", web::get().to(api::memory::memory))
+                .route("/swap", web::get().to(api::swap::swap)),
         );
 }

@@ -2,7 +2,7 @@ FROM rust:1-slim-buster AS base
 
 ENV USER=root
 
-RUN apt-get update && apt-get install -y --no-install-recommends apt-utils libssl-dev pkg-config build-essential libpq-dev
+RUN apt-get update && apt-get install -y --no-install-recommends cmake apt-utils libssl-dev pkg-config build-essential libpq-dev
 
 WORKDIR /code
 RUN cargo init

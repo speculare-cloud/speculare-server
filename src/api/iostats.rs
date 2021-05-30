@@ -4,7 +4,7 @@ use crate::Pool;
 
 use crate::api::PagedInfoSpecific;
 
-use actix_web::{web, HttpResponse, http};
+use actix_web::{http, web, HttpResponse};
 
 /// GET /api/iostats
 /// Return iostats for a particular host

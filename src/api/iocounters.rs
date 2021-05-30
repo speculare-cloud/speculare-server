@@ -4,7 +4,7 @@ use crate::Pool;
 
 use crate::api::PagedInfoSpecific;
 
-use actix_web::{web, HttpResponse};
+use actix_web::{http, web, HttpResponse};
 
 /// GET /api/iocounters
 /// Return iocounters for a particular host
@@ -68,6 +68,8 @@ pub async fn iocounters_count(
         // use web::block to offload blocking Diesel code without blocking server thread
         let data = web::block(move || IoCounters::count(&db.get()?, &uuid, size)).await?;
         // Return the data as form of JSON
-        Ok(HttpResponse::Ok().body(data.to_string()))
+        Ok(HttpResponse::Ok()
+            .header(http::header::CONTENT_TYPE, "text/plain")
+            .body(data.to_string()))
     }
 }

@@ -2,10 +2,15 @@ use crate::errors::AppError;
 use crate::ConnType;
 
 use super::schema::disks;
-use super::schema::disks::dsl::{created_at, disk_name, disks as dsl_disks, host_uuid};
-use super::{Host, HttpPostHost};
+use super::schema::disks::dsl::{
+    avail_space, created_at, disk_name, disks as dsl_disks, host_uuid, total_space,
+};
+use super::{get_granularity, Host, HttpPostHost};
 
-use diesel::*;
+use diesel::{
+    sql_types::{Int8, Text},
+    *,
+};
 use serde::{Deserialize, Serialize};
 
 // ========================
@@ -50,27 +55,54 @@ impl Disks {
     /// * `conn` - The r2d2 connection needed to fetch the data from the db
     /// * `uuid` - The host's uuid we want to get Disks of
     /// * `size` - The number of elements to fetch
-    /// * `page` - How many items you want to skip (page * size)
     /// * `min_date` - Min timestamp for the data to be fetched
     /// * `max_date` - Max timestamp for the data to be fetched
     pub fn get_data_dated(
         conn: &ConnType,
         uuid: &str,
         size: i64,
-        page: i64,
         min_date: chrono::NaiveDateTime,
         max_date: chrono::NaiveDateTime,
-    ) -> Result<Vec<Self>, AppError> {
-        Ok(dsl_disks
-            .filter(
-                host_uuid
-                    .eq(uuid)
-                    .and(created_at.gt(min_date).and(created_at.le(max_date))),
+    ) -> Result<Vec<DisksDTORaw>, AppError> {
+        let granularity = get_granularity(size);
+        if granularity <= 1 {
+            Ok(dsl_disks
+                .select((disk_name, total_space, avail_space, created_at))
+                .filter(
+                    host_uuid
+                        .eq(uuid)
+                        .and(created_at.gt(min_date).and(created_at.le(max_date))),
+                )
+                .limit(size)
+                .order_by(created_at.desc())
+                .load(conn)?)
+        } else {
+            Ok(sql_query(
+                "
+                WITH s AS 
+                    (SELECT disk_name, total_space, avail_space, created_at as time 
+                        FROM disks 
+                        WHERE host_uuid=$1 
+                        ORDER BY created_at 
+                        DESC LIMIT $2
+                    )
+                SELECT 
+                    disk_name, 
+                    avg(total_space)::int8 as total_space, 
+                    avg(avail_space)::int8 as avail_space, 
+                    time::date + 
+                        (extract(hour from time)::int)* '1h'::interval + 
+                        (extract(minute from time)::int)* '1m'::interval + 
+                        (extract(second from time)::int/$3)* '$3s'::interval as created_at 
+                    FROM s 
+                    GROUP BY created_at,disk_name 
+                    ORDER BY created_at DESC",
             )
-            .limit(size)
-            .offset(page * size)
-            .order_by(created_at.desc())
+            .bind::<Text, _>(uuid)
+            .bind::<Int8, _>(size)
+            .bind::<Int8, _>(granularity as i64)
             .load(conn)?)
+        }
     }
 
     /// Return the numbers of disks the host have
@@ -89,6 +121,16 @@ impl Disks {
         devices.dedup();
         Ok(devices.len())
     }
+}
+
+#[derive(Queryable, QueryableByName, Serialize)]
+#[table_name = "disks"]
+pub struct DisksDTORaw {
+    pub disk_name: String,
+    // pub mount_point: String,
+    pub total_space: i64,
+    pub avail_space: i64,
+    pub created_at: chrono::NaiveDateTime,
 }
 
 // ================

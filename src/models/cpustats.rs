@@ -2,10 +2,15 @@ use crate::errors::AppError;
 use crate::ConnType;
 
 use super::schema::cpustats;
-use super::schema::cpustats::dsl::{cpustats as dsl_cpustats, created_at, host_uuid};
-use super::{Host, HttpPostHost};
+use super::schema::cpustats::dsl::{
+    cpustats as dsl_cpustats, created_at, ctx_switches, host_uuid, interrupts, soft_interrupts,
+};
+use super::{get_granularity, Host, HttpPostHost};
 
-use diesel::*;
+use diesel::{
+    sql_types::{Int8, Text},
+    *,
+};
 use serde::{Deserialize, Serialize};
 
 // ========================
@@ -49,28 +54,66 @@ impl CpuStats {
     /// * `conn` - The r2d2 connection needed to fetch the data from the db
     /// * `uuid` - The host's uuid we want to get CpuTimes of
     /// * `size` - The number of elements to fetch
-    /// * `page` - How many items you want to skip (page * size)
     /// * `min_date` - Min timestamp for the data to be fetched
     /// * `max_date` - Max timestamp for the data to be fetched
     pub fn get_data_dated(
         conn: &ConnType,
         uuid: &str,
         size: i64,
-        page: i64,
         min_date: chrono::NaiveDateTime,
         max_date: chrono::NaiveDateTime,
-    ) -> Result<Vec<Self>, AppError> {
-        Ok(dsl_cpustats
-            .filter(
-                host_uuid
-                    .eq(uuid)
-                    .and(created_at.gt(min_date).and(created_at.le(max_date))),
+    ) -> Result<Vec<CpuStatsDTORaw>, AppError> {
+        let granularity = get_granularity(size);
+        if granularity <= 1 {
+            Ok(dsl_cpustats
+                .select((interrupts, ctx_switches, soft_interrupts, created_at))
+                .filter(
+                    host_uuid
+                        .eq(uuid)
+                        .and(created_at.gt(min_date).and(created_at.le(max_date))),
+                )
+                .limit(size)
+                .order_by(created_at.desc())
+                .load(conn)?)
+        } else {
+            // TODO - Add min_date & max_date in the QUERY
+            // TODO - Handle if granularity > 60 (for the moment stuck at max 1 per minutes)
+            Ok(sql_query(
+                "
+                WITH s AS 
+                    (SELECT interrupts, ctx_switches, soft_interrupts, created_at as time 
+                        FROM cpustats 
+                        WHERE host_uuid=$1 
+                        ORDER BY created_at 
+                        DESC LIMIT $2
+                    )
+                SELECT 
+                    avg(interrupts)::int8 as interrupts, 
+                    avg(ctx_switches)::int8 as ctx_switches, 
+                    avg(soft_interrupts)::int8 as soft_interrupts, 
+                    time::date + 
+                        (extract(hour from time)::int)* '1h'::interval + 
+                        (extract(minute from time)::int)* '1m'::interval + 
+                        (extract(second from time)::int/$3)* '$3s'::interval as created_at 
+                    FROM s 
+                    GROUP BY created_at 
+                    ORDER BY created_at DESC",
             )
-            .limit(size)
-            .offset(page * size)
-            .order_by(created_at.desc())
+            .bind::<Text, _>(uuid)
+            .bind::<Int8, _>(size)
+            .bind::<Int8, _>(granularity as i64)
             .load(conn)?)
+        }
     }
+}
+
+#[derive(Queryable, QueryableByName, Serialize)]
+#[table_name = "cpustats"]
+pub struct CpuStatsDTORaw {
+    pub interrupts: i64,
+    pub ctx_switches: i64,
+    pub soft_interrupts: i64,
+    pub created_at: chrono::NaiveDateTime,
 }
 
 // ================

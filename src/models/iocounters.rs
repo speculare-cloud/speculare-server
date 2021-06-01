@@ -3,11 +3,14 @@ use crate::ConnType;
 
 use super::schema::iocounters;
 use super::schema::iocounters::dsl::{
-    created_at, host_uuid, interface, iocounters as dsl_iocounters,
+    created_at, host_uuid, interface, iocounters as dsl_iocounters, rx_bytes, tx_bytes,
 };
-use super::{Host, HttpPostHost};
+use super::{get_granularity, Host, HttpPostHost};
 
-use diesel::*;
+use diesel::{
+    sql_types::{Int8, Text},
+    *,
+};
 use serde::{Deserialize, Serialize};
 
 // ========================
@@ -57,27 +60,54 @@ impl IoCounters {
     /// * `conn` - The r2d2 connection needed to fetch the data from the db
     /// * `uuid` - The host's uuid we want to get IoCounters of
     /// * `size` - The number of elements to fetch
-    /// * `page` - How many items you want to skip (page * size)
     /// * `min_date` - Min timestamp for the data to be fetched
     /// * `max_date` - Max timestamp for the data to be fetched
     pub fn get_data_dated(
         conn: &ConnType,
         uuid: &str,
         size: i64,
-        page: i64,
         min_date: chrono::NaiveDateTime,
         max_date: chrono::NaiveDateTime,
-    ) -> Result<Vec<Self>, AppError> {
-        Ok(dsl_iocounters
-            .filter(
-                host_uuid
-                    .eq(uuid)
-                    .and(created_at.gt(min_date).and(created_at.le(max_date))),
+    ) -> Result<Vec<IoCountersDTORaw>, AppError> {
+        let granularity = get_granularity(size);
+        if granularity <= 1 {
+            Ok(dsl_iocounters
+                .select((interface, rx_bytes, tx_bytes, created_at))
+                .filter(
+                    host_uuid
+                        .eq(uuid)
+                        .and(created_at.gt(min_date).and(created_at.le(max_date))),
+                )
+                .limit(size)
+                .order_by(created_at.desc())
+                .load(conn)?)
+        } else {
+            Ok(sql_query(
+                "
+                WITH s AS 
+                    (SELECT interface, rx_bytes, tx_bytes, created_at as time 
+                        FROM iocounters 
+                        WHERE host_uuid=$1 
+                        ORDER BY created_at 
+                        DESC LIMIT $2
+                    ) 
+                SELECT 
+                    interface, 
+                    avg(rx_bytes)::int8 as rx_bytes, 
+                    avg(tx_bytes)::int8 as tx_bytes, 
+                    time::date + 
+                        (extract(hour from time)::int)* '1h'::interval + 
+                        (extract(minute from time)::int)* '1m'::interval + 
+                        (extract(second from time)::int/$3)* '$3s'::interval as created_at 
+                    FROM s 
+                    GROUP BY created_at,interface 
+                    ORDER BY created_at DESC",
             )
-            .limit(size)
-            .offset(page * size)
-            .order_by(created_at.desc())
+            .bind::<Text, _>(uuid)
+            .bind::<Int8, _>(size)
+            .bind::<Int8, _>(granularity as i64)
             .load(conn)?)
+        }
     }
 
     /// Return the numbers of iostats the host have
@@ -96,6 +126,15 @@ impl IoCounters {
         devices.dedup();
         Ok(devices.len())
     }
+}
+
+#[derive(Queryable, QueryableByName, Serialize)]
+#[table_name = "iocounters"]
+pub struct IoCountersDTORaw {
+    pub interface: String,
+    pub rx_bytes: i64,
+    pub tx_bytes: i64,
+    pub created_at: chrono::NaiveDateTime,
 }
 
 // ================

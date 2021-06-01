@@ -18,7 +18,8 @@ pub async fn disks(
     // If size is over 500 or less than 0, return error
     let size = info.size.unwrap_or(100);
     let page = info.page.unwrap_or(0);
-    if !(0..=50000).contains(&size) {
+    // Clear the data and close the websocket
+    if !(0..=500000).contains(&size) {
         Err(AppError {
             message: Some("The size parameters must be 0 < size <= 500".to_string()),
             cause: None,

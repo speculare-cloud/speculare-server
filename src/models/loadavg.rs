@@ -86,9 +86,9 @@ impl LoadAvg {
                         DESC LIMIT $2
                     ) 
                 SELECT 
-                    avg(one)::int8 as one, 
-                    avg(five)::int8 as five, 
-                    avg(fifteen)::int8 as fifteen, 
+                    avg(one)::float8 as one, 
+                    avg(five)::float8 as five, 
+                    avg(fifteen)::float8 as fifteen, 
                     time::date + 
                         (extract(hour from time)::int)* '1h'::interval + 
                         (extract(minute from time)::int)* '1m'::interval + 

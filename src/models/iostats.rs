@@ -97,8 +97,8 @@ impl IoStats {
                     avg(write_bytes)::int8 as write_bytes, 
                     time::date + 
                         (extract(hour from time)::int)* '1h'::interval +
-                        (extract(minute from time)::int/3$)* '3$m4$s'::interval +
-                        (extract(second from time)::int/5$)* '5$s'::interval as created_at  
+                        (extract(minute from time)::int/$3)* '$3m$4s'::interval +
+                        (extract(second from time)::int/$5)* '$5s'::interval as created_at 
                     FROM s 
                     GROUP BY created_at,device_name 
                     ORDER BY created_at DESC",

@@ -15,7 +15,6 @@ pub async fn iocounters(
     info!("Route GET /api/iocounters : {:?}", info);
 
     let uuid = info.uuid.to_owned();
-    // If size is over 5000 or less than 30, return error
     let size = info.size.unwrap_or(100);
     let page = info.page.unwrap_or(0);
     // If min_date and max_date are specified, it's a dated request, otherwise, normal
@@ -34,9 +33,19 @@ pub async fn iocounters(
         // Return the data as form of JSON
         Ok(HttpResponse::Ok().json(data))
     } else {
-        let data = web::block(move || IoCounters::get_data(&db.get()?, &uuid, size, page)).await?;
-        // Return the data as form of JSON
-        Ok(HttpResponse::Ok().json(data))
+        // Define the max size someone can request
+        if !(30..=5000).contains(&size) {
+            Err(AppError {
+                message: Some("The size parameters must be 30 < size <= 5000".to_string()),
+                cause: None,
+                error_type: AppErrorType::InvalidRequest,
+            })
+        } else {
+            let data =
+                web::block(move || IoCounters::get_data(&db.get()?, &uuid, size, page)).await?;
+            // Return the data as form of JSON
+            Ok(HttpResponse::Ok().json(data))
+        }
     }
 }
 
@@ -49,11 +58,11 @@ pub async fn iocounters_count(
     info!("Route GET /api/iocounters_count : {:?}", info);
 
     let uuid = info.uuid.to_owned();
-    // If size is over 500 or less than 30, return error
+    // If size is over 5000 or less than 30, return error
     let size = info.size.unwrap_or(100);
-    if !(30..=500).contains(&size) {
+    if !(30..=5000).contains(&size) {
         Err(AppError {
-            message: Some("The size parameters must be 30 < size <= 500".to_string()),
+            message: Some("The size parameters must be 30 < size <= 5000".to_string()),
             cause: None,
             error_type: AppErrorType::InvalidRequest,
         })

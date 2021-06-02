@@ -41,7 +41,16 @@ pub use swap::*;
 /// size = 21600 => 45
 #[inline]
 pub fn get_granularity(size: i64) -> u16 {
-    assert!(size < 30000000);
-    // Casting to u16 is safe as per the check above as u16 max value is 65535 and is not reached unless size is 3*(10^7)
-    ((0.00192859 * size as f32) * (1.00694) + 0.298206) as u16
+    assert!(size < 23000000);
+    // Casting to u16 is safe as per the check above as u16 max value is 65535 and is not reached unless size is 23000000
+    ((0.003 * size as f32) * (0.93) + 0.298206) as u16
+}
+
+#[inline]
+pub fn get_query_range_values(granularity: u16) -> (i64, i64, i64) {
+    if granularity > 60 {
+        ((granularity / 60) as i64, (granularity % 60) as i64, 0i64)
+    } else {
+        (1i64, 0i64, granularity as i64)
+    }
 }

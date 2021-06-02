@@ -6,7 +6,7 @@ use super::schema::cputimes::dsl::{
     cputimes as dsl_cputimes, created_at, cuser, host_uuid, idle, iowait, irq, nice, softirq,
     steal, system,
 };
-use super::{get_granularity, Host, HttpPostHost};
+use super::{get_granularity, get_query_range_values, Host, HttpPostHost};
 
 use diesel::{
     sql_types::{Int8, Text},
@@ -87,7 +87,10 @@ impl CpuTimes {
                 .load(conn)?)
         } else {
             // TODO - Add min_date & max_date in the QUERY
-            // TODO - Handle if granularity > 60 (for the moment stuck at max 1 per minutes)
+
+            // Compute values if granularity > 60
+            let (min, sec_supp, granularity) = get_query_range_values(granularity);
+            // Prepare and run the query
             Ok(sql_query("
                 WITH s AS 
                     (SELECT cuser, nice, system, idle, iowait, irq, softirq, steal, created_at as time 
@@ -107,14 +110,16 @@ impl CpuTimes {
                     avg(steal)::int8 as steal, 
                     time::date + 
                         (extract(hour from time)::int)* '1h'::interval +
-                        (extract(minute from time)::int)* '1m'::interval +
-                        (extract(second from time)::int/$3)* '$3s'::interval as created_at 
+                        (extract(minute from time)::int/3$)* '3$m4$s'::interval +
+                        (extract(second from time)::int/5$)* '5$s'::interval as created_at 
                     FROM s 
                     GROUP BY created_at 
                     ORDER BY created_at DESC")
                 .bind::<Text, _>(uuid)
                 .bind::<Int8, _>(size)
-                .bind::<Int8, _>(granularity as i64)
+                .bind::<Int8, _>(min)
+                .bind::<Int8, _>(sec_supp)
+                .bind::<Int8, _>(granularity)
                 .load(conn)?)
         }
     }

@@ -3,7 +3,7 @@ use crate::ConnType;
 
 use super::schema::swap;
 use super::schema::swap::dsl::{created_at, free, host_uuid, swap as dsl_swap, total, used};
-use super::{get_granularity, Host, HttpPostHost};
+use super::{get_granularity, get_query_range_values, Host, HttpPostHost};
 
 use diesel::{
     sql_types::{Int8, Text},
@@ -74,6 +74,9 @@ impl Swap {
                 .order_by(created_at.desc())
                 .load(conn)?)
         } else {
+            // Compute values if granularity > 60
+            let (min, sec_supp, granularity) = get_query_range_values(granularity);
+            // Prepare and run the query
             Ok(sql_query(
                 "
                 WITH s AS 
@@ -88,16 +91,18 @@ impl Swap {
                     avg(free)::int8 as free, 
                     avg(used)::int8 as used, 
                     time::date + 
-                        (extract(hour from time)::int)* '1h'::interval + 
-                        (extract(minute from time)::int)* '1m'::interval + 
-                        (extract(second from time)::int/$3)* '$3s'::interval as created_at 
+                        (extract(hour from time)::int)* '1h'::interval +
+                        (extract(minute from time)::int/3$)* '3$m4$s'::interval +
+                        (extract(second from time)::int/5$)* '5$s'::interval as created_at 
                     FROM s 
                     GROUP BY created_at 
                     ORDER BY created_at DESC",
             )
             .bind::<Text, _>(uuid)
             .bind::<Int8, _>(size)
-            .bind::<Int8, _>(granularity as i64)
+            .bind::<Int8, _>(min)
+            .bind::<Int8, _>(sec_supp)
+            .bind::<Int8, _>(granularity)
             .load(conn)?)
         }
     }

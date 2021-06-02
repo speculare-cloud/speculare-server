@@ -5,7 +5,7 @@ use super::schema::loadavg;
 use super::schema::loadavg::dsl::{
     created_at, fifteen, five, host_uuid, loadavg as dsl_loadavg, one,
 };
-use super::{get_granularity, Host, HttpPostHost};
+use super::{get_granularity, get_query_range_values, Host, HttpPostHost};
 
 use diesel::{
     sql_types::{Int8, Text},
@@ -76,6 +76,9 @@ impl LoadAvg {
                 .order_by(created_at.desc())
                 .load(conn)?)
         } else {
+            // Compute values if granularity > 60
+            let (min, sec_supp, granularity) = get_query_range_values(granularity);
+            // Prepare and run the query
             Ok(sql_query(
                 "
                 WITH s AS 
@@ -90,16 +93,18 @@ impl LoadAvg {
                     avg(five)::float8 as five, 
                     avg(fifteen)::float8 as fifteen, 
                     time::date + 
-                        (extract(hour from time)::int)* '1h'::interval + 
-                        (extract(minute from time)::int)* '1m'::interval + 
-                        (extract(second from time)::int/$3)* '$3s'::interval as created_at 
+                        (extract(hour from time)::int)* '1h'::interval +
+                        (extract(minute from time)::int/3$)* '3$m4$s'::interval +
+                        (extract(second from time)::int/5$)* '5$s'::interval as created_at 
                     FROM s 
                     GROUP BY created_at 
                     ORDER BY created_at DESC",
             )
             .bind::<Text, _>(uuid)
             .bind::<Int8, _>(size / 5) // divide by 5 because loadavg is gathered once every 5s minimum
-            .bind::<Int8, _>(granularity as i64)
+            .bind::<Int8, _>(min)
+            .bind::<Int8, _>(sec_supp)
+            .bind::<Int8, _>(granularity)
             .load(conn)?)
         }
     }

@@ -5,7 +5,7 @@ use super::schema::disks;
 use super::schema::disks::dsl::{
     avail_space, created_at, disk_name, disks as dsl_disks, host_uuid, total_space,
 };
-use super::{get_granularity, Host, HttpPostHost};
+use super::{get_granularity, get_query_range_values, Host, HttpPostHost};
 
 use diesel::{
     sql_types::{Int8, Text},
@@ -77,6 +77,9 @@ impl Disks {
                 .order_by(created_at.desc())
                 .load(conn)?)
         } else {
+            // Compute values if granularity > 60
+            let (min, sec_supp, granularity) = get_query_range_values(granularity);
+            // Prepare and run the query
             Ok(sql_query(
                 "
                 WITH s AS 
@@ -91,16 +94,18 @@ impl Disks {
                     avg(total_space)::int8 as total_space, 
                     avg(avail_space)::int8 as avail_space, 
                     time::date + 
-                        (extract(hour from time)::int)* '1h'::interval + 
-                        (extract(minute from time)::int)* '1m'::interval + 
-                        (extract(second from time)::int/$3)* '$3s'::interval as created_at 
+                        (extract(hour from time)::int)* '1h'::interval +
+                        (extract(minute from time)::int/3$)* '3$m4$s'::interval +
+                        (extract(second from time)::int/5$)* '5$s'::interval as created_at 
                     FROM s 
                     GROUP BY created_at,disk_name 
                     ORDER BY created_at DESC",
             )
             .bind::<Text, _>(uuid)
             .bind::<Int8, _>(size)
-            .bind::<Int8, _>(granularity as i64)
+            .bind::<Int8, _>(min)
+            .bind::<Int8, _>(sec_supp)
+            .bind::<Int8, _>(granularity)
             .load(conn)?)
         }
     }

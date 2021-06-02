@@ -9,7 +9,8 @@ use super::schema::cputimes::dsl::{
 use super::{get_granularity, get_query_range_values, Host, HttpPostHost};
 
 use diesel::{
-    sql_types::{Int8, Text},
+    pg::expression::extensions::IntervalDsl,
+    sql_types::{Int8, Interval, Text},
     *,
 };
 use serde::{Deserialize, Serialize};
@@ -111,7 +112,7 @@ impl CpuTimes {
                     avg(steal)::int8 as steal, 
                     time::date + 
                         (extract(hour from time)::int)* '1h'::interval +
-                        (extract(minute from time)::int/$3)* '$3m$4s'::interval +
+                        (extract(minute from time)::int/$3)* $4 +
                         (extract(second from time)::int/$5)* '$5s'::interval as created_at 
                     FROM s 
                     GROUP BY created_at 
@@ -120,7 +121,7 @@ impl CpuTimes {
             .bind::<Text, _>(uuid)
             .bind::<Int8, _>(size)
             .bind::<Int8, _>(min)
-            .bind::<Int8, _>(sec_supp)
+            .bind::<Interval, _>(min.minute() + sec_supp.second())
             .bind::<Int8, _>(granularity)
             .load(conn)?)
         }

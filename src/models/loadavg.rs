@@ -94,7 +94,7 @@ impl LoadAvg {
                     avg(fifteen)::float8 as fifteen, 
                     time::date + 
                         (extract(hour from time)::int)* '1h'::interval +
-                        (extract(minute from time)::int/$3)* '$3m$4s'::interval +
+                        (extract(minute from time)::int/$3)* $4::interval +
                         (extract(second from time)::int/$5)* '$5s'::interval as created_at 
                     FROM s 
                     GROUP BY created_at 
@@ -103,7 +103,7 @@ impl LoadAvg {
             .bind::<Text, _>(uuid)
             .bind::<Int8, _>(size / 5) // divide by 5 because loadavg is gathered once every 5s minimum
             .bind::<Int8, _>(min)
-            .bind::<Int8, _>(sec_supp)
+            .bind::<Text, _>(format!("{}m{}s", min, sec_supp))
             .bind::<Int8, _>(granularity)
             .load(conn)?)
         }

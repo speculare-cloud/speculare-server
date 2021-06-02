@@ -8,7 +8,8 @@ use super::schema::loadavg::dsl::{
 use super::{get_granularity, get_query_range_values, Host, HttpPostHost};
 
 use diesel::{
-    sql_types::{Int8, Text},
+    pg::expression::extensions::IntervalDsl,
+    sql_types::{Int8, Interval, Text},
     *,
 };
 use serde::{Deserialize, Serialize};
@@ -94,8 +95,8 @@ impl LoadAvg {
                     avg(fifteen)::float8 as fifteen, 
                     time::date + 
                         (extract(hour from time)::int)* '1h'::interval +
-                        (extract(minute from time)::int/$3)* $4::interval +
-                        (extract(second from time)::int/$5)* '$5s'::interval as created_at 
+                        (extract(minute from time)::int/$3)* $4 +
+                        (extract(second from time)::int/$5)* $5 as created_at 
                     FROM s 
                     GROUP BY created_at 
                     ORDER BY created_at DESC",
@@ -103,8 +104,8 @@ impl LoadAvg {
             .bind::<Text, _>(uuid)
             .bind::<Int8, _>(size / 5) // divide by 5 because loadavg is gathered once every 5s minimum
             .bind::<Int8, _>(min)
-            .bind::<Text, _>(format!("{}m{}s", min, sec_supp))
-            .bind::<Int8, _>(granularity)
+            .bind::<Interval, _>(min.minute() + sec_supp.second())
+            .bind::<Interval, _>(granularity.second())
             .load(conn)?)
         }
     }

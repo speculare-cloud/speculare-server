@@ -8,7 +8,8 @@ use super::schema::memory::dsl::{
 use super::{get_granularity, get_query_range_values, Host, HttpPostHost};
 
 use diesel::{
-    sql_types::{Int8, Text},
+    pg::expression::extensions::IntervalDsl,
+    sql_types::{Int8, Interval, Text},
     *,
 };
 use serde::{Deserialize, Serialize};
@@ -98,8 +99,8 @@ impl Memory {
                     avg(cached)::int8 as cached, 
                     time::date + 
                         (extract(hour from time)::int)* '1h'::interval +
-                        (extract(minute from time)::int/$3)* $4::interval +
-                        (extract(second from time)::int/$5)* '$5s'::interval as created_at 
+                        (extract(minute from time)::int/$3)* $4 +
+                        (extract(second from time)::int/$5)* $5 as created_at 
                     FROM s 
                     GROUP BY created_at 
                     ORDER BY created_at DESC",
@@ -107,8 +108,8 @@ impl Memory {
             .bind::<Text, _>(uuid)
             .bind::<Int8, _>(size)
             .bind::<Int8, _>(min)
-            .bind::<Text, _>(format!("{}m{}s", min, sec_supp))
-            .bind::<Int8, _>(granularity)
+            .bind::<Interval, _>(min.minute() + sec_supp.second())
+            .bind::<Interval, _>(granularity.second())
             .load(conn)?)
         }
     }

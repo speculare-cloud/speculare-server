@@ -91,7 +91,8 @@ impl CpuTimes {
             // Compute values if granularity > 60
             let (min, sec_supp, granularity) = get_query_range_values(granularity);
             // Prepare and run the query
-            Ok(sql_query("
+            Ok(sql_query(
+                "
                 WITH s AS 
                     (SELECT cuser, nice, system, idle, iowait, irq, softirq, steal, created_at as time 
                         FROM cputimes 
@@ -114,13 +115,14 @@ impl CpuTimes {
                         (extract(second from time)::int/$5)* '$5s'::interval as created_at 
                     FROM s 
                     GROUP BY created_at 
-                    ORDER BY created_at DESC")
-                .bind::<Text, _>(uuid)
-                .bind::<Int8, _>(size)
-                .bind::<Int8, _>(min)
-                .bind::<Int8, _>(sec_supp)
-                .bind::<Int8, _>(granularity)
-                .load(conn)?)
+                    ORDER BY created_at DESC",
+            )
+            .bind::<Text, _>(uuid)
+            .bind::<Int8, _>(size)
+            .bind::<Int8, _>(min)
+            .bind::<Int8, _>(sec_supp)
+            .bind::<Int8, _>(granularity)
+            .load(conn)?)
         }
     }
 }

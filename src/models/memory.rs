@@ -100,7 +100,7 @@ impl Memory {
                     time::date + 
                         (extract(hour from time)::int)* '1h'::interval +
                         (extract(minute from time)::int/$3)* $4 +
-                        (extract(second from time)::int/$5)* $5 as created_at 
+                        (extract(second from time)::int/$5)* $6 as created_at 
                     FROM s 
                     GROUP BY created_at 
                     ORDER BY created_at DESC",
@@ -109,6 +109,7 @@ impl Memory {
             .bind::<Int8, _>(size)
             .bind::<Int8, _>(min)
             .bind::<Interval, _>(min.minute() + sec_supp.second())
+            .bind::<Int8, _>(granularity)
             .bind::<Interval, _>(granularity.second())
             .load(conn)?)
         }

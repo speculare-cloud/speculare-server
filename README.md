@@ -27,6 +27,8 @@ $ cargo install diesel_cli --no-default-features --features postgres
 
 - Create a .env file based on .env.example
 
+> **⚠ WARNING: The postgres instance you're going to use need to be configured for logical replication (see [pg-docker/pg.conf.sample](pg-docker/pg.conf.sample)). Moreover the instance must have partman extension installed and loaded as well as wal2json.**
+
 - (Solution A) Setup the database based on the migrations files (bash file)
 ```bash
 # For database_setup.sh to works, you need to have a folder migrations at the same

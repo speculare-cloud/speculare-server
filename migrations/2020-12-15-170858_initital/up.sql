@@ -16,10 +16,13 @@ CREATE TABLE disks (
 	host_uuid VARCHAR(48) NOT NULL,
 	created_at TIMESTAMP NOT NULL,
 	CONSTRAINT host_uuid_fkey FOREIGN KEY (host_uuid) REFERENCES hosts (uuid) DEFERRABLE
-);
+) PARTITION BY RANGE (created_at);
+
+CREATE TABLE disks_template (LIKE disks);
+ALTER TABLE disks_template ADD PRIMARY KEY (id);
 
 CREATE TABLE cputimes (
-	id BIGSERIAL PRIMARY KEY,
+	id BIGSERIAL,
 	cuser BIGINT NOT NULL,
 	nice BIGINT NOT NULL,
 	system BIGINT NOT NULL,
@@ -33,20 +36,26 @@ CREATE TABLE cputimes (
 	host_uuid VARCHAR(48) NOT NULL,
 	created_at TIMESTAMP NOT NULL,
 	CONSTRAINT host_uuid_fkey FOREIGN KEY (host_uuid) REFERENCES hosts (uuid) DEFERRABLE
-);
+) PARTITION BY RANGE (created_at);
+
+CREATE TABLE cputimes_template (LIKE cputimes);
+ALTER TABLE cputimes_template ADD PRIMARY KEY (id);
 
 CREATE TABLE cpustats (
-	id BIGSERIAL PRIMARY KEY,
+	id BIGSERIAL,
 	interrupts BIGINT NOT NULL,
 	ctx_switches BIGINT NOT NULL,
 	soft_interrupts BIGINT NOT NULL,
 	host_uuid VARCHAR(48) NOT NULL,
 	created_at TIMESTAMP NOT NULL,
 	CONSTRAINT host_uuid_fkey FOREIGN KEY (host_uuid) REFERENCES hosts (uuid) DEFERRABLE
-);
+) PARTITION BY RANGE (created_at);
+
+CREATE TABLE cpustats_template (LIKE cpustats);
+ALTER TABLE cpustats_template ADD PRIMARY KEY (id);
 
 CREATE TABLE iostats (
-	id BIGSERIAL PRIMARY KEY,
+	id BIGSERIAL,
 	device_name VARCHAR(128) NOT NULL,
 	read_count BIGINT NOT NULL,
 	read_bytes BIGINT NOT NULL,
@@ -56,20 +65,26 @@ CREATE TABLE iostats (
 	host_uuid VARCHAR(48) NOT NULL,
 	created_at TIMESTAMP NOT NULL,
 	CONSTRAINT host_uuid_fkey FOREIGN KEY (host_uuid) REFERENCES hosts (uuid) DEFERRABLE
-);
+) PARTITION BY RANGE (created_at);
+
+CREATE TABLE iostats_template (LIKE iostats);
+ALTER TABLE iostats_template ADD PRIMARY KEY (id);
 
 CREATE TABLE loadavg (
-	id BIGSERIAL PRIMARY KEY,
+	id BIGSERIAL,
 	one FLOAT NOT NULL,
 	five FLOAT NOT NULL,
     fifteen FLOAT NOT NULL,
 	host_uuid VARCHAR(48) NOT NULL,
     created_at TIMESTAMP NOT NULL,
 	CONSTRAINT host_uuid_fkey FOREIGN KEY (host_uuid) REFERENCES hosts (uuid) DEFERRABLE
-);
+) PARTITION BY RANGE (created_at);
+
+CREATE TABLE loadavg_template (LIKE loadavg);
+ALTER TABLE loadavg_template ADD PRIMARY KEY (id);
 
 CREATE TABLE memory (
-	id BIGSERIAL PRIMARY KEY,
+	id BIGSERIAL,
 	total BIGINT NOT NULL,
 	free BIGINT NOT NULL,
 	used BIGINT NOT NULL,
@@ -79,20 +94,26 @@ CREATE TABLE memory (
 	host_uuid VARCHAR(48) NOT NULL,
     created_at TIMESTAMP NOT NULL,
 	CONSTRAINT host_uuid_fkey FOREIGN KEY (host_uuid) REFERENCES hosts (uuid) DEFERRABLE
-);
+) PARTITION BY RANGE (created_at);
+
+CREATE TABLE memory_template (LIKE memory);
+ALTER TABLE memory_template ADD PRIMARY KEY (id);
 
 CREATE TABLE swap (
-	id BIGSERIAL PRIMARY KEY,
+	id BIGSERIAL,
 	total BIGINT NOT NULL,
 	free BIGINT NOT NULL,
 	used BIGINT NOT NULL,
 	host_uuid VARCHAR(48) NOT NULL,
     created_at TIMESTAMP NOT NULL,
 	CONSTRAINT host_uuid_fkey FOREIGN KEY (host_uuid) REFERENCES hosts (uuid) DEFERRABLE
-);
+) PARTITION BY RANGE (created_at);
+
+CREATE TABLE swap_template (LIKE swap);
+ALTER TABLE swap_template ADD PRIMARY KEY (id);
 
 CREATE TABLE iocounters (
-	id BIGSERIAL PRIMARY KEY,
+	id BIGSERIAL,
 	interface VARCHAR(128) NOT NULL,
 	rx_bytes BIGINT NOT NULL,
 	rx_packets BIGINT NOT NULL,
@@ -105,4 +126,7 @@ CREATE TABLE iocounters (
 	host_uuid VARCHAR(48) NOT NULL,
 	created_at TIMESTAMP NOT NULL,
 	CONSTRAINT host_uuid_fkey FOREIGN KEY (host_uuid) REFERENCES hosts (uuid) DEFERRABLE
-);
+) PARTITION BY RANGE (created_at);
+
+CREATE TABLE iocounters_template (LIKE iocounters);
+ALTER TABLE iocounters_template ADD PRIMARY KEY (id);

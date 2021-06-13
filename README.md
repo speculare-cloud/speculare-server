@@ -7,6 +7,7 @@
 
 [![Apache 2 License](https://img.shields.io/badge/license-Apache%202-blue.svg)](LICENSE)
 [![CI](https://github.com/Martichou/speculare-server/workflows/CI/badge.svg)](https://github.com/Martichou/speculare-server/actions)
+[![Docs](https://img.shields.io/badge/Docs-latest-green.svg)](https://docs.speculare.cloud)
 
   </p>
 </div>

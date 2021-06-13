@@ -45,6 +45,12 @@ $ cargo install diesel_cli
 $ diesel setup
 ```
 
+Information
+--------------------------
+By default (and until configuration is implemented) the data retention is set to 7 days. If you've configured everything and each service are running correctly, you don't have to do anything. Partman will take care of cleaning old PARTITION and creating new one.
+
+Using PARTITION instead of regular DELETE ... WHERE created_at ... is better to avoid any performance impact. DELETE on a big table can take several minutes and block incoming transaction, whereas DROPing a TABLE is faster and don't block incoming transaction.
+
 Run in Docker
 --------------------------
 

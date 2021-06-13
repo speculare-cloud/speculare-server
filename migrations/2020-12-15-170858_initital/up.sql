@@ -8,7 +8,7 @@ CREATE TABLE hosts (
 );
 
 CREATE TABLE disks (
-	id BIGSERIAL PRIMARY KEY,
+	id BIGSERIAL,
 	disk_name VARCHAR(128) NOT NULL,
 	mount_point VARCHAR(128) NOT NULL,
 	total_space BIGINT NOT NULL,

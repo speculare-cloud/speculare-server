@@ -9,7 +9,7 @@ SELECT partman.create_parent('public.iostats', 'created_at', 'native', 'daily', 
 SELECT partman.create_parent('public.loadavg', 'created_at', 'native', 'daily', p_template_table := 'public.loadavg_template');
 SELECT partman.create_parent('public.memory', 'created_at', 'native', 'daily', p_template_table := 'public.memory_template');
 SELECT partman.create_parent('public.swap', 'created_at', 'native', 'daily', p_template_table := 'public.swap_template');
-SELECT partman.create_parent('public.iocounters', 'created_at', 'native', 'daily', p_premake := 7, p_template_table := 'public.iocounters_template');
+SELECT partman.create_parent('public.iocounters', 'created_at', 'native', 'daily', p_template_table := 'public.iocounters_template');
 
 UPDATE partman.part_config SET 
 	retention = '14 days', 

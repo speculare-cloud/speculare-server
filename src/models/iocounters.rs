@@ -117,21 +117,34 @@ impl IoCounters {
         }
     }
 
-    /// Return the numbers of iostats the host have
+    /// Return the numbers of iocounters the host have
     /// # Params
     /// * `conn` - The r2d2 connection needed to fetch the data from the db
-    /// * `uuid` - The host's uuid we want to get the number of iostats of
+    /// * `uuid` - The host's uuid we want to get the number of iocounters of
     /// * `size` - The number of elements to fetch
-    pub fn count(conn: &ConnType, uuid: &str, size: i64) -> Result<usize, AppError> {
-        let mut devices = dsl_iocounters
-            .select(interface)
-            .filter(host_uuid.eq(uuid))
-            .limit(size)
-            .order_by(created_at.desc())
-            .load::<String>(conn)?;
-        devices.sort();
-        devices.dedup();
-        Ok(devices.len())
+    pub fn count(conn: &ConnType, uuid: &str, size: i64) -> Result<i64, AppError> {
+        let res = sql_query(
+            "
+            WITH s AS 
+                (SELECT id, interface, created_at 
+                    FROM iocounters 
+                    WHERE host_uuid=$1 
+                    ORDER BY created_at 
+                    DESC LIMIT $2
+                ) 
+            SELECT 
+                COUNT(DISTINCT interface) 
+                FROM s",
+        )
+        .bind::<Text, _>(uuid)
+        .bind::<Int8, _>(size)
+        .load::<IoCountersCount>(conn)?;
+
+        if res.len() == 0 {
+            Ok(0)
+        } else {
+            Ok(res[0].count)
+        }
     }
 }
 
@@ -142,6 +155,12 @@ pub struct IoCountersDTORaw {
     pub rx_bytes: i64,
     pub tx_bytes: i64,
     pub created_at: chrono::NaiveDateTime,
+}
+
+#[derive(Queryable, QueryableByName, Serialize)]
+pub struct IoCountersCount {
+    #[sql_type = "Int8"]
+    pub count: i64,
 }
 
 // ================

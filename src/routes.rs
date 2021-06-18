@@ -24,11 +24,8 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
                 .route("/disks_count", web::get().to(api::disks::disks_count))
                 .route("/iostats", web::get().to(api::iostats::iostats))
                 .route("/iostats_count", web::get().to(api::iostats::iostats_count))
-                .route("/iocounters", web::get().to(api::iocounters::iocounters))
-                .route(
-                    "/iocounters_count",
-                    web::get().to(api::iocounters::iocounters_count),
-                )
+                .route("/ionets", web::get().to(api::ionet::ionets))
+                .route("/ionets_count", web::get().to(api::ionet::ionets_count))
                 .route("/memory", web::get().to(api::memory::memory))
                 .route("/swap", web::get().to(api::swap::swap)),
         );

@@ -95,6 +95,6 @@ pub struct HttpPostHost {
     pub iostats: Option<Vec<HttpIoStats>>,
     pub memory: Option<HttpMemory>,
     pub swap: Option<HttpSwap>,
-    pub iocounters: Option<Vec<HttpIoCounters>>,
+    pub ionets: Option<Vec<HttpIoCounters>>,
     pub created_at: chrono::NaiveDateTime,
 }

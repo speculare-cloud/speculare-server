@@ -20,7 +20,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Identifiable, Queryable, Debug, Serialize, Deserialize, Associations)]
 #[belongs_to(Host, foreign_key = "host_uuid")]
 #[table_name = "iocounters"]
-pub struct IoCounters {
+pub struct IoNet {
     pub id: i64,
     pub interface: String,
     pub rx_bytes: i64,
@@ -35,11 +35,11 @@ pub struct IoCounters {
     pub created_at: chrono::NaiveDateTime,
 }
 
-impl IoCounters {
-    /// Return a Vector of IoCounters
+impl IoNet {
+    /// Return a Vector of IoNet
     /// # Params
     /// * `conn` - The r2d2 connection needed to fetch the data from the db
-    /// * `uuid` - The host's uuid we want to get IoCounters of
+    /// * `uuid` - The host's uuid we want to get IoNet of
     /// * `size` - The number of elements to fetch
     /// * `page` - How many items you want to skip (page * size)
     pub fn get_data(
@@ -56,10 +56,10 @@ impl IoCounters {
             .load(conn)?)
     }
 
-    /// Return a Vector of IoCounters between min_date and max_date
+    /// Return a Vector of IoNet between min_date and max_date
     /// # Params
     /// * `conn` - The r2d2 connection needed to fetch the data from the db
-    /// * `uuid` - The host's uuid we want to get IoCounters of
+    /// * `uuid` - The host's uuid we want to get IoNet of
     /// * `size` - The number of elements to fetch
     /// * `min_date` - Min timestamp for the data to be fetched
     /// * `max_date` - Max timestamp for the data to be fetched
@@ -69,7 +69,7 @@ impl IoCounters {
         size: i64,
         min_date: chrono::NaiveDateTime,
         max_date: chrono::NaiveDateTime,
-    ) -> Result<Vec<IoCountersDTORaw>, AppError> {
+    ) -> Result<Vec<IoNetDTORaw>, AppError> {
         let granularity = get_granularity(size);
         if granularity <= 1 {
             Ok(dsl_iocounters
@@ -117,10 +117,10 @@ impl IoCounters {
         }
     }
 
-    /// Return the numbers of iocounters the host have
+    /// Return the numbers of IoNet the host have
     /// # Params
     /// * `conn` - The r2d2 connection needed to fetch the data from the db
-    /// * `uuid` - The host's uuid we want to get the number of iocounters of
+    /// * `uuid` - The host's uuid we want to get the number of IoNet of
     /// * `size` - The number of elements to fetch
     pub fn count(conn: &ConnType, uuid: &str, size: i64) -> Result<i64, AppError> {
         let res = sql_query(
@@ -138,9 +138,9 @@ impl IoCounters {
         )
         .bind::<Text, _>(uuid)
         .bind::<Int8, _>(size)
-        .load::<IoCountersCount>(conn)?;
+        .load::<IoNetCount>(conn)?;
 
-        if res.len() == 0 {
+        if res.is_empty() {
             Ok(0)
         } else {
             Ok(res[0].count)
@@ -150,7 +150,7 @@ impl IoCounters {
 
 #[derive(Queryable, QueryableByName, Serialize)]
 #[table_name = "iocounters"]
-pub struct IoCountersDTORaw {
+pub struct IoNetDTORaw {
     pub interface: String,
     pub rx_bytes: i64,
     pub tx_bytes: i64,
@@ -158,7 +158,7 @@ pub struct IoCountersDTORaw {
 }
 
 #[derive(Queryable, QueryableByName, Serialize)]
-pub struct IoCountersCount {
+pub struct IoNetCount {
     #[sql_type = "Int8"]
     pub count: i64,
 }
@@ -168,7 +168,7 @@ pub struct IoCountersCount {
 // ================
 #[derive(Insertable)]
 #[table_name = "iocounters"]
-pub struct IoCountersDTO<'a> {
+pub struct IoNetDTO<'a> {
     pub interface: &'a str,
     pub rx_bytes: i64,
     pub rx_packets: i64,
@@ -182,13 +182,13 @@ pub struct IoCountersDTO<'a> {
     pub created_at: chrono::NaiveDateTime,
 }
 
-pub type IoCountersDTOList<'a> = Vec<IoCountersDTO<'a>>;
-impl<'a> From<&'a HttpPostHost> for Option<IoCountersDTOList<'a>> {
-    fn from(item: &'a HttpPostHost) -> Option<IoCountersDTOList<'a>> {
-        let iocounters = item.iocounters.as_ref()?;
+pub type IoNetDTOList<'a> = Vec<IoNetDTO<'a>>;
+impl<'a> From<&'a HttpPostHost> for Option<IoNetDTOList<'a>> {
+    fn from(item: &'a HttpPostHost) -> Option<IoNetDTOList<'a>> {
+        let iocounters = item.ionets.as_ref()?;
         let mut list = Vec::with_capacity(iocounters.len());
         for iocounter in iocounters {
-            list.push(IoCountersDTO {
+            list.push(IoNetDTO {
                 interface: &iocounter.interface,
                 rx_bytes: iocounter.rx_bytes,
                 rx_packets: iocounter.rx_packets,

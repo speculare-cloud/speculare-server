@@ -4,7 +4,7 @@ pub mod cpustats;
 pub mod cputimes;
 pub mod disks;
 pub mod hosts;
-pub mod iocounters;
+pub mod ionet;
 pub mod iostats;
 pub mod loadavg;
 pub mod memory;

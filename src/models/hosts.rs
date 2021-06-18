@@ -13,8 +13,7 @@ use super::schema::{
     memory::dsl::*,
 };
 use super::{
-    CpuTimesDTO, DisksDTOList, HttpPostHost, IoCountersDTOList, IostatsDTOList, LoadAvgDTO,
-    MemoryDTO,
+    CpuTimesDTO, DisksDTOList, HttpPostHost, IoNetDTOList, IostatsDTOList, LoadAvgDTO, MemoryDTO,
 };
 
 use diesel::*;
@@ -62,7 +61,7 @@ impl Host {
         let mut v_nmemory: Vec<MemoryDTO> = Vec::with_capacity(items.len());
         let mut v_ndisks: DisksDTOList = Vec::new();
         let mut v_niostats: IostatsDTOList = Vec::new();
-        let mut v_niocounters: IoCountersDTOList = Vec::new();
+        let mut v_nionets: IoNetDTOList = Vec::new();
 
         for item in items {
             // Construct the new Struct from item
@@ -72,7 +71,7 @@ impl Host {
             let new_memory = Option::<MemoryDTO>::from(item);
             let mut new_disks = Option::<DisksDTOList>::from(item);
             let mut new_iostats = Option::<IostatsDTOList>::from(item);
-            let mut new_iocounters = Option::<IoCountersDTOList>::from(item);
+            let mut new_ionet = Option::<IoNetDTOList>::from(item);
 
             // Add some result in their vec for BatchInsert
             if let Some(value_cputimes) = new_cputimes {
@@ -90,8 +89,8 @@ impl Host {
             if let Some(value_iostats) = new_iostats.as_mut() {
                 v_niostats.append(value_iostats);
             }
-            if let Some(value_iocounters) = new_iocounters.as_mut() {
-                v_niocounters.append(value_iocounters);
+            if let Some(value_iocounters) = new_ionet.as_mut() {
+                v_nionets.append(value_iocounters);
             }
 
             // Insert Host data, if conflict, only update uptime
@@ -108,9 +107,7 @@ impl Host {
         insert_into(memory).values(&v_nmemory).execute(conn)?;
         insert_into(disks).values(&v_ndisks).execute(conn)?;
         insert_into(iostats).values(&v_niostats).execute(conn)?;
-        insert_into(iocounters)
-            .values(&v_niocounters)
-            .execute(conn)?;
+        insert_into(iocounters).values(&v_nionets).execute(conn)?;
         // If we reached this point, everything went well so return an empty Closure
         Ok(())
     }
@@ -127,7 +124,7 @@ impl Host {
         let new_memory = Option::<MemoryDTO>::from(item);
         let new_disks = Option::<DisksDTOList>::from(item);
         let new_iostats = Option::<IostatsDTOList>::from(item);
-        let new_iocounters = Option::<IoCountersDTOList>::from(item);
+        let new_ionet = Option::<IoNetDTOList>::from(item);
 
         // Insert Host data, if conflict, only update uptime
         insert_into(hosts)
@@ -152,7 +149,7 @@ impl Host {
         if let Some(value) = new_iostats {
             insert_into(iostats).values(&value).execute(conn)?;
         }
-        if let Some(value) = new_iocounters {
+        if let Some(value) = new_ionet {
             insert_into(iocounters).values(&value).execute(conn)?;
         }
         // If we reached this point, everything went well so return an empty Closure

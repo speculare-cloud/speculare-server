@@ -15,8 +15,8 @@ pub use hosts::*;
 mod http_models;
 pub use http_models::*;
 
-mod iocounters;
-pub use iocounters::*;
+mod ionet;
+pub use ionet::*;
 
 mod iostats;
 pub use iostats::*;

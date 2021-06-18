@@ -87,7 +87,7 @@ impl IoBlock {
                 "
                 WITH s AS 
                     (SELECT device_name, read_bytes, write_bytes, created_at as time 
-                        FROM iostats 
+                        FROM ioblocks 
                         WHERE host_uuid=$1 
                         ORDER BY created_at 
                         DESC LIMIT $2
@@ -114,17 +114,17 @@ impl IoBlock {
         }
     }
 
-    /// Return the numbers of iostats the host have
+    /// Return the numbers of ioblocks the host have
     /// # Params
     /// * `conn` - The r2d2 connection needed to fetch the data from the db
-    /// * `uuid` - The host's uuid we want to get the number of iostats of
+    /// * `uuid` - The host's uuid we want to get the number of ioblocks of
     /// * `size` - The number of elements to fetch
     pub fn count(conn: &ConnType, uuid: &str, size: i64) -> Result<i64, AppError> {
         let res = sql_query(
             "
             WITH s AS 
                 (SELECT id, device_name, created_at 
-                    FROM iostats 
+                    FROM ioblocks 
                     WHERE host_uuid=$1 
                     ORDER BY created_at 
                     DESC LIMIT $2

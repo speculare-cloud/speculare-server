@@ -90,7 +90,7 @@ impl IoNet {
                 "
                 WITH s AS 
                     (SELECT interface, rx_bytes, tx_bytes, created_at as time 
-                        FROM iocounters 
+                        FROM ionets 
                         WHERE host_uuid=$1 
                         ORDER BY created_at 
                         DESC LIMIT $2
@@ -127,7 +127,7 @@ impl IoNet {
             "
             WITH s AS 
                 (SELECT id, interface, created_at 
-                    FROM iocounters 
+                    FROM ionets 
                     WHERE host_uuid=$1 
                     ORDER BY created_at 
                     DESC LIMIT $2

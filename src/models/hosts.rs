@@ -7,8 +7,8 @@ use super::schema::{
     hosts,
     hosts::dsl::*,
     hosts::dsl::{hosts as dsl_host, uuid},
-    iocounters::dsl::*,
-    iostats::dsl::*,
+    ioblocks::dsl::*,
+    ionets::dsl::*,
     loadavg::dsl::*,
     memory::dsl::*,
 };
@@ -106,8 +106,8 @@ impl Host {
         insert_into(loadavg).values(&v_nloadavg).execute(conn)?;
         insert_into(memory).values(&v_nmemory).execute(conn)?;
         insert_into(disks).values(&v_ndisks).execute(conn)?;
-        insert_into(iostats).values(&v_nioblocks).execute(conn)?;
-        insert_into(iocounters).values(&v_nionets).execute(conn)?;
+        insert_into(ioblocks).values(&v_nioblocks).execute(conn)?;
+        insert_into(ionets).values(&v_nionets).execute(conn)?;
         // If we reached this point, everything went well so return an empty Closure
         Ok(())
     }
@@ -147,10 +147,10 @@ impl Host {
             insert_into(disks).values(&value).execute(conn)?;
         }
         if let Some(value) = new_ioblock {
-            insert_into(iostats).values(&value).execute(conn)?;
+            insert_into(ioblocks).values(&value).execute(conn)?;
         }
         if let Some(value) = new_ionet {
-            insert_into(iocounters).values(&value).execute(conn)?;
+            insert_into(ionets).values(&value).execute(conn)?;
         }
         // If we reached this point, everything went well so return an empty Closure
         Ok(())

@@ -1,9 +1,9 @@
 use crate::errors::AppError;
 use crate::ConnType;
 
-use super::schema::iostats;
-use super::schema::iostats::dsl::{
-    created_at, device_name, host_uuid, iostats as dsl_iostats, read_bytes, write_bytes,
+use super::schema::ioblocks;
+use super::schema::ioblocks::dsl::{
+    created_at, device_name, host_uuid, ioblocks as dsl_ioblocks, read_bytes, write_bytes,
 };
 use super::{get_granularity, get_query_range_values, Host, HttpPostHost};
 
@@ -19,7 +19,7 @@ use serde::{Deserialize, Serialize};
 // ========================
 #[derive(Identifiable, Queryable, Debug, Serialize, Deserialize, Associations)]
 #[belongs_to(Host, foreign_key = "host_uuid")]
-#[table_name = "iostats"]
+#[table_name = "ioblocks"]
 pub struct IoBlock {
     pub id: i64,
     pub device_name: String,
@@ -45,7 +45,7 @@ impl IoBlock {
         size: i64,
         page: i64,
     ) -> Result<Vec<Self>, AppError> {
-        Ok(dsl_iostats
+        Ok(dsl_ioblocks
             .filter(host_uuid.eq(uuid))
             .limit(size)
             .offset(page * size)
@@ -69,7 +69,7 @@ impl IoBlock {
     ) -> Result<Vec<IoBlockDTORaw>, AppError> {
         let granularity = get_granularity(size);
         if granularity <= 1 {
-            Ok(dsl_iostats
+            Ok(dsl_ioblocks
                 .select((device_name, read_bytes, write_bytes, created_at))
                 .filter(
                     host_uuid
@@ -146,7 +146,7 @@ impl IoBlock {
 }
 
 #[derive(Queryable, QueryableByName, Serialize)]
-#[table_name = "iostats"]
+#[table_name = "ioblocks"]
 pub struct IoBlockDTORaw {
     pub device_name: String,
     pub read_bytes: i64,
@@ -164,7 +164,7 @@ pub struct IoBlockCount {
 // Insertable model
 // ================
 #[derive(Insertable)]
-#[table_name = "iostats"]
+#[table_name = "ioblocks"]
 pub struct IoBlockDTO<'a> {
     pub device_name: &'a str,
     pub read_count: i64,

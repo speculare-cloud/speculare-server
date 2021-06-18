@@ -54,7 +54,7 @@ CREATE TABLE cpustats (
 CREATE TABLE cpustats_template (LIKE cpustats);
 ALTER TABLE cpustats_template ADD PRIMARY KEY (id);
 
-CREATE TABLE iostats (
+CREATE TABLE ioblocks (
 	id BIGSERIAL,
 	device_name VARCHAR(128) NOT NULL,
 	read_count BIGINT NOT NULL,
@@ -67,8 +67,8 @@ CREATE TABLE iostats (
 	CONSTRAINT host_uuid_fkey FOREIGN KEY (host_uuid) REFERENCES hosts (uuid) DEFERRABLE
 ) PARTITION BY RANGE (created_at);
 
-CREATE TABLE iostats_template (LIKE iostats);
-ALTER TABLE iostats_template ADD PRIMARY KEY (id);
+CREATE TABLE ioblocks_template (LIKE ioblocks);
+ALTER TABLE ioblocks_template ADD PRIMARY KEY (id);
 
 CREATE TABLE loadavg (
 	id BIGSERIAL,
@@ -112,7 +112,7 @@ CREATE TABLE swap (
 CREATE TABLE swap_template (LIKE swap);
 ALTER TABLE swap_template ADD PRIMARY KEY (id);
 
-CREATE TABLE iocounters (
+CREATE TABLE ionets (
 	id BIGSERIAL,
 	interface VARCHAR(128) NOT NULL,
 	rx_bytes BIGINT NOT NULL,
@@ -128,5 +128,5 @@ CREATE TABLE iocounters (
 	CONSTRAINT host_uuid_fkey FOREIGN KEY (host_uuid) REFERENCES hosts (uuid) DEFERRABLE
 ) PARTITION BY RANGE (created_at);
 
-CREATE TABLE iocounters_template (LIKE iocounters);
-ALTER TABLE iocounters_template ADD PRIMARY KEY (id);
+CREATE TABLE ionets_template (LIKE ionets);
+ALTER TABLE ionets_template ADD PRIMARY KEY (id);

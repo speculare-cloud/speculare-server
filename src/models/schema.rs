@@ -51,7 +51,7 @@ table! {
 }
 
 table! {
-    iocounters (id) {
+    ionets (id) {
         id -> Int8,
         interface -> Varchar,
         rx_bytes -> Int8,
@@ -68,7 +68,7 @@ table! {
 }
 
 table! {
-    iostats (id) {
+    ioblocks (id) {
         id -> Int8,
         device_name -> Varchar,
         read_count -> Int8,
@@ -118,5 +118,5 @@ table! {
 }
 
 allow_tables_to_appear_in_same_query!(
-    cpustats, cputimes, disks, hosts, iocounters, iostats, loadavg, memory, swap,
+    cpustats, cputimes, disks, hosts, ionets, ioblocks, loadavg, memory, swap,
 );

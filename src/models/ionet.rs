@@ -1,9 +1,9 @@
 use crate::errors::AppError;
 use crate::ConnType;
 
-use super::schema::iocounters;
-use super::schema::iocounters::dsl::{
-    created_at, host_uuid, interface, iocounters as dsl_iocounters, rx_bytes, tx_bytes,
+use super::schema::ionets;
+use super::schema::ionets::dsl::{
+    created_at, host_uuid, interface, ionets as dsl_ionets, rx_bytes, tx_bytes,
 };
 use super::{get_granularity, get_query_range_values, Host, HttpPostHost};
 
@@ -19,7 +19,7 @@ use serde::{Deserialize, Serialize};
 // ========================
 #[derive(Identifiable, Queryable, Debug, Serialize, Deserialize, Associations)]
 #[belongs_to(Host, foreign_key = "host_uuid")]
-#[table_name = "iocounters"]
+#[table_name = "ionets"]
 pub struct IoNet {
     pub id: i64,
     pub interface: String,
@@ -48,7 +48,7 @@ impl IoNet {
         size: i64,
         page: i64,
     ) -> Result<Vec<Self>, AppError> {
-        Ok(dsl_iocounters
+        Ok(dsl_ionets
             .filter(host_uuid.eq(uuid))
             .limit(size)
             .offset(page * size)
@@ -72,7 +72,7 @@ impl IoNet {
     ) -> Result<Vec<IoNetDTORaw>, AppError> {
         let granularity = get_granularity(size);
         if granularity <= 1 {
-            Ok(dsl_iocounters
+            Ok(dsl_ionets
                 .select((interface, rx_bytes, tx_bytes, created_at))
                 .filter(
                     host_uuid
@@ -149,7 +149,7 @@ impl IoNet {
 }
 
 #[derive(Queryable, QueryableByName, Serialize)]
-#[table_name = "iocounters"]
+#[table_name = "ionets"]
 pub struct IoNetDTORaw {
     pub interface: String,
     pub rx_bytes: i64,
@@ -167,7 +167,7 @@ pub struct IoNetCount {
 // Insertable model
 // ================
 #[derive(Insertable)]
-#[table_name = "iocounters"]
+#[table_name = "ionets"]
 pub struct IoNetDTO<'a> {
     pub interface: &'a str,
     pub rx_bytes: i64,

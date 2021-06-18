@@ -13,7 +13,7 @@ use super::schema::{
     memory::dsl::*,
 };
 use super::{
-    CpuTimesDTO, DisksDTOList, HttpPostHost, IoNetDTOList, IostatsDTOList, LoadAvgDTO, MemoryDTO,
+    CpuTimesDTO, DisksDTOList, HttpPostHost, IoBlockDTOList, IoNetDTOList, LoadAvgDTO, MemoryDTO,
 };
 
 use diesel::*;
@@ -48,19 +48,19 @@ impl Host {
         // Even if this method (using Vec) use more memory, it prefer speed over low RAM usage.
         // For the first three (v_ncpuinfo, v_nloadavg, v_nmemory) we init them with a capacity
         // because in the best case, there will only be items.len() elements for each.
-        // For v_ndisks and v_niostats we cannot predict the numbers of elements.
+        // For v_ndisks and v_nioblocks we cannot predict the numbers of elements.
         //      On this last point, we can in fact. We can simply check the len of
         //        - items[0].disks.len()
         //        - items[0].iostats.len()
         //      But as they are Optional, we also have to check if they are .is_some()
         //      Doing so would be optimal to avoid allocations, and if they are .is_none()
-        //      we could skip the construction of new_disks and new_iostats, as well as their
+        //      we could skip the construction of new_disks and new_ioblock, as well as their
         //      respective insert.
         let mut v_ncputimes: Vec<CpuTimesDTO> = Vec::with_capacity(items.len());
         let mut v_nloadavg: Vec<LoadAvgDTO> = Vec::with_capacity(items.len());
         let mut v_nmemory: Vec<MemoryDTO> = Vec::with_capacity(items.len());
         let mut v_ndisks: DisksDTOList = Vec::new();
-        let mut v_niostats: IostatsDTOList = Vec::new();
+        let mut v_nioblocks: IoBlockDTOList = Vec::new();
         let mut v_nionets: IoNetDTOList = Vec::new();
 
         for item in items {
@@ -70,7 +70,7 @@ impl Host {
             let new_loadavg = Option::<LoadAvgDTO>::from(item);
             let new_memory = Option::<MemoryDTO>::from(item);
             let mut new_disks = Option::<DisksDTOList>::from(item);
-            let mut new_iostats = Option::<IostatsDTOList>::from(item);
+            let mut new_ioblock = Option::<IoBlockDTOList>::from(item);
             let mut new_ionet = Option::<IoNetDTOList>::from(item);
 
             // Add some result in their vec for BatchInsert
@@ -86,8 +86,8 @@ impl Host {
             if let Some(value_disks) = new_disks.as_mut() {
                 v_ndisks.append(value_disks);
             }
-            if let Some(value_iostats) = new_iostats.as_mut() {
-                v_niostats.append(value_iostats);
+            if let Some(value_iostats) = new_ioblock.as_mut() {
+                v_nioblocks.append(value_iostats);
             }
             if let Some(value_iocounters) = new_ionet.as_mut() {
                 v_nionets.append(value_iocounters);
@@ -106,7 +106,7 @@ impl Host {
         insert_into(loadavg).values(&v_nloadavg).execute(conn)?;
         insert_into(memory).values(&v_nmemory).execute(conn)?;
         insert_into(disks).values(&v_ndisks).execute(conn)?;
-        insert_into(iostats).values(&v_niostats).execute(conn)?;
+        insert_into(iostats).values(&v_nioblocks).execute(conn)?;
         insert_into(iocounters).values(&v_nionets).execute(conn)?;
         // If we reached this point, everything went well so return an empty Closure
         Ok(())
@@ -123,7 +123,7 @@ impl Host {
         let new_loadavg = Option::<LoadAvgDTO>::from(item);
         let new_memory = Option::<MemoryDTO>::from(item);
         let new_disks = Option::<DisksDTOList>::from(item);
-        let new_iostats = Option::<IostatsDTOList>::from(item);
+        let new_ioblock = Option::<IoBlockDTOList>::from(item);
         let new_ionet = Option::<IoNetDTOList>::from(item);
 
         // Insert Host data, if conflict, only update uptime
@@ -146,7 +146,7 @@ impl Host {
         if let Some(value) = new_disks {
             insert_into(disks).values(&value).execute(conn)?;
         }
-        if let Some(value) = new_iostats {
+        if let Some(value) = new_ioblock {
             insert_into(iostats).values(&value).execute(conn)?;
         }
         if let Some(value) = new_ionet {

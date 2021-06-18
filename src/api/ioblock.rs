@@ -1,18 +1,18 @@
 use crate::errors::{AppError, AppErrorType};
-use crate::models::IoStats;
+use crate::models::IoBlock;
 use crate::Pool;
 
 use crate::api::PagedInfoSpecific;
 
 use actix_web::{http, web, HttpResponse};
 
-/// GET /api/iostats
-/// Return iostats for a particular host
-pub async fn iostats(
+/// GET /api/ioblocks
+/// Return ioblock for a particular host
+pub async fn ioblocks(
     db: web::Data<Pool>,
     info: web::Query<PagedInfoSpecific>,
 ) -> Result<HttpResponse, AppError> {
-    info!("Route GET /api/iostats : {:?}", info);
+    info!("Route GET /api/ioblocks : {:?}", info);
 
     let uuid = info.uuid.to_owned();
     let size = info.size.unwrap_or(100);
@@ -21,7 +21,7 @@ pub async fn iostats(
     // use web::block to offload blocking Diesel code without blocking server thread
     if info.min_date.is_some() && info.max_date.is_some() {
         let data = web::block(move || {
-            IoStats::get_data_dated(
+            IoBlock::get_data_dated(
                 &db.get()?,
                 &uuid,
                 size,
@@ -41,20 +41,20 @@ pub async fn iostats(
                 error_type: AppErrorType::InvalidRequest,
             })
         } else {
-            let data = web::block(move || IoStats::get_data(&db.get()?, &uuid, size, page)).await?;
+            let data = web::block(move || IoBlock::get_data(&db.get()?, &uuid, size, page)).await?;
             // Return the data as form of JSON
             Ok(HttpResponse::Ok().json(data))
         }
     }
 }
 
-/// GET /api/iostats_count
-/// Return iostats_count for a particular host
-pub async fn iostats_count(
+/// GET /api/ioblocks_count
+/// Return ioblocks_count for a particular host
+pub async fn ioblocks_count(
     db: web::Data<Pool>,
     info: web::Query<PagedInfoSpecific>,
 ) -> Result<HttpResponse, AppError> {
-    info!("Route GET /api/iostats_count : {:?}", info);
+    info!("Route GET /api/ioblocks_count : {:?}", info);
 
     let uuid = info.uuid.to_owned();
     // If size is over 5000 or less than 30, return error
@@ -67,7 +67,7 @@ pub async fn iostats_count(
         })
     } else {
         // use web::block to offload blocking Diesel code without blocking server thread
-        let data = web::block(move || IoStats::count(&db.get()?, &uuid, size)).await?;
+        let data = web::block(move || IoBlock::count(&db.get()?, &uuid, size)).await?;
         // Return the data as form of JSON
         Ok(HttpResponse::Ok()
             .header(http::header::CONTENT_TYPE, "text/plain")

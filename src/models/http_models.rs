@@ -42,7 +42,7 @@ pub struct HttpDisks {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct HttpIoStats {
+pub struct HttpIoBlock {
     pub device_name: String,
     pub read_count: i64,
     pub read_bytes: i64,
@@ -69,7 +69,7 @@ pub struct HttpSwap {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct HttpIoCounters {
+pub struct HttpIoNet {
     pub interface: String,
     pub rx_bytes: i64,
     pub rx_packets: i64,
@@ -92,9 +92,9 @@ pub struct HttpPostHost {
     pub cpu_times: Option<HttpCpuTimes>,
     pub load_avg: Option<HttpLoadAvg>,
     pub disks: Option<Vec<HttpDisks>>,
-    pub iostats: Option<Vec<HttpIoStats>>,
+    pub ioblocks: Option<Vec<HttpIoBlock>>,
     pub memory: Option<HttpMemory>,
     pub swap: Option<HttpSwap>,
-    pub ionets: Option<Vec<HttpIoCounters>>,
+    pub ionets: Option<Vec<HttpIoNet>>,
     pub created_at: chrono::NaiveDateTime,
 }

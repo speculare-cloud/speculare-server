@@ -185,9 +185,9 @@ pub struct IoNetDTO<'a> {
 pub type IoNetDTOList<'a> = Vec<IoNetDTO<'a>>;
 impl<'a> From<&'a HttpPostHost> for Option<IoNetDTOList<'a>> {
     fn from(item: &'a HttpPostHost) -> Option<IoNetDTOList<'a>> {
-        let iocounters = item.ionets.as_ref()?;
-        let mut list = Vec::with_capacity(iocounters.len());
-        for iocounter in iocounters {
+        let ionets = item.ionets.as_ref()?;
+        let mut list = Vec::with_capacity(ionets.len());
+        for iocounter in ionets {
             list.push(IoNetDTO {
                 interface: &iocounter.interface,
                 rx_bytes: iocounter.rx_bytes,

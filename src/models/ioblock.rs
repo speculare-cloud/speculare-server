@@ -20,7 +20,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Identifiable, Queryable, Debug, Serialize, Deserialize, Associations)]
 #[belongs_to(Host, foreign_key = "host_uuid")]
 #[table_name = "iostats"]
-pub struct IoStats {
+pub struct IoBlock {
     pub id: i64,
     pub device_name: String,
     pub read_count: i64,
@@ -32,11 +32,11 @@ pub struct IoStats {
     pub created_at: chrono::NaiveDateTime,
 }
 
-impl IoStats {
-    /// Return a Vector of IoStats
+impl IoBlock {
+    /// Return a Vector of IoBlock
     /// # Params
     /// * `conn` - The r2d2 connection needed to fetch the data from the db
-    /// * `uuid` - The host's uuid we want to get IoStats of
+    /// * `uuid` - The host's uuid we want to get IoBlock of
     /// * `size` - The number of elements to fetch
     /// * `page` - How many items you want to skip (page * size)
     pub fn get_data(
@@ -53,10 +53,10 @@ impl IoStats {
             .load(conn)?)
     }
 
-    /// Return a Vector of IoStats between min_date and max_date
+    /// Return a Vector of IoBlock between min_date and max_date
     /// # Params
     /// * `conn` - The r2d2 connection needed to fetch the data from the db
-    /// * `uuid` - The host's uuid we want to get IoStats of
+    /// * `uuid` - The host's uuid we want to get IoBlock of
     /// * `size` - The number of elements to fetch
     /// * `min_date` - Min timestamp for the data to be fetched
     /// * `max_date` - Max timestamp for the data to be fetched
@@ -66,7 +66,7 @@ impl IoStats {
         size: i64,
         min_date: chrono::NaiveDateTime,
         max_date: chrono::NaiveDateTime,
-    ) -> Result<Vec<IoStatsDTORaw>, AppError> {
+    ) -> Result<Vec<IoBlockDTORaw>, AppError> {
         let granularity = get_granularity(size);
         if granularity <= 1 {
             Ok(dsl_iostats
@@ -119,26 +119,45 @@ impl IoStats {
     /// * `conn` - The r2d2 connection needed to fetch the data from the db
     /// * `uuid` - The host's uuid we want to get the number of iostats of
     /// * `size` - The number of elements to fetch
-    pub fn count(conn: &ConnType, uuid: &str, size: i64) -> Result<usize, AppError> {
-        let mut devices = dsl_iostats
-            .select(device_name)
-            .filter(host_uuid.eq(uuid))
-            .limit(size)
-            .order_by(created_at.desc())
-            .load::<String>(conn)?;
-        devices.sort();
-        devices.dedup();
-        Ok(devices.len())
+    pub fn count(conn: &ConnType, uuid: &str, size: i64) -> Result<i64, AppError> {
+        let res = sql_query(
+            "
+            WITH s AS 
+                (SELECT id, device_name, created_at 
+                    FROM iostats 
+                    WHERE host_uuid=$1 
+                    ORDER BY created_at 
+                    DESC LIMIT $2
+                ) 
+            SELECT 
+                COUNT(DISTINCT device_name) 
+                FROM s",
+        )
+        .bind::<Text, _>(uuid)
+        .bind::<Int8, _>(size)
+        .load::<IoBlockCount>(conn)?;
+
+        if res.is_empty() {
+            Ok(0)
+        } else {
+            Ok(res[0].count)
+        }
     }
 }
 
 #[derive(Queryable, QueryableByName, Serialize)]
 #[table_name = "iostats"]
-pub struct IoStatsDTORaw {
+pub struct IoBlockDTORaw {
     pub device_name: String,
     pub read_bytes: i64,
     pub write_bytes: i64,
     pub created_at: chrono::NaiveDateTime,
+}
+
+#[derive(Queryable, QueryableByName, Serialize)]
+pub struct IoBlockCount {
+    #[sql_type = "Int8"]
+    pub count: i64,
 }
 
 // ================
@@ -146,7 +165,7 @@ pub struct IoStatsDTORaw {
 // ================
 #[derive(Insertable)]
 #[table_name = "iostats"]
-pub struct IoStatsDTO<'a> {
+pub struct IoBlockDTO<'a> {
     pub device_name: &'a str,
     pub read_count: i64,
     pub read_bytes: i64,
@@ -157,13 +176,13 @@ pub struct IoStatsDTO<'a> {
     pub created_at: chrono::NaiveDateTime,
 }
 
-pub type IostatsDTOList<'a> = Vec<IoStatsDTO<'a>>;
-impl<'a> From<&'a HttpPostHost> for Option<IostatsDTOList<'a>> {
-    fn from(item: &'a HttpPostHost) -> Option<IostatsDTOList<'a>> {
-        let iostats = item.iostats.as_ref()?;
-        let mut list = Vec::with_capacity(iostats.len());
-        for iostat in iostats {
-            list.push(IoStatsDTO {
+pub type IoBlockDTOList<'a> = Vec<IoBlockDTO<'a>>;
+impl<'a> From<&'a HttpPostHost> for Option<IoBlockDTOList<'a>> {
+    fn from(item: &'a HttpPostHost) -> Option<IoBlockDTOList<'a>> {
+        let ioblocks = item.ioblocks.as_ref()?;
+        let mut list = Vec::with_capacity(ioblocks.len());
+        for iostat in ioblocks {
+            list.push(IoBlockDTO {
                 device_name: &iostat.device_name,
                 read_count: iostat.read_count,
                 read_bytes: iostat.read_bytes,

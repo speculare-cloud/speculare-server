@@ -18,8 +18,8 @@ pub use http_models::*;
 mod ionet;
 pub use ionet::*;
 
-mod iostats;
-pub use iostats::*;
+mod ioblock;
+pub use ioblock::*;
 
 mod loadavg;
 pub use loadavg::*;

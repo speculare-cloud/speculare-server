@@ -135,7 +135,7 @@ impl Disks {
         .bind::<Int8, _>(size)
         .load::<DisksCount>(conn)?;
 
-        if res.len() == 0 {
+        if res.is_empty() {
             Ok(0)
         } else {
             Ok(res[0].count)

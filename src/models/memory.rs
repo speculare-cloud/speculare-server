@@ -82,6 +82,14 @@ impl Memory {
         } else {
             // Compute values if granularity > 60
             let (min, sec_supp, granularity) = get_query_range_values(granularity);
+
+            // Dummy require to ensure no issue if table name change.
+            // If the table's name is to be changed, we have to change it from the sql_query below.
+            {
+                #[allow(unused_imports)]
+                use super::schema::memory;
+            }
+
             // Prepare and run the query
             Ok(sql_query(
                 "

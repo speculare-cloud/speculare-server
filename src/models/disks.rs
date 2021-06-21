@@ -5,7 +5,7 @@ use super::schema::disks;
 use super::schema::disks::dsl::{
     avail_space, created_at, disk_name, disks as dsl_disks, host_uuid, total_space,
 };
-use super::{get_granularity, get_query_range_values, Host, HttpPostHost};
+use super::{get_granularity, get_query_range_values, HttpPostHost};
 
 use diesel::{
     pg::expression::extensions::IntervalDsl,
@@ -17,8 +17,7 @@ use serde::{Deserialize, Serialize};
 // ========================
 // DATABASE Specific struct
 // ========================
-#[derive(Identifiable, Queryable, Debug, Serialize, Deserialize, Associations)]
-#[belongs_to(Host, foreign_key = "host_uuid")]
+#[derive(Identifiable, Queryable, Debug, Serialize, Deserialize)]
 #[table_name = "disks"]
 pub struct Disks {
     pub id: i64,

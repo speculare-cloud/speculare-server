@@ -19,7 +19,7 @@ CREATE TABLE disks (
 	created_at TIMESTAMP NOT NULL
 );
 
-SELECT create_hypertable('disks', 'created_at');
+SELECT create_hypertable('disks', 'created_at', chunk_time_interval => INTERVAL '1 day');
 SELECT add_retention_policy('disks', INTERVAL '10 days');
 
 CREATE TABLE cputimes (
@@ -38,7 +38,7 @@ CREATE TABLE cputimes (
 	created_at TIMESTAMP NOT NULL
 );
 
-SELECT create_hypertable('cputimes', 'created_at');
+SELECT create_hypertable('cputimes', 'created_at', chunk_time_interval => INTERVAL '1 day');
 SELECT add_retention_policy('cputimes', INTERVAL '10 days');
 
 CREATE TABLE cpustats (
@@ -50,7 +50,7 @@ CREATE TABLE cpustats (
 	created_at TIMESTAMP NOT NULL
 );
 
-SELECT create_hypertable('cpustats', 'created_at');
+SELECT create_hypertable('cpustats', 'created_at', chunk_time_interval => INTERVAL '1 day');
 SELECT add_retention_policy('cpustats', INTERVAL '10 days');
 
 CREATE TABLE ioblocks (
@@ -65,7 +65,7 @@ CREATE TABLE ioblocks (
 	created_at TIMESTAMP NOT NULL
 );
 
-SELECT create_hypertable('ioblocks', 'created_at');
+SELECT create_hypertable('ioblocks', 'created_at', chunk_time_interval => INTERVAL '1 day');
 SELECT add_retention_policy('ioblocks', INTERVAL '10 days');
 
 CREATE TABLE loadavg (
@@ -77,7 +77,7 @@ CREATE TABLE loadavg (
     created_at TIMESTAMP NOT NULL
 );
 
-SELECT create_hypertable('loadavg', 'created_at');
+SELECT create_hypertable('loadavg', 'created_at', chunk_time_interval => INTERVAL '1 day');
 SELECT add_retention_policy('loadavg', INTERVAL '10 days');
 
 CREATE TABLE memory (
@@ -92,7 +92,7 @@ CREATE TABLE memory (
     created_at TIMESTAMP NOT NULL
 );
 
-SELECT create_hypertable('memory', 'created_at');
+SELECT create_hypertable('memory', 'created_at', chunk_time_interval => INTERVAL '1 day');
 SELECT add_retention_policy('memory', INTERVAL '10 days');
 
 CREATE TABLE swap (
@@ -104,7 +104,7 @@ CREATE TABLE swap (
     created_at TIMESTAMP NOT NULL
 );
 
-SELECT create_hypertable('swap', 'created_at');
+SELECT create_hypertable('swap', 'created_at', chunk_time_interval => INTERVAL '1 day');
 SELECT add_retention_policy('swap', INTERVAL '10 days');
 
 CREATE TABLE ionets (
@@ -122,5 +122,5 @@ CREATE TABLE ionets (
 	created_at TIMESTAMP NOT NULL
 );
 
-SELECT create_hypertable('ionets', 'created_at');
+SELECT create_hypertable('ionets', 'created_at', chunk_time_interval => INTERVAL '1 day');
 SELECT add_retention_policy('ionets', INTERVAL '10 days');

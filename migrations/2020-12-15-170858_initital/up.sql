@@ -1,3 +1,5 @@
+CREATE EXTENSION IF NOT EXISTS timescaledb;
+
 CREATE TABLE hosts (
 	system VARCHAR(128) NOT NULL,
 	os_version VARCHAR(128) NOT NULL,
@@ -14,12 +16,11 @@ CREATE TABLE disks (
 	total_space BIGINT NOT NULL,
 	avail_space BIGINT NOT NULL,
 	host_uuid VARCHAR(48) NOT NULL,
-	created_at TIMESTAMP NOT NULL,
-	CONSTRAINT host_uuid_fkey FOREIGN KEY (host_uuid) REFERENCES hosts (uuid) DEFERRABLE
-) PARTITION BY RANGE (created_at);
+	created_at TIMESTAMP NOT NULL
+);
 
-CREATE TABLE disks_template (LIKE disks);
-ALTER TABLE disks_template ADD PRIMARY KEY (id);
+SELECT create_hypertable('disks', 'created_at');
+SELECT add_retention_policy('disks', INTERVAL '10 days');
 
 CREATE TABLE cputimes (
 	id BIGSERIAL,
@@ -34,12 +35,11 @@ CREATE TABLE cputimes (
 	guest BIGINT NOT NULL,
 	guest_nice BIGINT NOT NULL,
 	host_uuid VARCHAR(48) NOT NULL,
-	created_at TIMESTAMP NOT NULL,
-	CONSTRAINT host_uuid_fkey FOREIGN KEY (host_uuid) REFERENCES hosts (uuid) DEFERRABLE
-) PARTITION BY RANGE (created_at);
+	created_at TIMESTAMP NOT NULL
+);
 
-CREATE TABLE cputimes_template (LIKE cputimes);
-ALTER TABLE cputimes_template ADD PRIMARY KEY (id);
+SELECT create_hypertable('cputimes', 'created_at');
+SELECT add_retention_policy('cputimes', INTERVAL '10 days');
 
 CREATE TABLE cpustats (
 	id BIGSERIAL,
@@ -47,12 +47,11 @@ CREATE TABLE cpustats (
 	ctx_switches BIGINT NOT NULL,
 	soft_interrupts BIGINT NOT NULL,
 	host_uuid VARCHAR(48) NOT NULL,
-	created_at TIMESTAMP NOT NULL,
-	CONSTRAINT host_uuid_fkey FOREIGN KEY (host_uuid) REFERENCES hosts (uuid) DEFERRABLE
-) PARTITION BY RANGE (created_at);
+	created_at TIMESTAMP NOT NULL
+);
 
-CREATE TABLE cpustats_template (LIKE cpustats);
-ALTER TABLE cpustats_template ADD PRIMARY KEY (id);
+SELECT create_hypertable('cpustats', 'created_at');
+SELECT add_retention_policy('cpustats', INTERVAL '10 days');
 
 CREATE TABLE ioblocks (
 	id BIGSERIAL,
@@ -63,12 +62,11 @@ CREATE TABLE ioblocks (
 	write_bytes BIGINT NOT NULL,
 	busy_time BIGINT NOT NULL,
 	host_uuid VARCHAR(48) NOT NULL,
-	created_at TIMESTAMP NOT NULL,
-	CONSTRAINT host_uuid_fkey FOREIGN KEY (host_uuid) REFERENCES hosts (uuid) DEFERRABLE
-) PARTITION BY RANGE (created_at);
+	created_at TIMESTAMP NOT NULL
+);
 
-CREATE TABLE ioblocks_template (LIKE ioblocks);
-ALTER TABLE ioblocks_template ADD PRIMARY KEY (id);
+SELECT create_hypertable('ioblocks', 'created_at');
+SELECT add_retention_policy('ioblocks', INTERVAL '10 days');
 
 CREATE TABLE loadavg (
 	id BIGSERIAL,
@@ -76,12 +74,11 @@ CREATE TABLE loadavg (
 	five FLOAT NOT NULL,
     fifteen FLOAT NOT NULL,
 	host_uuid VARCHAR(48) NOT NULL,
-    created_at TIMESTAMP NOT NULL,
-	CONSTRAINT host_uuid_fkey FOREIGN KEY (host_uuid) REFERENCES hosts (uuid) DEFERRABLE
-) PARTITION BY RANGE (created_at);
+    created_at TIMESTAMP NOT NULL
+);
 
-CREATE TABLE loadavg_template (LIKE loadavg);
-ALTER TABLE loadavg_template ADD PRIMARY KEY (id);
+SELECT create_hypertable('loadavg', 'created_at');
+SELECT add_retention_policy('loadavg', INTERVAL '10 days');
 
 CREATE TABLE memory (
 	id BIGSERIAL,
@@ -92,12 +89,11 @@ CREATE TABLE memory (
 	buffers BIGINT NOT NULL,
 	cached BIGINT NOT NULL,
 	host_uuid VARCHAR(48) NOT NULL,
-    created_at TIMESTAMP NOT NULL,
-	CONSTRAINT host_uuid_fkey FOREIGN KEY (host_uuid) REFERENCES hosts (uuid) DEFERRABLE
-) PARTITION BY RANGE (created_at);
+    created_at TIMESTAMP NOT NULL
+);
 
-CREATE TABLE memory_template (LIKE memory);
-ALTER TABLE memory_template ADD PRIMARY KEY (id);
+SELECT create_hypertable('memory', 'created_at');
+SELECT add_retention_policy('memory', INTERVAL '10 days');
 
 CREATE TABLE swap (
 	id BIGSERIAL,
@@ -105,12 +101,11 @@ CREATE TABLE swap (
 	free BIGINT NOT NULL,
 	used BIGINT NOT NULL,
 	host_uuid VARCHAR(48) NOT NULL,
-    created_at TIMESTAMP NOT NULL,
-	CONSTRAINT host_uuid_fkey FOREIGN KEY (host_uuid) REFERENCES hosts (uuid) DEFERRABLE
-) PARTITION BY RANGE (created_at);
+    created_at TIMESTAMP NOT NULL
+);
 
-CREATE TABLE swap_template (LIKE swap);
-ALTER TABLE swap_template ADD PRIMARY KEY (id);
+SELECT create_hypertable('swap', 'created_at');
+SELECT add_retention_policy('swap', INTERVAL '10 days');
 
 CREATE TABLE ionets (
 	id BIGSERIAL,
@@ -124,9 +119,8 @@ CREATE TABLE ionets (
 	tx_errs BIGINT NOT NULL,
 	tx_drop BIGINT NOT NULL,
 	host_uuid VARCHAR(48) NOT NULL,
-	created_at TIMESTAMP NOT NULL,
-	CONSTRAINT host_uuid_fkey FOREIGN KEY (host_uuid) REFERENCES hosts (uuid) DEFERRABLE
-) PARTITION BY RANGE (created_at);
+	created_at TIMESTAMP NOT NULL
+);
 
-CREATE TABLE ionets_template (LIKE ionets);
-ALTER TABLE ionets_template ADD PRIMARY KEY (id);
+SELECT create_hypertable('ionets', 'created_at');
+SELECT add_retention_policy('ionets', INTERVAL '10 days');

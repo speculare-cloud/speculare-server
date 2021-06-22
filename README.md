@@ -23,25 +23,23 @@ Server setup / Dev setup
 ```bash
 $ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 $ sudo apt-get install libssl-dev libpq-dev pkg-config build-essential
-$ cargo install diesel_cli --no-default-features --features postgres
 ```
 
 - Create a .env file based on .env.example
 
-> **⚠ WARNING: The postgres instance you're going to use need to be configured for logical replication (see [pg-docker/pg.conf.sample](pg-docker/pg.conf.sample)). Moreover the instance must have partman extension installed and loaded as well as wal2json.**
+> **⚠ WARNING: The TimescaleDB instance you're going to use need to be configured for logical replication, check the [docs](https://docs.speculare.cloud).**
 
-- (Solution A) Setup the database based on the migrations files (bash file)
-```bash
-# For database_setup.sh to works, you need to have a folder migrations at the same
-# level of database_setup, containing folders containting up.sql and down.sql.
-$ env PGHOST=localhost PGUSER=postgres PGPASSWORD=password ./database_setup.sh
+- (Solution A) Setup the database without doing anything
+```
+When running the binary, it will check automatically if all available migrations has been applied.
+So you don't have to do anything, just launch and enjoy.
 ```
 
 - (Solution B) Setup the database based on diesel
 ```bash
 # You first need to setup a postgresql 13 instance
 # And you also need to install diesel cli
-$ cargo install diesel_cli
+$ cargo install diesel_cli --no-default-features --features postgres
 # For diesel setup to works you need to be at the root of the project
 $ diesel setup
 ```

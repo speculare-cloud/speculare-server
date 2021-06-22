@@ -1,16 +1,8 @@
 DROP INDEX disks_idx_created_at;
-DROP INDEX disks_idx_host_uuid;
 DROP INDEX cpustats_idx_created_at;
-DROP INDEX cpustats_idx_host_uuid;
 DROP INDEX cputimes_idx_created_at;
-DROP INDEX cputimes_idx_host_uuid;
 DROP INDEX ioblocks_idx_created_at;
-DROP INDEX ioblocks_idx_host_uuid;
 DROP INDEX loadavg_idx_created_at;
-DROP INDEX loadavg_idx_host_uuid;
 DROP INDEX memory_idx_created_at;
-DROP INDEX memory_idx_host_uuid;
 DROP INDEX swap_idx_created_at;
-DROP INDEX swap_idx_host_uuid;
 DROP INDEX ionets_idx_created_at;
-DROP INDEX ionets_idx_host_uuid;

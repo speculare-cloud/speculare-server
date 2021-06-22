@@ -5,7 +5,7 @@ use super::schema::cpustats;
 use super::schema::cpustats::dsl::{
     cpustats as dsl_cpustats, created_at, ctx_switches, host_uuid, interrupts, soft_interrupts,
 };
-use super::{get_granularity, get_query_range_values, Host, HttpPostHost};
+use super::{get_granularity, get_query_range_values, HttpPostHost};
 
 use diesel::{
     pg::expression::extensions::IntervalDsl,
@@ -17,8 +17,7 @@ use serde::{Deserialize, Serialize};
 // ========================
 // DATABASE Specific struct
 // ========================
-#[derive(Identifiable, Queryable, Debug, Serialize, Deserialize, Associations)]
-#[belongs_to(Host, foreign_key = "host_uuid")]
+#[derive(Identifiable, Queryable, Debug, Serialize, Deserialize)]
 #[table_name = "cpustats"]
 pub struct CpuStats {
     pub id: i64,

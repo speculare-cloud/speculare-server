@@ -5,7 +5,7 @@ use super::schema::ioblocks;
 use super::schema::ioblocks::dsl::{
     created_at, device_name, host_uuid, ioblocks as dsl_ioblocks, read_bytes, write_bytes,
 };
-use super::{get_granularity, get_query_range_values, Host, HttpPostHost};
+use super::{get_granularity, get_query_range_values, HttpPostHost};
 
 use diesel::{
     pg::expression::extensions::IntervalDsl,
@@ -17,8 +17,7 @@ use serde::{Deserialize, Serialize};
 // ========================
 // DATABASE Specific struct
 // ========================
-#[derive(Identifiable, Queryable, Debug, Serialize, Deserialize, Associations)]
-#[belongs_to(Host, foreign_key = "host_uuid")]
+#[derive(Identifiable, Queryable, Debug, Serialize, Deserialize)]
 #[table_name = "ioblocks"]
 pub struct IoBlock {
     pub id: i64,

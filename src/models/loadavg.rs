@@ -5,7 +5,7 @@ use super::schema::loadavg;
 use super::schema::loadavg::dsl::{
     created_at, fifteen, five, host_uuid, loadavg as dsl_loadavg, one,
 };
-use super::{get_granularity, get_query_range_values, Host, HttpPostHost};
+use super::{get_granularity, get_query_range_values, HttpPostHost};
 
 use diesel::{
     pg::expression::extensions::IntervalDsl,
@@ -17,8 +17,7 @@ use serde::{Deserialize, Serialize};
 // ========================
 // DATABASE Specific struct
 // ========================
-#[derive(Identifiable, Queryable, Debug, Serialize, Deserialize, Associations)]
-#[belongs_to(Host, foreign_key = "host_uuid")]
+#[derive(Identifiable, Queryable, Debug, Serialize, Deserialize)]
 #[table_name = "loadavg"]
 pub struct LoadAvg {
     pub id: i64,

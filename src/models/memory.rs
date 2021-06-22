@@ -5,7 +5,7 @@ use super::schema::memory;
 use super::schema::memory::dsl::{
     buffers, cached, created_at, free, host_uuid, memory as dsl_memory, used,
 };
-use super::{get_granularity, get_query_range_values, Host, HttpPostHost};
+use super::{get_granularity, get_query_range_values, HttpPostHost};
 
 use diesel::{
     pg::expression::extensions::IntervalDsl,
@@ -17,8 +17,7 @@ use serde::{Deserialize, Serialize};
 // ========================
 // DATABASE Specific struct
 // ========================
-#[derive(Identifiable, Queryable, Debug, Serialize, Deserialize, Associations)]
-#[belongs_to(Host, foreign_key = "host_uuid")]
+#[derive(Identifiable, Queryable, Debug, Serialize, Deserialize)]
 #[table_name = "memory"]
 pub struct Memory {
     pub id: i64,

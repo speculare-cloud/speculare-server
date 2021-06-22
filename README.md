@@ -27,7 +27,7 @@ $ sudo apt-get install libssl-dev libpq-dev pkg-config build-essential
 
 - Create a .env file based on .env.example
 
-> **⚠ WARNING: The TimescaleDB instance you're going to use need to be configured for logical replication (see [pg-docker/pg.conf.sample](pg-docker/pg.conf.sample)). Moreover the instance must have wal2json installed and loaded.**
+> **⚠ WARNING: The TimescaleDB instance you're going to use need to be configured for logical replication, check the [docs](https://docs.speculare.cloud).**
 
 - (Solution A) Setup the database without doing anything
 ```

@@ -31,7 +31,7 @@ $ sudo apt-get install libssl-dev libpq-dev pkg-config build-essential
 
 - (Solution A) Setup the database without doing anything
 ```
-When running the binary, it will check automatically if all available migrations has been applied.
+When running the binary, it will automatically check if all available migrations have been applied.
 So you don't have to do anything, just launch and enjoy.
 ```
 

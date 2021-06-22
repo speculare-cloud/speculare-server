@@ -1,8 +1,7 @@
-use crate::routes;
+use crate::{routes, Pool};
 
 use actix_cors::Cors;
 use actix_web::{middleware, App, HttpServer};
-use diesel::{prelude::PgConnection, r2d2::ConnectionManager};
 use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
 
 /// Return the SslAcceptorBuilder needed for Actix to be binded on HTTPS
@@ -21,24 +20,7 @@ fn get_ssl_builder() -> openssl::ssl::SslAcceptorBuilder {
 /// Construct and run the actix server instance
 ///
 /// Start by initializating a link to the database. And finish by binding and running the actix serv
-pub async fn server() -> std::io::Result<()> {
-    // Init the connection to the postgresql
-    let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    let manager = ConnectionManager::<PgConnection>::new(database_url);
-    // Get the max number of connection to open
-    // No fear to parse it to u32 and unwrap, if not a correct value crash is ok
-    let max_db_connection = match std::env::var("DATABASE_MAX_CONNECTION") {
-        Ok(value) => value,
-        Err(_) => "10".into(),
-    }
-    .parse::<u32>()
-    .unwrap();
-    // Create a pool of connection
-    // This step might spam for error max_db_connection of times, this is normal.
-    let pool = r2d2::Pool::builder()
-        .max_size(max_db_connection)
-        .build(manager)
-        .expect("Failed to create pool");
+pub async fn server(pool: Pool) -> std::io::Result<()> {
     // Construct the HttpServer instance.
     // Passing the pool of PgConnection and defining the logger / compress middleware.
     let serv = HttpServer::new(move || {

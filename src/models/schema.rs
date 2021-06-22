@@ -4,6 +4,9 @@ table! {
         interrupts -> Int8,
         ctx_switches -> Int8,
         soft_interrupts -> Int8,
+        processes -> Int8,
+        procs_running -> Int8,
+        procs_blocked -> Int8,
         host_uuid -> Varchar,
         created_at -> Timestamp,
     }

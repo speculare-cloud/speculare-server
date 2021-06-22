@@ -10,6 +10,9 @@ pub struct HttpCpuStats {
     pub interrupts: i64,
     pub ctx_switches: i64,
     pub soft_interrupts: i64,
+    pub processes: i64,
+    pub procs_running: i64,
+    pub procs_blocked: i64,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

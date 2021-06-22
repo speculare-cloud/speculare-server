@@ -3,7 +3,8 @@ use crate::ConnType;
 
 use super::schema::cpustats;
 use super::schema::cpustats::dsl::{
-    cpustats as dsl_cpustats, created_at, ctx_switches, host_uuid, interrupts, soft_interrupts,
+    cpustats as dsl_cpustats, created_at, ctx_switches, host_uuid, interrupts, processes,
+    procs_blocked, procs_running, soft_interrupts,
 };
 use super::{get_granularity, get_query_range_values, HttpPostHost};
 
@@ -24,6 +25,9 @@ pub struct CpuStats {
     pub interrupts: i64,
     pub ctx_switches: i64,
     pub soft_interrupts: i64,
+    pub processes: i64,
+    pub procs_running: i64,
+    pub procs_blocked: i64,
     pub host_uuid: String,
     pub created_at: chrono::NaiveDateTime,
 }
@@ -66,7 +70,15 @@ impl CpuStats {
         let granularity = get_granularity(size);
         if granularity <= 1 {
             Ok(dsl_cpustats
-                .select((interrupts, ctx_switches, soft_interrupts, created_at))
+                .select((
+                    interrupts,
+                    ctx_switches,
+                    soft_interrupts,
+                    processes,
+                    procs_running,
+                    procs_blocked,
+                    created_at,
+                ))
                 .filter(
                     host_uuid
                         .eq(uuid)
@@ -88,10 +100,11 @@ impl CpuStats {
                 use super::schema::cpustats;
             }
 
+            // TODO - Should we use MAX instead of AVG for proc* ?
             Ok(sql_query(
                 "
                 WITH s AS 
-                    (SELECT interrupts, ctx_switches, soft_interrupts, created_at as time 
+                    (SELECT interrupts, ctx_switches, soft_interrupts, processes, procs_running, procs_blocked, created_at as time 
                         FROM cpustats 
                         WHERE host_uuid=$1 
                         ORDER BY created_at 
@@ -100,7 +113,10 @@ impl CpuStats {
                 SELECT 
                     avg(interrupts)::int8 as interrupts, 
                     avg(ctx_switches)::int8 as ctx_switches, 
-                    avg(soft_interrupts)::int8 as soft_interrupts, 
+                    avg(soft_interrupts)::int8 as soft_interrupts,
+                    avg(processes)::int8 as processes,
+                    avg(procs_running)::int8 as procs_running,
+                    avg(procs_blocked)::int8 as procs_blocked, 
                     time::date + 
                         (extract(hour from time)::int)* '1h'::interval +
                         (extract(minute from time)::int/$3)* $4 +
@@ -126,6 +142,9 @@ pub struct CpuStatsDTORaw {
     pub interrupts: i64,
     pub ctx_switches: i64,
     pub soft_interrupts: i64,
+    pub processes: i64,
+    pub procs_running: i64,
+    pub procs_blocked: i64,
     pub created_at: chrono::NaiveDateTime,
 }
 
@@ -138,6 +157,9 @@ pub struct CpuStatsDTO<'a> {
     pub interrupts: i64,
     pub ctx_switches: i64,
     pub soft_interrupts: i64,
+    pub processes: i64,
+    pub procs_running: i64,
+    pub procs_blocked: i64,
     pub host_uuid: &'a str,
     pub created_at: chrono::NaiveDateTime,
 }
@@ -149,6 +171,9 @@ impl<'a> From<&'a HttpPostHost> for Option<CpuStatsDTO<'a>> {
             interrupts: cpustats.interrupts,
             ctx_switches: cpustats.ctx_switches,
             soft_interrupts: cpustats.soft_interrupts,
+            processes: cpustats.processes,
+            procs_running: cpustats.procs_running,
+            procs_blocked: cpustats.procs_blocked,
             host_uuid: &item.uuid,
             created_at: item.created_at,
         })

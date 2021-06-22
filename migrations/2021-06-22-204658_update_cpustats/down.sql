@@ -1,0 +1,1 @@
+ALTER TABLE cpustats DROP COLUMN processes, procs_running, procs_blocked;

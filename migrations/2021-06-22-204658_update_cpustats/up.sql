@@ -1,0 +1,1 @@
+ALTER TABLE cpustats ADD processes BIGINT NOT NULL DEFAULT 0, procs_running BIGINT NOT NULL DEFAULT 0, procs_blocked BIGINT NOT NULL DEFAULT 0;

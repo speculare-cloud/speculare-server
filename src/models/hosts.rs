@@ -2,18 +2,21 @@ use crate::errors::AppError;
 use crate::ConnType;
 
 use super::schema::{
+    cpustats::dsl::*,
     cputimes::dsl::*,
     disks::dsl::*,
-    hosts,
-    hosts::dsl::*,
-    hosts::dsl::{hosts as dsl_host, uuid},
+    hosts::{
+        self,
+        dsl::{hosts as dsl_host, uuid, *},
+    },
     ioblocks::dsl::*,
     ionets::dsl::*,
     loadavg::dsl::*,
     memory::dsl::*,
 };
 use super::{
-    CpuTimesDTO, DisksDTOList, HttpPostHost, IoBlockDTOList, IoNetDTOList, LoadAvgDTO, MemoryDTO,
+    CpuStatsDTO, CpuTimesDTO, DisksDTOList, HttpPostHost, IoBlockDTOList, IoNetDTOList, LoadAvgDTO,
+    MemoryDTO,
 };
 
 use diesel::*;
@@ -56,6 +59,7 @@ impl Host {
         //      Doing so would be optimal to avoid allocations, and if they are .is_none()
         //      we could skip the construction of new_disks and new_ioblock, as well as their
         //      respective insert.
+        let mut v_ncpustats: Vec<CpuStatsDTO> = Vec::with_capacity(items.len());
         let mut v_ncputimes: Vec<CpuTimesDTO> = Vec::with_capacity(items.len());
         let mut v_nloadavg: Vec<LoadAvgDTO> = Vec::with_capacity(items.len());
         let mut v_nmemory: Vec<MemoryDTO> = Vec::with_capacity(items.len());
@@ -66,6 +70,7 @@ impl Host {
         for item in items {
             // Construct the new Struct from item
             let new_data = Host::from(item);
+            let new_cpustats = Option::<CpuStatsDTO>::from(item);
             let new_cputimes = Option::<CpuTimesDTO>::from(item);
             let new_loadavg = Option::<LoadAvgDTO>::from(item);
             let new_memory = Option::<MemoryDTO>::from(item);
@@ -74,6 +79,9 @@ impl Host {
             let mut new_ionet = Option::<IoNetDTOList>::from(item);
 
             // Add some result in their vec for BatchInsert
+            if let Some(value_cpustats) = new_cpustats {
+                v_ncpustats.push(value_cpustats);
+            }
             if let Some(value_cputimes) = new_cputimes {
                 v_ncputimes.push(value_cputimes);
             }
@@ -102,6 +110,7 @@ impl Host {
                 .execute(conn)?;
         }
         // Insert Vec of Table from the for loop in one call (66% faster)
+        insert_into(cpustats).values(&v_ncpustats).execute(conn)?;
         insert_into(cputimes).values(&v_ncputimes).execute(conn)?;
         insert_into(loadavg).values(&v_nloadavg).execute(conn)?;
         insert_into(memory).values(&v_nmemory).execute(conn)?;
@@ -119,6 +128,7 @@ impl Host {
     pub fn insert_one(conn: &ConnType, item: &HttpPostHost) -> Result<(), AppError> {
         // Construct the new Struct from item
         let new_data = Host::from(item);
+        let new_cpustats = Option::<CpuStatsDTO>::from(item);
         let new_cputimes = Option::<CpuTimesDTO>::from(item);
         let new_loadavg = Option::<LoadAvgDTO>::from(item);
         let new_memory = Option::<MemoryDTO>::from(item);
@@ -134,6 +144,9 @@ impl Host {
             .set(uptime.eq(item.uptime))
             .execute(conn)?;
         // Only insert Option if they are present
+        if let Some(value) = new_cpustats {
+            insert_into(cpustats).values(&value).execute(conn)?;
+        }
         if let Some(value) = new_cputimes {
             insert_into(cputimes).values(&value).execute(conn)?;
         }

@@ -1,1 +1,1 @@
-ALTER TABLE cpustats DROP COLUMN processes, procs_running, procs_blocked;
+ALTER TABLE cpustats DROP COLUMN processes, DROP COLUMN procs_running, DROP COLUMN procs_blocked;

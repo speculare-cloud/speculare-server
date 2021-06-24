@@ -13,10 +13,11 @@ use super::schema::{
     ionets::dsl::*,
     loadavg::dsl::*,
     memory::dsl::*,
+    swap::dsl::*,
 };
 use super::{
     CpuStatsDTO, CpuTimesDTO, DisksDTOList, HttpPostHost, IoBlockDTOList, IoNetDTOList, LoadAvgDTO,
-    MemoryDTO,
+    MemoryDTO, SwapDTO,
 };
 
 use diesel::*;
@@ -63,6 +64,7 @@ impl Host {
         let mut v_ncputimes: Vec<CpuTimesDTO> = Vec::with_capacity(items.len());
         let mut v_nloadavg: Vec<LoadAvgDTO> = Vec::with_capacity(items.len());
         let mut v_nmemory: Vec<MemoryDTO> = Vec::with_capacity(items.len());
+        let mut v_nswap: Vec<SwapDTO> = Vec::with_capacity(items.len());
         let mut v_ndisks: DisksDTOList = Vec::new();
         let mut v_nioblocks: IoBlockDTOList = Vec::new();
         let mut v_nionets: IoNetDTOList = Vec::new();
@@ -74,6 +76,7 @@ impl Host {
             let new_cputimes = Option::<CpuTimesDTO>::from(item);
             let new_loadavg = Option::<LoadAvgDTO>::from(item);
             let new_memory = Option::<MemoryDTO>::from(item);
+            let new_swap = Option::<SwapDTO>::from(item);
             let mut new_disks = Option::<DisksDTOList>::from(item);
             let mut new_ioblock = Option::<IoBlockDTOList>::from(item);
             let mut new_ionet = Option::<IoNetDTOList>::from(item);
@@ -90,6 +93,9 @@ impl Host {
             }
             if let Some(value_memory) = new_memory {
                 v_nmemory.push(value_memory);
+            }
+            if let Some(value_swap) = new_swap {
+                v_nswap.push(value_swap);
             }
             if let Some(value_disks) = new_disks.as_mut() {
                 v_ndisks.append(value_disks);
@@ -114,6 +120,7 @@ impl Host {
         insert_into(cputimes).values(&v_ncputimes).execute(conn)?;
         insert_into(loadavg).values(&v_nloadavg).execute(conn)?;
         insert_into(memory).values(&v_nmemory).execute(conn)?;
+        insert_into(swap).values(&v_nswap).execute(conn)?;
         insert_into(disks).values(&v_ndisks).execute(conn)?;
         insert_into(ioblocks).values(&v_nioblocks).execute(conn)?;
         insert_into(ionets).values(&v_nionets).execute(conn)?;
@@ -132,6 +139,7 @@ impl Host {
         let new_cputimes = Option::<CpuTimesDTO>::from(item);
         let new_loadavg = Option::<LoadAvgDTO>::from(item);
         let new_memory = Option::<MemoryDTO>::from(item);
+        let new_swap = Option::<SwapDTO>::from(item);
         let new_disks = Option::<DisksDTOList>::from(item);
         let new_ioblock = Option::<IoBlockDTOList>::from(item);
         let new_ionet = Option::<IoNetDTOList>::from(item);
@@ -155,6 +163,9 @@ impl Host {
         }
         if let Some(value) = new_memory {
             insert_into(memory).values(&value).execute(conn)?;
+        }
+        if let Some(value) = new_swap {
+            insert_into(swap).values(&value).execute(conn)?;
         }
         if let Some(value) = new_disks {
             insert_into(disks).values(&value).execute(conn)?;

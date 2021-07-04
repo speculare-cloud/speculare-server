@@ -1,18 +1,18 @@
 use crate::errors::{AppError, AppErrorType};
-use crate::models::Disks;
+use crate::models::CpuTimes;
 use crate::Pool;
 
-use crate::api::PagedInfoSpecific;
+use crate::s_server::api::PagedInfoSpecific;
 
 use actix_web::{web, HttpResponse};
 
-/// GET /api/disks
-/// Return disks for a particular host
-pub async fn disks(
+/// GET /api/cputimes
+/// Return cputimes for a particular host
+pub async fn cputimes(
     db: web::Data<Pool>,
     info: web::Query<PagedInfoSpecific>,
 ) -> Result<HttpResponse, AppError> {
-    info!("Route GET /api/disks : {:?}", info);
+    info!("Route GET /api/cputimes : {:?}", info);
 
     let uuid = info.uuid.to_owned();
     let size = info.size.unwrap_or(100);
@@ -21,7 +21,7 @@ pub async fn disks(
     // use web::block to offload blocking Diesel code without blocking server thread
     if info.min_date.is_some() && info.max_date.is_some() {
         let data = web::block(move || {
-            Disks::get_data_dated(
+            CpuTimes::get_data_dated(
                 &db.get()?,
                 &uuid,
                 size,
@@ -41,34 +41,10 @@ pub async fn disks(
                 error_type: AppErrorType::InvalidRequest,
             })
         } else {
-            let data = web::block(move || Disks::get_data(&db.get()?, &uuid, size, page)).await?;
+            let data =
+                web::block(move || CpuTimes::get_data(&db.get()?, &uuid, size, page)).await?;
             // Return the data as form of JSON
             Ok(HttpResponse::Ok().json(data))
         }
-    }
-}
-
-/// GET /api/disks_count
-/// Return disks_count for a particular host
-pub async fn disks_count(
-    db: web::Data<Pool>,
-    info: web::Query<PagedInfoSpecific>,
-) -> Result<HttpResponse, AppError> {
-    info!("Route GET /api/disks_count : {:?}", info);
-
-    let uuid = info.uuid.to_owned();
-    // If size is over 5000 or less than 30, return error
-    let size = info.size.unwrap_or(100);
-    if !(30..=5000).contains(&size) {
-        Err(AppError {
-            message: Some("The size parameters must be 30 < size <= 5000".to_string()),
-            cause: None,
-            error_type: AppErrorType::InvalidRequest,
-        })
-    } else {
-        // use web::block to offload blocking Diesel code without blocking server thread
-        let data = web::block(move || Disks::count(&db.get()?, &uuid, size)).await?;
-        // Return the data as form of JSON
-        Ok(HttpResponse::Ok().body(data.to_string()))
     }
 }

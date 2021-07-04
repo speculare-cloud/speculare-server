@@ -2,7 +2,7 @@ use crate::errors::{AppError, AppErrorType};
 use crate::models::Swap;
 use crate::Pool;
 
-use crate::api::PagedInfoSpecific;
+use crate::s_server::api::PagedInfoSpecific;
 
 use actix_web::{web, HttpResponse};
 

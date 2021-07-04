@@ -1,4 +1,6 @@
-use crate::{routes, Pool};
+use super::routes;
+
+use crate::Pool;
 
 use actix_cors::Cors;
 use actix_web::{middleware, App, HttpServer};

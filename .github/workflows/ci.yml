@@ -87,3 +87,8 @@ jobs:
         with:
           name: ${{ matrix.os || 'ubuntu-latest' }}-speculare-server
           path: target/debug/speculare-server
+      - name: Upload Test binary
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.os || 'ubuntu-latest' }}-speculare-alerts
+          path: target/debug/speculare-alerts

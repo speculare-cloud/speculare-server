@@ -12,7 +12,11 @@
   </p>
 </div>
 
+This repo is the place for both server & alerts of Speculare, doing it this way to share models and some common code.
+
 Speculare server is intended to recieve data from speculare-client childrens.
+
+Speculare alerts is intended to create and send notifications about incidents.
 
 This project is meant to evolve in something more complete and more complexe in a somewhat near future.
 
@@ -43,29 +47,6 @@ $ cargo install diesel_cli --no-default-features --features postgres
 # For diesel setup to works you need to be at the root of the project
 $ diesel setup
 ```
-
-Information
---------------------------
-By default (and until configuration is implemented) the data retention is set to 7 days. If you've configured everything and each service are running correctly, you don't have to do anything. Partman will take care of cleaning old PARTITION and creating new one.
-
-Using PARTITION instead of regular DELETE ... WHERE created_at ... is better to avoid any performance impact. DELETE on a big table can take several minutes and block incoming transaction, whereas DROPing a TABLE is faster and don't block incoming transaction.
-
-Run in Docker
---------------------------
-
-You might want to take advantage of Docker to run the server inside a container.
-
-You first need to build the image:
-```bash
-$ docker build -t speculare_server .
-```
-
-And then you can simply launch it:
-```bash
-$ docker run -d -p 8080:8080 --env-file .env speculare_server
-```
-
-_Note: the Dockerfile is configured to use the *port* 8080 by default and is running in *debug* mode._
 
 Contributing
 --------------------------

@@ -155,21 +155,29 @@ fn main() {
     dbg!(&limit);
     dbg!(&pg_interval);
 
-    let query = format!("WITH s AS (SELECT {} FROM cputimes WHERE host_uuid=$1 ORDER BY created_at DESC LIMIT $2) SELECT {}, time::date + {} FROM s GROUP BY created_at ORDER BY created_at DESC LIMIT 1", pg_fields, pg_select, pg_interval);
+    let query = format!("WITH s AS (SELECT {} FROM cputimes WHERE host_uuid=$1 ORDER BY created_at DESC LIMIT $2) SELECT {}, time::date + {} FROM s GROUP BY created_at ORDER BY created_at DESC LIMIT 2", pg_fields, pg_select, pg_interval);
     dbg!(&query);
 
     let result = sql_query(query)
         .bind::<Text, _>(alert.host_uuid)
-        .bind::<Int8, _>(limit)
+        .bind::<Int8, _>(limit * 2)
         .load::<DTORaw>(&pool.get().unwrap());
     dbg!(&result);
 
     let result = result.unwrap();
-    dbg!(&result[0].numerator);
-    dbg!(&result[0].divisor);
-    let total = (result[0].numerator + result[0].divisor) as f64;
-    dbg!(&total);
-    let percentage = (result[0].numerator as f64 / total) * 100.0;
+    assert!(result.len() == 2);
+    let prev_divisor = result[1].divisor as f64;
+    let prev_numerator = result[1].numerator as f64;
+    let curr_divisor = result[0].divisor as f64;
+    let curr_numerator = result[0].numerator as f64;
+
+    let prev_total = prev_divisor + prev_numerator;
+    let curr_total = curr_divisor + curr_numerator;
+
+    let total_d = curr_total - prev_total;
+    let divisor_d = curr_divisor - prev_divisor;
+
+    let percentage = ((total_d - divisor_d) / total_d) * 100.0;
     dbg!(&percentage);
 
     dbg!(&eval_boolean(

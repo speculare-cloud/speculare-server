@@ -75,12 +75,12 @@ fn main() {
         host_uuid: "07c2ff2b28f01e93ef1ea6e311664a97facefba7".into(),
     };
 
-    let mut parts = alert.lookup.split(' ');
-    let req_type = parts.next();
-    let req_time = parts.next();
-    let req_numerator = parts.nth(1);
-    let req_divisor = parts.nth(1);
+    let mut lookup_parts = alert.lookup.split(' ');
 
+    let req_type = lookup_parts.next();
+    let req_time = lookup_parts.next();
+    let req_numerator = lookup_parts.nth(1);
+    let req_divisor = lookup_parts.nth(1);
     dbg!(&req_type);
     dbg!(&req_time);
     dbg!(&req_numerator);
@@ -89,10 +89,11 @@ fn main() {
     let pg_agregate = match req_type {
         Some("average") => "avg",
         Some(&_) => {
-            dbg!("Unknown agregation function");
-            "max"
+            panic!("Unhandled aggregation function");
         }
-        None => "avg",
+        None => {
+            panic!("Can't determine the aggreation function");
+        }
     };
     dbg!(&pg_agregate);
 
@@ -142,14 +143,12 @@ fn main() {
                     format!("(extract(hour from time)::int)* '1h'::interval + (extract(minute from time)::int)* '1m'::interval + (extract(second from time)::int/{})* '{}s'::interval as created_at", nb, nb)
                 }
                 _ => {
-                    limit = 1;
-                    "".into()
+                    panic!("Can't determine the interval, the time unit is not correct");
                 }
             }
         }
         None => {
-            limit = 1;
-            "(extract(hour from time)::int)* '1h'::interval + (extract(minute from time)::int/10)* '10m'::interval as created_at".into()
+            panic!("Can't determine the interval, no req_time");
         }
     };
     dbg!(&limit);
@@ -166,6 +165,7 @@ fn main() {
 
     let result = result.unwrap();
     assert!(result.len() == 2);
+
     let prev_divisor = result[1].divisor as f64;
     let prev_numerator = result[1].numerator as f64;
     let curr_divisor = result[0].divisor as f64;
@@ -180,9 +180,11 @@ fn main() {
     let percentage = ((total_d - divisor_d) / total_d) * 100.0;
     dbg!(&percentage);
 
-    dbg!(&eval_boolean(
-        &alert.warn.replace("$this", &percentage.to_string())
-    ));
+    let shound_warn = eval_boolean(&alert.warn.replace("$this", &percentage.to_string()));
+    dbg!(&shound_warn);
+
+    let shound_crit = eval_boolean(&alert.crit.replace("$this", &percentage.to_string()));
+    dbg!(&shound_crit);
 
     //  - Start an async task which will loop forever
     //      - In that loop we'll get all alerts

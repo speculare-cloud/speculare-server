@@ -625,6 +625,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "evalexpr"
+version = "6.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dcae065e5f5c5b6d7bec0abe91b067dd97576aaef756be99272bf75138563287"
+
+[[package]]
 name = "flate2"
 version = "1.0.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1567,6 +1573,7 @@ dependencies = [
  "diesel_migrations",
  "dotenv",
  "env_logger",
+ "evalexpr",
  "lazy_static",
  "log",
  "openssl",

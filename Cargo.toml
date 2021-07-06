@@ -18,6 +18,7 @@ diesel = { version = "1.4", features = ["postgres", "r2d2", "chrono"] }
 diesel_migrations = "1.4"
 dotenv = "0.15"
 env_logger = "0.8"
+evalexpr = "6.2"
 lazy_static = "1.4"
 log = "0.4"
 openssl = { version = "0.10" }

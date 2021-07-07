@@ -17,11 +17,12 @@ pub struct Alerts {
     pub table: String,  // Table name targeted
     pub lookup: String, // average 10m percentage of w,x over y,z
     // (will compute the (10m avg(w)+avg(x) over avg(y)+avg(z)) * 100, result is in percentage as asked using percentage and over)
-    pub timing: i64,       // Number of seconds between checks
+    pub timing: i64,                  // Number of seconds between checks
     pub warn: String, // $this > 50 ($this refer to the result of the query, should return a bool)
     pub crit: String, // $this > 80 ($this refer to the result of the query, should return a bool)
     pub info: String, // Description of the alarms
     pub host_uuid: String, // Targeted host
+    pub where_clause: Option<String>, // Where SQL condition
 }
 
 #[derive(QueryableByName, Debug)]
@@ -73,6 +74,7 @@ fn main() {
         crit: "$this > 80".into(),
         info: "average cpu utilization over the last 10 minutes".into(),
         host_uuid: "07c2ff2b28f01e93ef1ea6e311664a97facefba7".into(),
+        where_clause: None,
     };
 
     let mut lookup_parts = alert.lookup.split(' ');
@@ -92,7 +94,7 @@ fn main() {
             panic!("Unhandled aggregation function");
         }
         None => {
-            panic!("Can't determine the aggreation function");
+            panic!("Can't determine the aggreation function, no req_type");
         }
     };
     dbg!(&pg_agregate);
@@ -143,7 +145,7 @@ fn main() {
                     format!("(extract(hour from time)::int)* '1h'::interval + (extract(minute from time)::int)* '1m'::interval + (extract(second from time)::int/{})* '{}s'::interval as created_at", nb, nb)
                 }
                 _ => {
-                    panic!("Can't determine the interval, the time unit is not correct");
+                    panic!("Can't determine the interval, the time unit (h,m,s) is not correct");
                 }
             }
         }
@@ -154,8 +156,32 @@ fn main() {
     dbg!(&limit);
     dbg!(&pg_interval);
 
-    let query = format!("WITH s AS (SELECT {} FROM cputimes WHERE host_uuid=$1 ORDER BY created_at DESC LIMIT $2) SELECT {}, time::date + {} FROM s GROUP BY created_at ORDER BY created_at DESC LIMIT 2", pg_fields, pg_select, pg_interval);
+    let mut pg_where = String::new();
+    if alert.where_clause.is_some() {
+        pg_where.push_str(&alert.where_clause.unwrap());
+    };
+
+    let query = format!("WITH s AS (SELECT {} FROM cputimes WHERE host_uuid=$1 {} ORDER BY created_at DESC LIMIT $2) SELECT {}, time::date + {} FROM s GROUP BY created_at ORDER BY created_at DESC LIMIT 2", pg_fields, pg_where, pg_select, pg_interval);
     dbg!(&query);
+
+    let statements = vec![
+        "DELETE",
+        "UPDATE",
+        "INSERT",
+        "CREATE",
+        "ALTER",
+        "DROP",
+        "TRUNCATE",
+        "GRANT",
+        "REVOKE",
+        "BEGIN",
+        "COMMIT",
+        "SAVEPOINT",
+        "ROLLBACK",
+    ];
+    for statement in statements {
+        assert!(!query.contains(statement));
+    }
 
     let result = sql_query(query)
         .bind::<Text, _>(alert.host_uuid)

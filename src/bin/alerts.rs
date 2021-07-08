@@ -11,22 +11,34 @@ use diesel::{
     *,
 };
 
+/// Struct to hold information about alerts
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Alerts {
-    pub name: String,   // Name of the alarms (only _ is allowed)
-    pub table: String,  // Table name targeted
-    pub lookup: String, // average 10m percentage of w,x over y,z
-    // (will compute the (10m avg(w)+avg(x) over avg(y)+avg(z)) * 100, result is in percentage as asked using percentage and over)
-    pub timing: i64,                  // Number of seconds between checks
-    pub warn: String, // $this > 50 ($this refer to the result of the query, should return a bool)
-    pub crit: String, // $this > 80 ($this refer to the result of the query, should return a bool)
-    pub info: String, // Description of the alarms
-    pub host_uuid: String, // Targeted host
-    pub where_clause: Option<String>, // Where SQL condition
+    // Name of the alarms (only _ is allowed)
+    pub name: String,
+    // Table name targeted
+    pub table: String,
+    // Represent the query used to check the alarms against the database's data
+    // eg: "average 10m percentage of w,x over y,z"
+    //     =>(will compute the (10m avg(w)+avg(x) over avg(y)+avg(z)) * 100, result is in percentage as asked using percentage and over)
+    pub lookup: String,
+    // Number of seconds between checks
+    pub timing: i64,
+    // $this > 50 ($this refer to the result of the query, should return a bool)
+    pub warn: String,
+    // $this > 80 ($this refer to the result of the query, should return a bool)
+    pub crit: String,
+    // Description of the alarms
+    pub info: String,
+    // Targeted host
+    pub host_uuid: String,
+    // Where SQL condition
+    pub where_clause: Option<String>,
 }
 
+/// Struct to hold the return from the sql_query for percentage query
 #[derive(QueryableByName, Debug)]
-pub struct DTORaw {
+pub struct PctDTORaw {
     #[sql_type = "Int8"]
     pub numerator: i64,
     #[sql_type = "Int8"]
@@ -35,13 +47,30 @@ pub struct DTORaw {
     pub time: chrono::NaiveDateTime,
 }
 
+/// Constant list of disallowed statement in the SQL query to avoid somthg bad
+const DISALLOWED_STATEMENT: &[&str] = &[
+    "DELETE",
+    "UPDATE",
+    "INSERT",
+    "CREATE",
+    "ALTER",
+    "DROP",
+    "TRUNCATE",
+    "GRANT",
+    "REVOKE",
+    "BEGIN",
+    "COMMIT",
+    "SAVEPOINT",
+    "ROLLBACK",
+];
+
 // // Embed migrations into the binary
 embed_migrations!();
 
 /// Compute the percentage of difference between a Vec containing two DTORaw
 ///
 /// This give us the percentage of use of results[1] over results[0].
-fn compute_percentage(results: &[DTORaw]) -> f64 {
+fn compute_percentage(results: &[PctDTORaw]) -> f64 {
     // results must contains exactly two items.
     assert!(results.len() == 2);
 
@@ -152,28 +181,14 @@ fn main() {
     let query = format!("SELECT time_bucket('{0}', created_at) as time, {1} FROM {2} WHERE host_uuid=$1 AND created_at > now() at time zone 'utc' - INTERVAL '{0}' {3} GROUP BY time ORDER BY time DESC", pg_time, pg_select, alert.table, pg_where);
     dbg!(&query);
 
-    let statements = vec![
-        "DELETE",
-        "UPDATE",
-        "INSERT",
-        "CREATE",
-        "ALTER",
-        "DROP",
-        "TRUNCATE",
-        "GRANT",
-        "REVOKE",
-        "BEGIN",
-        "COMMIT",
-        "SAVEPOINT",
-        "ROLLBACK",
-    ];
-    for statement in statements {
-        assert!(!query.contains(statement));
+    let tmp_query = query.to_lowercase();
+    for statement in DISALLOWED_STATEMENT {
+        assert!(!tmp_query.contains(statement));
     }
 
     let results = sql_query(query)
         .bind::<Text, _>(alert.host_uuid)
-        .load::<DTORaw>(&pool.get().unwrap());
+        .load::<PctDTORaw>(&pool.get().unwrap());
     dbg!(&results);
 
     let percentage = compute_percentage(&results.unwrap());

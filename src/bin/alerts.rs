@@ -32,11 +32,31 @@ pub struct DTORaw {
     #[sql_type = "Int8"]
     pub divisor: i64,
     #[sql_type = "Timestamp"]
-    pub created_at: chrono::NaiveDateTime,
+    pub time: chrono::NaiveDateTime,
 }
 
 // // Embed migrations into the binary
 embed_migrations!();
+
+/// Compute the percentage of difference between a Vec containing two DTORaw
+///
+/// This give us the percentage of use of results[1] over results[0].
+fn compute_percentage(results: &[DTORaw]) -> f64 {
+    // results must contains exactly two items.
+    assert!(results.len() == 2);
+
+    // Define temp variable
+    // results[0] is the previous value in time
+    // results[1] is the current value
+    let (prev_div, curr_div) = (results[1].divisor, results[0].divisor);
+    let (prev_num, curr_num) = (results[1].numerator, results[0].numerator);
+    // Compute the delta value between both previous and current
+    let total_d = ((curr_div + curr_num) - (prev_div + prev_num)) as f64;
+    let divisor_d = (curr_div - prev_div) as f64;
+
+    // Return the computed percentage
+    ((total_d - divisor_d) / total_d) * 100.0
+}
 
 fn main() {
     // Load env variable from .env
@@ -99,11 +119,17 @@ fn main() {
     };
     dbg!(&pg_agregate);
 
+    let pg_time = match req_time {
+        Some(v) => v,
+        None => {
+            panic!("Can't determine the time range, no req_time");
+        }
+    };
+    dbg!(&pg_time);
+
     let mut pg_select = String::new();
-    let mut pg_fields = String::new();
     let select_cols = req_numerator.unwrap().split(',');
     for col in select_cols {
-        pg_fields.push_str(&format!("{}, ", col));
         pg_select.push_str(&format!("{}({})::int8 + ", pg_agregate, col));
     }
     pg_select.drain(pg_select.len() - 3..pg_select.len());
@@ -111,57 +137,19 @@ fn main() {
 
     let select_cols = req_divisor.unwrap().split(',');
     for col in select_cols {
-        pg_fields.push_str(&format!("{}, ", col));
         pg_select.push_str(&format!("{}({})::int8 + ", pg_agregate, col));
     }
     pg_select.drain(pg_select.len() - 3..pg_select.len());
     pg_select.push_str(" as divisor");
-    pg_fields.push_str("created_at as time");
-    dbg!(&pg_fields);
     dbg!(&pg_select);
-
-    let limit;
-    let pg_interval = match req_time {
-        Some(val) => {
-            assert!(val.len() >= 3);
-            let nb = val[..2].parse::<i64>().unwrap();
-            let scale = &val[2..];
-            dbg!(&nb);
-            dbg!(&scale);
-            match scale {
-                "h" => {
-                    limit = nb * 60 * 60;
-                    format!(
-                        "(extract(hour from time)::int/{})* '{}h'::interval as created_at",
-                        nb, nb
-                    )
-                }
-                "m" => {
-                    limit = nb * 60;
-                    format!("(extract(hour from time)::int)* '1h'::interval + (extract(minute from time)::int/{})* '{}m'::interval as created_at", nb, nb)
-                }
-                "s" => {
-                    limit = nb;
-                    format!("(extract(hour from time)::int)* '1h'::interval + (extract(minute from time)::int)* '1m'::interval + (extract(second from time)::int/{})* '{}s'::interval as created_at", nb, nb)
-                }
-                _ => {
-                    panic!("Can't determine the interval, the time unit (h,m,s) is not correct");
-                }
-            }
-        }
-        None => {
-            panic!("Can't determine the interval, no req_time");
-        }
-    };
-    dbg!(&limit);
-    dbg!(&pg_interval);
 
     let mut pg_where = String::new();
     if alert.where_clause.is_some() {
+        pg_where.push_str(" AND ");
         pg_where.push_str(&alert.where_clause.unwrap());
     };
 
-    let query = format!("WITH s AS (SELECT {} FROM cputimes WHERE host_uuid=$1 {} ORDER BY created_at DESC LIMIT $2) SELECT {}, time::date + {} FROM s GROUP BY created_at ORDER BY created_at DESC LIMIT 2", pg_fields, pg_where, pg_select, pg_interval);
+    let query = format!("SELECT time_bucket('{0}', created_at) as time, {1} FROM {2} WHERE host_uuid=$1 AND created_at > now() at time zone 'utc' - INTERVAL '{0}' {3} GROUP BY time ORDER BY time DESC", pg_time, pg_select, alert.table, pg_where);
     dbg!(&query);
 
     let statements = vec![
@@ -183,27 +171,12 @@ fn main() {
         assert!(!query.contains(statement));
     }
 
-    let result = sql_query(query)
+    let results = sql_query(query)
         .bind::<Text, _>(alert.host_uuid)
-        .bind::<Int8, _>(limit * 2)
         .load::<DTORaw>(&pool.get().unwrap());
-    dbg!(&result);
+    dbg!(&results);
 
-    let result = result.unwrap();
-    assert!(result.len() == 2);
-
-    let prev_divisor = result[1].divisor as f64;
-    let prev_numerator = result[1].numerator as f64;
-    let curr_divisor = result[0].divisor as f64;
-    let curr_numerator = result[0].numerator as f64;
-
-    let prev_total = prev_divisor + prev_numerator;
-    let curr_total = curr_divisor + curr_numerator;
-
-    let total_d = curr_total - prev_total;
-    let divisor_d = curr_divisor - prev_divisor;
-
-    let percentage = ((total_d - divisor_d) / total_d) * 100.0;
+    let percentage = compute_percentage(&results.unwrap());
     dbg!(&percentage);
 
     let shound_warn = eval_boolean(&alert.warn.replace("$this", &percentage.to_string()));

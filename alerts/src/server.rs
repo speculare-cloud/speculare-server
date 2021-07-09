@@ -15,7 +15,7 @@ pub async fn server(pool: Pool) -> std::io::Result<()> {
             .wrap(Cors::permissive())
             .wrap(middleware::Compress::default())
             .wrap(middleware::Logger::default())
-            .app_data(pool.clone())
+            .app_data(actix_web::web::Data::new(pool.clone()))
             .configure(routes::routes)
     });
     // Bind and run the server on HTTP or HTTPS depending on the mode of compilation.

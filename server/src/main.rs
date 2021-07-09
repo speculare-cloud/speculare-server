@@ -41,6 +41,7 @@ async fn main() -> std::io::Result<()> {
     // This step might spam for error max_db_connection of times, this is normal.
     let pool = r2d2::Pool::builder()
         .max_size(max_db_connection)
+        .min_idle(Some((10 * max_db_connection) / 100))
         .build(manager)
         .expect("Failed to create pool");
     // Apply the migrations to the database

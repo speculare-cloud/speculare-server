@@ -19,8 +19,10 @@ pub struct Alerts {
     #[column_name = "_table"]
     pub table: String,
     // Represent the query used to check the alarms against the database's data
-    // eg: "average 10m percentage of w,x over y,z"
+    // eg: "average pct 10m of w,x over y,z"
     //     =>(will compute the (10m avg(w)+avg(x) over avg(y)+avg(z)) * 100, result is in percentage as asked using percentage and over)
+    // eg: "average abs 10m of x"
+    //     =>(will compute based on only an absolute value (no division))
     pub lookup: String,
     // Number of seconds between checks
     pub timing: i32,

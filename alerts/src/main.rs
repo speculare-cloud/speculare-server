@@ -4,7 +4,7 @@ extern crate diesel_migrations;
 extern crate log;
 
 use diesel::{prelude::PgConnection, r2d2::ConnectionManager};
-use sproot::{errors::AppError, models::Alerts, ConnType};
+use sproot::{errors::AppError, models::Alerts, Pool};
 use std::env::VarError;
 use std::time::Duration;
 
@@ -27,19 +27,48 @@ embed_migrations!();
 ///
 /// TODO:   - Use a mutex or somthg to be able to stop a particular alerts
 ///         - In case of new alerts created a task for that alerts should be started
-fn launch_monitoring(conn: &ConnType) -> Result<(), AppError> {
+fn launch_monitoring(pool: Pool) -> Result<(), AppError> {
     // Get the alerts from the database
-    let alerts: Vec<Alerts> = Alerts::get_data(conn, None, 9999, 0)?;
+    // let alerts: Vec<Alerts> = Alerts::get_data(&pool.get()?, None, 9999, 0)?;
+    let alerts = vec![
+        Alerts {
+            id: 0,
+            name: "cpu_usage".into(),
+            table: "cputimes".into(),
+            lookup: "avg abs 10m of cuser,nice,system,irq,softirq,steal over idle,iowait".into(),
+            timing: 60,
+            warn: "$this > 50".into(),
+            crit: "$this > 80".into(),
+            info: Some("average cpu utilization over the last 10 minutes".into()),
+            host_uuid: "dfaa7cf24d3e46cc80e8bedc6fb77886".into(),
+            where_clause: None,
+        },
+        Alerts {
+            id: 0,
+            name: "loadavg".into(),
+            table: "loadavg".into(),
+            lookup: "avg abs 10m of five".into(),
+            timing: 60,
+            warn: "$this > 50".into(),
+            crit: "$this > 80".into(),
+            info: Some("average of the avg cpu utilization over the last 5 minutes".into()),
+            host_uuid: "dfaa7cf24d3e46cc80e8bedc6fb77886".into(),
+            where_clause: None,
+        },
+    ];
 
     // Foreach alerts
     for alert in alerts {
         // Spawn a new task which will do the check for that particular alerts
+        let cpool = pool.clone();
         tokio::spawn(async move {
             let mut interval = tokio::time::interval(Duration::from_secs(alert.timing as u64));
+            let (query, qtype) = utils::construct_query(&alert);
             loop {
                 interval.tick().await;
                 // Do the sanity check here
                 info!("{}: Run every {:?}", alert.name, interval.period());
+                utils::execute(&query, &alert, &qtype, &cpool.get().unwrap());
             }
         });
     }
@@ -68,6 +97,7 @@ async fn main() -> std::io::Result<()> {
     // This step might spam for error max_db_connection of times, this is normal.
     let pool = r2d2::Pool::builder()
         .max_size(max_db_connection)
+        .min_idle(Some((10 * max_db_connection) / 100))
         .build(manager)
         .expect("Failed to create pool");
     // Apply the migrations to the database
@@ -79,12 +109,8 @@ async fn main() -> std::io::Result<()> {
     )
     .unwrap();
     // Launch the monitoring of each alarms
-    launch_monitoring(
-        &pool
-            .get()
-            .expect("Cannot get a connection from the pool for the launch_monitoring."),
-    )
-    .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.message()))?;
+    launch_monitoring(pool.clone())
+        .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.message()))?;
     // Continue the initialization of the actix web server
     // And wait indefinietly for it <3
     server::server(pool).await

@@ -4,47 +4,14 @@ extern crate diesel_migrations;
 extern crate log;
 
 use diesel::{prelude::PgConnection, r2d2::ConnectionManager};
-use sproot::{models::Alerts, ConnType};
+use sproot::{errors::AppError, models::Alerts, ConnType};
 use std::env::VarError;
 use std::time::Duration;
-
-// TEST
-use diesel::{
-    sql_types::{Int8, Timestamp},
-    *,
-};
 
 mod api;
 mod routes;
 mod server;
-
-/// Struct to hold the return from the sql_query for percentage query
-#[derive(QueryableByName, Debug)]
-pub struct PctDTORaw {
-    #[sql_type = "Int8"]
-    pub numerator: i64,
-    #[sql_type = "Int8"]
-    pub divisor: i64,
-    #[sql_type = "Timestamp"]
-    pub time: chrono::NaiveDateTime,
-}
-
-/// Constant list of disallowed statement in the SQL query to avoid somthg bad
-const DISALLOWED_STATEMENT: &[&str] = &[
-    "DELETE",
-    "UPDATE",
-    "INSERT",
-    "CREATE",
-    "ALTER",
-    "DROP",
-    "TRUNCATE",
-    "GRANT",
-    "REVOKE",
-    "BEGIN",
-    "COMMIT",
-    "SAVEPOINT",
-    "ROLLBACK",
-];
+mod utils;
 
 // Lazy static of the Token from .env to use in validator
 lazy_static::lazy_static! {
@@ -56,32 +23,13 @@ lazy_static::lazy_static! {
 // Embed migrations into the binary
 embed_migrations!();
 
-/// Compute the percentage of difference between a Vec containing two DTORaw
-///
-/// This give us the percentage of use of results[1] over results[0].
-fn compute_percentage(results: &[PctDTORaw]) -> f64 {
-    // results must contains exactly two items.
-    assert!(results.len() == 2);
-
-    // Define temp variable
-    // results[0] is the previous value in time
-    // results[1] is the current value
-    let (prev_div, curr_div) = (results[1].divisor, results[0].divisor);
-    let (prev_num, curr_num) = (results[1].numerator, results[0].numerator);
-    // Compute the delta value between both previous and current
-    let total_d = ((curr_div + curr_num) - (prev_div + prev_num)) as f64;
-    let divisor_d = (curr_div - prev_div) as f64;
-
-    // Return the computed percentage
-    ((total_d - divisor_d) / total_d) * 100.0
-}
-
 /// Start the monitoring tasks for each alarms
 ///
 /// TODO:   - Use a mutex or somthg to be able to stop a particular alerts
 ///         - In case of new alerts created a task for that alerts should be started
-fn launch_monitoring(_conn: &ConnType) {
-    let alerts: Vec<Alerts> = vec![];
+fn launch_monitoring(conn: &ConnType) -> Result<(), AppError> {
+    // Get the alerts from the database
+    let alerts: Vec<Alerts> = Alerts::get_data(conn, None, 9999, 0)?;
 
     // Foreach alerts
     for alert in alerts {
@@ -95,6 +43,8 @@ fn launch_monitoring(_conn: &ConnType) {
             }
         });
     }
+
+    Ok(())
 }
 
 #[actix_web::main]
@@ -133,7 +83,8 @@ async fn main() -> std::io::Result<()> {
         &pool
             .get()
             .expect("Cannot get a connection from the pool for the launch_monitoring."),
-    );
+    )
+    .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.message()))?;
     // Continue the initialization of the actix web server
     // And wait indefinietly for it <3
     server::server(pool).await

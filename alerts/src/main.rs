@@ -59,8 +59,7 @@ fn launch_monitoring(pool: Pool) -> Result<(), AppError> {
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     // Load env variable from .env.alerts
-    dotenv::from_filename(".env.alerts")
-        .expect("Cannot find the environment variable file '.env.alerts'");
+    dotenv::from_filename(".env.alerts").ok();
     // Init the logger and set the debug level correctly
     sproot::configure_logger();
     // Init the connection to the postgresql

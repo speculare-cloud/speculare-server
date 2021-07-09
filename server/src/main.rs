@@ -23,8 +23,7 @@ embed_migrations!();
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     // Load env variable from .env.server
-    dotenv::from_filename(".env.server")
-        .expect("Cannot find the environment variable file '.env.server'");
+    dotenv::from_filename(".env.server").ok();
     // Init the logger and set the debug level correctly
     sproot::configure_logger();
     // Init the connection to the postgresql

@@ -29,7 +29,7 @@ pub async fn cputimes(
                 info.max_date.unwrap(),
             )
         })
-        .await?;
+        .await??;
         // Return the data as form of JSON
         Ok(HttpResponse::Ok().json(data))
     } else {
@@ -42,7 +42,7 @@ pub async fn cputimes(
             })
         } else {
             let data =
-                web::block(move || CpuTimes::get_data(&db.get()?, &uuid, size, page)).await?;
+                web::block(move || CpuTimes::get_data(&db.get()?, &uuid, size, page)).await??;
             // Return the data as form of JSON
             Ok(HttpResponse::Ok().json(data))
         }

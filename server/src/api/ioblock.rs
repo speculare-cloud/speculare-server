@@ -29,7 +29,7 @@ pub async fn ioblocks(
                 info.max_date.unwrap(),
             )
         })
-        .await?;
+        .await??;
         // Return the data as form of JSON
         Ok(HttpResponse::Ok().json(data))
     } else {
@@ -41,7 +41,8 @@ pub async fn ioblocks(
                 error_type: AppErrorType::InvalidRequest,
             })
         } else {
-            let data = web::block(move || IoBlock::get_data(&db.get()?, &uuid, size, page)).await?;
+            let data =
+                web::block(move || IoBlock::get_data(&db.get()?, &uuid, size, page)).await??;
             // Return the data as form of JSON
             Ok(HttpResponse::Ok().json(data))
         }
@@ -67,10 +68,10 @@ pub async fn ioblocks_count(
         })
     } else {
         // use web::block to offload blocking Diesel code without blocking server thread
-        let data = web::block(move || IoBlock::count(&db.get()?, &uuid, size)).await?;
+        let data = web::block(move || IoBlock::count(&db.get()?, &uuid, size)).await??;
         // Return the data as form of JSON
         Ok(HttpResponse::Ok()
-            .header(http::header::CONTENT_TYPE, "text/plain")
+            .append_header((http::header::CONTENT_TYPE, "text/plain"))
             .body(data.to_string()))
     }
 }

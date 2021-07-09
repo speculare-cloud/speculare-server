@@ -1,3 +1,5 @@
+use super::api;
+
 use actix_web::{guard, web};
 
 // Populate the ServiceConfig with all the route needed for the server
@@ -12,10 +14,10 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
                 .service(
                     web::scope("/guard")
                         .guard(guard::Header("SPTK", super::TOKEN.as_ref().unwrap()))
-                        .route("/alerts", web::post().to(|| async { "post alerts" }))
-                        .route("/alerts", web::patch().to(|| async { "patch alerts" }))
-                        .route("/alerts", web::delete().to(|| async { "delete alerts" })),
+                        .route("/alerts", web::post().to(api::alerts::alerts_ingest))
+                        .route("/alerts/{id}", web::patch().to(api::alerts::alerts_update))
+                        .route("/alerts/{id}", web::delete().to(api::alerts::alerts_delete)),
                 )
-                .route("/alerts", web::get().to(|| async { "get alerts" })),
+                .route("/alerts", web::get().to(api::alerts::alerts_all)),
         );
 }

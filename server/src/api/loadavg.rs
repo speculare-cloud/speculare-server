@@ -29,7 +29,7 @@ pub async fn loadavg(
                 info.max_date.unwrap(),
             )
         })
-        .await?;
+        .await??;
         // Return the data as form of JSON
         Ok(HttpResponse::Ok().json(data))
     } else {
@@ -41,7 +41,8 @@ pub async fn loadavg(
                 error_type: AppErrorType::InvalidRequest,
             })
         } else {
-            let data = web::block(move || LoadAvg::get_data(&db.get()?, &uuid, size, page)).await?;
+            let data =
+                web::block(move || LoadAvg::get_data(&db.get()?, &uuid, size, page)).await??;
             // Return the data as form of JSON
             Ok(HttpResponse::Ok().json(data))
         }

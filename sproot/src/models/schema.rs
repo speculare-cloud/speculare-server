@@ -120,6 +120,21 @@ table! {
     }
 }
 
+table! {
+    alerts (id) {
+        id -> Int8,
+        _name -> Varchar,
+        _table -> Varchar,
+        lookup -> Text,
+        timing -> Int4,
+        warn -> Text,
+        crit -> Text,
+        info -> Nullable<Text>,
+        host_uuid -> Varchar,
+        where_clause -> Nullable<Text>,
+    }
+}
+
 allow_tables_to_appear_in_same_query!(
     cpustats, cputimes, disks, hosts, ionets, ioblocks, loadavg, memory, swap,
 );

@@ -14,6 +14,7 @@ use diesel::{
     *,
 };
 
+mod api;
 mod routes;
 mod server;
 

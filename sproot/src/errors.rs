@@ -111,8 +111,8 @@ impl From<actix_web::Error> for AppError {
     }
 }
 
-impl From<actix_web::error::BlockingError<AppError>> for AppError {
-    fn from(error: actix_web::error::BlockingError<AppError>) -> AppError {
+impl From<actix_web::error::BlockingError> for AppError {
+    fn from(error: actix_web::error::BlockingError) -> AppError {
         AppError {
             message: None,
             cause: Some(error.to_string()),

@@ -29,7 +29,7 @@ $ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 $ sudo apt-get install libssl-dev libpq-dev pkg-config build-essential
 ```
 
-- Create both .env.alerts and .env.server files based on .env.example
+- Create both Alerts.toml and Server.toml files based on Example.toml
 
 > **⚠ WARNING: The TimescaleDB instance you're going to use need to be configured for logical replication, check the [docs](https://docs.speculare.cloud).**
 

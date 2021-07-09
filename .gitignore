@@ -1,4 +1,4 @@
 /target
-.env.alerts
-.env.server
+Alerts.toml
+Server.toml
 *.pem

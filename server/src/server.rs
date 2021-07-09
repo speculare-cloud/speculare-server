@@ -1,4 +1,5 @@
 use super::routes;
+use super::CONFIG;
 
 use actix_cors::Cors;
 use actix_web::{middleware, App, HttpServer};
@@ -19,11 +20,11 @@ pub async fn server(pool: Pool) -> std::io::Result<()> {
             .configure(routes::routes)
     });
     // Bind and run the server on HTTP or HTTPS depending on the mode of compilation.
-    let binding = std::env::var("BINDING").expect("Missing binding");
+    let binding = CONFIG.get_str("BINDING").expect("Missing binding");
     // Check if we should enable https
-    let https = std::env::var("HTTPS");
+    let https = CONFIG.get_bool("HTTPS");
     // Bind the server (https or no)
-    if https.is_err() || https.unwrap() == "NO" {
+    if https.is_err() || !https.unwrap() {
         if !cfg!(debug_assertions) {
             warn!("You're starting speculare-server as HTTP on a production build, are you sure about what you're doing ?")
         } else {
@@ -32,8 +33,14 @@ pub async fn server(pool: Pool) -> std::io::Result<()> {
         serv.bind(binding)?.run().await
     } else {
         info!("Server started as HTTPS");
-        serv.bind_openssl(binding, sproot::get_ssl_builder())?
-            .run()
-            .await
+        serv.bind_openssl(
+            binding,
+            sproot::get_ssl_builder(
+                CONFIG.get_str("KEY_PRIV").unwrap(),
+                CONFIG.get_str("KEY_CERT").unwrap(),
+            ),
+        )?
+        .run()
+        .await
     }
 }

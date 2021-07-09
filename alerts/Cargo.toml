@@ -10,9 +10,9 @@ sproot = { version = "0.1.0", path = "../sproot" }
 actix-cors = { version = "0.6.0-beta.2" }
 actix-web = { version = "4.0.0-beta.8", features = ["openssl"] }
 chrono = { version = "0.4", features = ["serde"] }
+config = "0.11"
 diesel = { version = "1.4", features = ["postgres", "r2d2", "chrono"] }
 diesel_migrations = "1.4"
-dotenv = "0.15"
 env_logger = "0.8"
 evalexpr = "6.2"
 lazy_static = "1.4"

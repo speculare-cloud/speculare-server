@@ -3,17 +3,25 @@ extern crate diesel_migrations;
 #[macro_use]
 extern crate log;
 
+use config::{Config, ConfigError};
 use diesel::{prelude::PgConnection, r2d2::ConnectionManager};
-use std::env::VarError;
 
 mod api;
 mod routes;
 mod server;
 
-// Lazy static of the Token from .env to use in validator
 lazy_static::lazy_static! {
-    static ref TOKEN: Result<String, VarError> = {
-        std::env::var("API_TOKEN")
+    static ref CONFIG: Config = {
+        let mut config = Config::default();
+        config.merge(config::File::with_name("Server")).unwrap();
+        config
+    };
+}
+
+// Lazy static of the Token from Config to use in validator
+lazy_static::lazy_static! {
+    static ref TOKEN: Result<String, ConfigError> = {
+        CONFIG.get_str("API_TOKEN")
     };
 }
 
@@ -22,21 +30,16 @@ embed_migrations!();
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    // Load env variable from .env.server
-    dotenv::from_filename(".env.server").ok();
     // Init the logger and set the debug level correctly
     sproot::configure_logger();
     // Init the connection to the postgresql
-    let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    let database_url = CONFIG
+        .get_str("DATABASE_URL")
+        .expect("DATABASE_URL must be set");
     let manager = ConnectionManager::<PgConnection>::new(database_url);
     // Get the max number of connection to open
     // No fear to parse it to u32 and unwrap, if not a correct value crash is ok
-    let max_db_connection = match std::env::var("DATABASE_MAX_CONNECTION") {
-        Ok(value) => value,
-        Err(_) => "10".into(),
-    }
-    .parse::<u32>()
-    .expect("Can't get the DATABASE_MAX_CONNECTION correctly, verify that it's set correctly (should be a number).");
+    let max_db_connection = CONFIG.get::<u32>("DATABASE_MAX_CONNECTION").unwrap_or(10);
     // Create a pool of connection
     // This step might spam for error max_db_connection of times, this is normal.
     let pool = r2d2::Pool::builder()

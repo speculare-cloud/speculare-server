@@ -64,6 +64,12 @@ fn launch_monitoring(pool: Pool) -> Result<(), AppError> {
         tokio::spawn(async move {
             let mut interval = tokio::time::interval(Duration::from_secs(alert.timing as u64));
             let (query, qtype) = utils::construct_query(&alert);
+
+            let tmp_query = query.to_uppercase();
+            for statement in utils::DISALLOWED_STATEMENT {
+                assert!(!tmp_query.contains(statement));
+            }
+
             loop {
                 interval.tick().await;
                 // Do the sanity check here

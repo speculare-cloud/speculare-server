@@ -35,11 +35,11 @@ pub struct AbsDTORaw {
 }
 
 /// Constant list of disallowed statement in the SQL query to avoid somthg bad
-const DISALLOWED_STATEMENT: &[&str] = &[
+pub const DISALLOWED_STATEMENT: &[&str] = &[
     "DELETE",
     "UPDATE",
     "INSERT",
-    "CREATE",
+    //"CREATE", => conflict with created_at, TODO FIX LATER
     "ALTER",
     "DROP",
     "TRUNCATE",
@@ -115,11 +115,6 @@ pub fn construct_query(alert: &Alerts) -> (String, QueryType) {
 }
 
 pub fn execute_query(query: &str, host_uuid: &str, qtype: &QueryType, conn: &ConnType) -> String {
-    let tmp_query = query.to_uppercase();
-    for statement in DISALLOWED_STATEMENT {
-        assert!(!tmp_query.contains(statement));
-    }
-
     match qtype {
         QueryType::Pct => {
             let results = sql_query(query)

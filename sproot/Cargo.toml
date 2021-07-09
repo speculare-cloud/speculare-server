@@ -1,0 +1,17 @@
+[package]
+name = "sproot"
+version = "0.1.0"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+actix-web = { version = "3", features = ["openssl"] }
+chrono = { version = "0.4", features = ["serde"] }
+diesel = { version = "1.4", features = ["postgres", "r2d2", "chrono"] }
+env_logger = "0.8"
+log = "0.4"
+openssl = { version = "0.10" }
+r2d2 = "0.8"
+serde = { version = "1.0", features = ["derive"] }
+snmalloc-rs = "0.2"

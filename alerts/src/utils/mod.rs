@@ -110,7 +110,7 @@ pub fn construct_query(alert: &Alerts) -> (String, QueryType) {
 
     let query = format!("SELECT time_bucket('{0}', created_at) as time, {1} FROM {2} WHERE host_uuid=$1 AND created_at > now() at time zone 'utc' - INTERVAL '{0}' {3} GROUP BY time ORDER BY time DESC", req_time, pg_select, alert.table, pg_where);
 
-    dbg!(&query, &req_mode);
+    trace!("Query[{:?}] is {}", req_mode, &query);
     (query, req_mode)
 }
 
@@ -120,16 +120,18 @@ pub fn execute_query(query: &str, host_uuid: &str, qtype: &QueryType, conn: &Con
             let results = sql_query(query)
                 .bind::<Text, _>(host_uuid)
                 .load::<PctDTORaw>(conn);
-            dbg!(&results);
-            pct::compute_pct(&results.unwrap()).to_string()
+            trace!("result pct is {:?}", &results);
+            let results = results.unwrap();
+            assert!(results.len() >= 2);
+            pct::compute_pct(&results).to_string()
         }
         QueryType::Abs => {
             let results = sql_query(query)
                 .bind::<Text, _>(host_uuid)
                 .load::<AbsDTORaw>(conn);
-            dbg!(&results);
+            trace!("result abs is {:?}", &results);
             let results = results.unwrap();
-            assert!(results.len() == 1);
+            assert!(!results.is_empty());
             results[0].value.to_string()
         }
     }
@@ -137,9 +139,9 @@ pub fn execute_query(query: &str, host_uuid: &str, qtype: &QueryType, conn: &Con
 
 pub fn execute(query: &str, alert: &Alerts, qtype: &QueryType, conn: &ConnType) {
     let result = execute_query(query, &alert.host_uuid, qtype, conn);
+    trace!("{}", &result);
 
     let should_warn = eval_boolean(&alert.warn.replace("$this", &result));
     let should_crit = eval_boolean(&alert.crit.replace("$this", &result));
-
-    dbg!(should_warn, should_crit);
+    trace!("{:?}, {:?}", should_warn, should_crit);
 }

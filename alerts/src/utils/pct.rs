@@ -4,9 +4,6 @@ use super::PctDTORaw;
 ///
 /// This give us the percentage of use of results[1] over results[0].
 pub fn compute_pct(results: &[PctDTORaw]) -> f64 {
-    // results must contains exactly two items.
-    assert!(results.len() == 2);
-
     // Define temp variable
     // results[0] is the previous value in time
     // results[1] is the current value

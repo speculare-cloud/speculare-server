@@ -29,33 +29,7 @@ embed_migrations!();
 ///         - In case of new alerts created a task for that alerts should be started
 fn launch_monitoring(pool: Pool) -> Result<(), AppError> {
     // Get the alerts from the database
-    // let alerts: Vec<Alerts> = Alerts::get_data(&pool.get()?, None, 9999, 0)?;
-    let alerts = vec![
-        Alerts {
-            id: 0,
-            name: "cpu_usage".into(),
-            table: "cputimes".into(),
-            lookup: "avg abs 10m of cuser,nice,system,irq,softirq,steal over idle,iowait".into(),
-            timing: 60,
-            warn: "$this > 50".into(),
-            crit: "$this > 80".into(),
-            info: Some("average cpu utilization over the last 10 minutes".into()),
-            host_uuid: "dfaa7cf24d3e46cc80e8bedc6fb77886".into(),
-            where_clause: None,
-        },
-        Alerts {
-            id: 0,
-            name: "loadavg".into(),
-            table: "loadavg".into(),
-            lookup: "avg abs 10m of five".into(),
-            timing: 60,
-            warn: "$this > 50".into(),
-            crit: "$this > 80".into(),
-            info: Some("average of the avg cpu utilization over the last 5 minutes".into()),
-            host_uuid: "dfaa7cf24d3e46cc80e8bedc6fb77886".into(),
-            where_clause: None,
-        },
-    ];
+    let alerts: Vec<Alerts> = Alerts::get_data(&pool.get()?, None, 9999, 0)?;
 
     // Foreach alerts
     for alert in alerts {
@@ -73,7 +47,7 @@ fn launch_monitoring(pool: Pool) -> Result<(), AppError> {
             loop {
                 interval.tick().await;
                 // Do the sanity check here
-                info!("{}: Run every {:?}", alert.name, interval.period());
+                trace!("{}: Run every {:?}", alert.name, interval.period());
                 utils::execute(&query, &alert, &qtype, &cpool.get().unwrap());
             }
         });
@@ -84,8 +58,9 @@ fn launch_monitoring(pool: Pool) -> Result<(), AppError> {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    // Load env variable from .env
-    dotenv::dotenv().ok();
+    // Load env variable from .env.alerts
+    dotenv::from_filename(".env.alerts")
+        .expect("Cannot find the environment variable file '.env.alerts'");
     // Init the logger and set the debug level correctly
     sproot::configure_logger();
     // Init the connection to the postgresql

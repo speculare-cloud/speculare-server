@@ -26,17 +26,17 @@ impl AppError {
                 ..
             } => message.clone(),
             AppError {
-                message: None,
+                cause: Some(cause), ..
+            } => cause.clone(),
+            AppError {
                 error_type: AppErrorType::PoolError,
                 ..
             } => "Cannot get the connection pool to the database".to_string(),
             AppError {
-                message: None,
                 error_type: AppErrorType::InvalidToken,
                 ..
             } => "The token is invalid or has been expired".to_string(),
             AppError {
-                message: None,
                 error_type: AppErrorType::InvalidRequest,
                 ..
             } => "Invalid request".to_string(),

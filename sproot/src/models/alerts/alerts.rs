@@ -10,10 +10,10 @@ use diesel::*;
 use serde::{Deserialize, Serialize};
 
 /// Struct to hold information about alerts
-#[derive(Identifiable, Queryable, Debug, Serialize, Deserialize)]
+#[derive(Identifiable, Queryable, Debug, Serialize, Deserialize, Clone)]
 #[table_name = "alerts"]
 pub struct Alerts {
-    pub id: i64,
+    pub id: i32,
     // Name of the alarms (only _ is allowed)
     #[column_name = "_name"]
     pub name: String,
@@ -76,7 +76,6 @@ impl Alerts {
     /// * `conn` - The r2d2 connection needed to fetch the data from the db
     /// * `alert` - The HttpAlerts struct containing the new alert information
     pub fn create_new(conn: &ConnType, alerts: &[HttpAlerts]) -> Result<(), AppError> {
-        // Insert the HttpAlerts into the Alerts table and throw error if any
         insert_into(dsl_alerts).values(alerts).execute(conn)?;
         Ok(())
     }
@@ -85,7 +84,7 @@ impl Alerts {
     /// # Params
     /// * `conn` - The r2d2 connection needed to fetch the data from the db
     /// * `target_id` - The id of the alerts to delete
-    pub fn delete(conn: &ConnType, target_id: i64) -> Result<(), AppError> {
+    pub fn delete(conn: &ConnType, target_id: i32) -> Result<(), AppError> {
         delete(dsl_alerts.filter(id.eq(target_id))).execute(conn)?;
         Ok(())
     }
@@ -95,7 +94,7 @@ impl Alerts {
     /// * `conn` - The r2d2 connection needed to fetch the data from the db
     /// * `alert` - The HttpAlerts struct containing the updated alert information
     /// * `target_id` - The id of the alerts to update
-    pub fn modify(conn: &ConnType, alert: &HttpAlerts, target_id: i64) -> Result<(), AppError> {
+    pub fn modify(conn: &ConnType, alert: &HttpAlerts, target_id: i32) -> Result<(), AppError> {
         update(dsl_alerts.filter(id.eq(target_id)))
             .set(alert)
             .execute(conn)?;

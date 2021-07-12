@@ -67,7 +67,11 @@ fn launch_monitoring(pool: Pool) -> Result<(), AppError> {
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     // Init the logger and set the debug level correctly
-    sproot::configure_logger();
+    sproot::configure_logger(
+        CONFIG
+            .get_str("RUST_LOG")
+            .unwrap_or_else(|_| "error,actix_server=info,actix_web=error".into()),
+    );
     // Init the connection to the postgresql
     let database_url = CONFIG
         .get_str("DATABASE_URL")

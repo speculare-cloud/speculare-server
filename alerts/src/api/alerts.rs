@@ -1,10 +1,9 @@
-use sproot::errors::{AppError, AppErrorType};
-use sproot::models::{Alerts, HttpAlerts};
-use sproot::Pool;
-
 use super::PagedInfo;
 
 use actix_web::{web, HttpResponse};
+use sproot::errors::{AppError, AppErrorType};
+use sproot::models::{Alerts, HttpAlerts};
+use sproot::Pool;
 
 /// GET /api/alerts
 /// Return all alerts
@@ -48,7 +47,7 @@ pub async fn alerts_add(
 /// Save data of an alerts into the db
 pub async fn alerts_update(
     db: web::Data<Pool>,
-    path: web::Path<u32>,
+    path: web::Path<u16>,
     item: web::Json<HttpAlerts>,
 ) -> Result<HttpResponse, AppError> {
     let id = path.into_inner();
@@ -63,7 +62,7 @@ pub async fn alerts_update(
 /// Delete an alert previously created from the database
 pub async fn alerts_delete(
     db: web::Data<Pool>,
-    path: web::Path<u32>,
+    path: web::Path<u16>,
 ) -> Result<HttpResponse, AppError> {
     let id = path.into_inner();
     info!("Route DELETE /api/guard/alerts/{}", id);

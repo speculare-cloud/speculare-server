@@ -122,7 +122,7 @@ table! {
 
 table! {
     alerts (id) {
-        id -> Int8,
+        id -> Int4,
         _name -> Varchar,
         _table -> Varchar,
         lookup -> Text,

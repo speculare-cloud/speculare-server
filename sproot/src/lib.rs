@@ -15,19 +15,12 @@ pub type Pool = r2d2::Pool<ConnectionManager<PgConnection>>;
 pub type ConnType = r2d2::PooledConnection<ConnectionManager<PgConnection>>;
 
 /// Configure the logger level for any binary calling it
-pub fn configure_logger() {
+pub fn configure_logger(level: String) {
     // Check if the RUST_LOG already exist in the sys
     if std::env::var_os("RUST_LOG").is_none() {
         // if it doesn't, assign a default value to RUST_LOG
         // Define RUST_LOG as trace for debug and error for prod
-        std::env::set_var(
-            "RUST_LOG",
-            if cfg!(debug_assertions) {
-                "info,actix_server=info,actix_web=info"
-            } else {
-                "error,actix_server=error,actix_web=error"
-            },
-        );
+        std::env::set_var("RUST_LOG", level);
     }
     // Init the logger
     env_logger::init();

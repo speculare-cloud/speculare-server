@@ -2,7 +2,9 @@ use crate::errors::AppError;
 use crate::ConnType;
 
 use crate::models::schema::alerts;
-use crate::models::schema::alerts::dsl::{_name, alerts as dsl_alerts, host_uuid};
+use crate::models::schema::alerts::dsl::{_name, alerts as dsl_alerts, host_uuid, id};
+
+use super::HttpAlerts;
 
 use diesel::*;
 use serde::{Deserialize, Serialize};
@@ -39,18 +41,19 @@ pub struct Alerts {
 }
 
 impl Alerts {
-    /// Return a Vector of CpuStats
+    /// Return a Vector of Alerts
     /// # Params
     /// * `conn` - The r2d2 connection needed to fetch the data from the db
     /// * `uuid` - The host's uuid we want to get alerts of, this field is optional
     /// * `size` - The number of elements to fetch
     /// * `page` - How many items you want to skip (page * size)
-    pub fn get_data(
+    pub fn get_list(
         conn: &ConnType,
-        uuid: Option<&str>,
+        uuid: Option<&String>,
         size: i64,
         page: i64,
     ) -> Result<Vec<Self>, AppError> {
+        // Depending on if the uuid is present or not
         let data: Vec<Self> = match uuid {
             Some(val) => dsl_alerts
                 .filter(host_uuid.eq(val))
@@ -66,5 +69,36 @@ impl Alerts {
         };
 
         Ok(data)
+    }
+
+    /// Insert a new alarm inside the database
+    /// # Params
+    /// * `conn` - The r2d2 connection needed to fetch the data from the db
+    /// * `alert` - The HttpAlerts struct containing the new alert information
+    pub fn create_new(conn: &ConnType, alerts: &[HttpAlerts]) -> Result<(), AppError> {
+        // Insert the HttpAlerts into the Alerts table and throw error if any
+        insert_into(dsl_alerts).values(alerts).execute(conn)?;
+        Ok(())
+    }
+
+    /// Remove an alarm inside the database
+    /// # Params
+    /// * `conn` - The r2d2 connection needed to fetch the data from the db
+    /// * `target_id` - The id of the alerts to delete
+    pub fn delete(conn: &ConnType, target_id: i64) -> Result<(), AppError> {
+        delete(dsl_alerts.filter(id.eq(target_id))).execute(conn)?;
+        Ok(())
+    }
+
+    /// Update an alarm inside the database
+    /// # Params
+    /// * `conn` - The r2d2 connection needed to fetch the data from the db
+    /// * `alert` - The HttpAlerts struct containing the updated alert information
+    /// * `target_id` - The id of the alerts to update
+    pub fn modify(conn: &ConnType, alert: &HttpAlerts, target_id: i64) -> Result<(), AppError> {
+        update(dsl_alerts.filter(id.eq(target_id)))
+            .set(alert)
+            .execute(conn)?;
+        Ok(())
     }
 }

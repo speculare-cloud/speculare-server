@@ -6,4 +6,5 @@ pub mod alerts;
 pub struct PagedInfo {
     pub size: Option<i64>,
     pub page: Option<i64>,
+    pub uuid: Option<String>,
 }

@@ -37,7 +37,7 @@ embed_migrations!();
 ///         - In case of new alerts created a task for that alerts should be started
 fn launch_monitoring(pool: Pool) -> Result<(), AppError> {
     // Get the alerts from the database
-    let alerts: Vec<Alerts> = Alerts::get_data(&pool.get()?, None, 9999, 0)?;
+    let alerts: Vec<Alerts> = Alerts::get_list(&pool.get()?, None, 9999, 0)?;
 
     // Foreach alerts
     for alert in alerts {

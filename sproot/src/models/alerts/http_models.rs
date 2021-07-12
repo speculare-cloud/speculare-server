@@ -1,3 +1,5 @@
+use crate::models::schema::alerts;
+
 use serde::{Deserialize, Serialize};
 
 // ====================
@@ -5,9 +7,12 @@ use serde::{Deserialize, Serialize};
 // Meaning those are used whenever
 // there is a POST request
 // ====================
-#[derive(Debug, Serialize, Deserialize)]
-pub struct HttpPostAlert {
+#[derive(Insertable, AsChangeset, Deserialize, Serialize, Debug)]
+#[table_name = "alerts"]
+pub struct HttpAlerts {
+    #[column_name = "_name"]
     pub name: String,
+    #[column_name = "_table"]
     pub table: String,
     pub lookup: String,
     pub timing: i32,

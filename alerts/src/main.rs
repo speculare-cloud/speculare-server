@@ -15,6 +15,7 @@ mod routes;
 mod server;
 mod utils;
 
+// Lazy static of the Config which is loaded from Alerts.toml
 lazy_static::lazy_static! {
     static ref CONFIG: Config = {
         let mut config = Config::default();
@@ -30,7 +31,11 @@ lazy_static::lazy_static! {
     };
 }
 
+// Lazy static holding the Alerts that are currently running,
+// with their task (allow us to abort them if needed)
 lazy_static::lazy_static! {
+    // Be warned that it is not guarantee that the task is currently running.
+    // The task could have been aborted sooner due to the sanity check of the query.
     static ref ALERTS_LIST: RwLock<HashMap<i32, tokio::task::JoinHandle<()>>> = RwLock::new(HashMap::new());
 }
 
@@ -44,18 +49,29 @@ fn launch_alert_task(alert: Alerts, pool: Pool) {
     // Spawn a new task which will do the check for that particular alerts
     // Save the JoinHandle so we can abort if needed later
     let alert_task: tokio::task::JoinHandle<()> = tokio::spawn(async move {
+        // Construct the interval corresponding to this alert
         let mut interval = tokio::time::interval(Duration::from_secs(alert.timing as u64));
+        // Construct the query and get the type of query we have
         let (query, qtype) = utils::construct_query(&alert);
-
+        // Assert that we don't have any malicious statement in the query
+        // by changing it to uppercase and checking against our list of banned statement.
         let tmp_query = query.to_uppercase();
         for statement in utils::DISALLOWED_STATEMENT {
-            assert!(!tmp_query.contains(statement));
+            if tmp_query.contains(statement) {
+                error!(
+                    "Alerts[{}] contains disallowed statement \"{}\"",
+                    alert.id, statement
+                );
+                return;
+            }
         }
 
+        // Start the real "forever" loop
         loop {
+            // Wait for the next tick of our interval
             interval.tick().await;
-            // Do the sanity check here
             trace!("{}: Run every {:?}", alert.name, interval.period());
+            // Execute the query and the analysis
             utils::execute(&query, &alert, &qtype, &pool.get().unwrap());
         }
     });
@@ -80,23 +96,40 @@ fn launch_monitoring(pool: Pool) -> Result<(), AppError> {
     // This client will abort a task of an Alarm that is being updated and restart it
     // and will also create new task for new Alarms that are just being created after the startup.
     tokio::spawn(async {
-        // TODO - Change the URL of the WS
-        // TODO - Either create two tokio task, one for update and one for insert
-        //        or allow to have multiple query type in the PGCDC server
-        let (mut ws_stream, _) =
+        // Connect to the WS for the update type
+        let (mut ws_update, _) =
             match connect_async("wss://cdc.speculare.cloud/ws?query=update:hosts").await {
                 Ok(val) => val,
                 Err(err) => {
-                    error!("WS: error while connecting: \"{}\"", err);
+                    error!("WS: error while connecting update: \"{}\"", err);
+                    // TODO - Check, return should exit the task
                     return;
                 }
             };
-        debug!("WS: handshake completed");
+        debug!("WS: update handshake completed");
+
+        // Connect to the WS for the insert type
+        let (mut ws_insert, _) =
+            match connect_async("wss://cdc.speculare.cloud/ws?query=update:hosts").await {
+                Ok(val) => val,
+                Err(err) => {
+                    error!("WS: error while connecting insert: \"{}\"", err);
+                    // TODO - Check, return should exit the task
+                    return;
+                }
+            };
+        debug!("WS: insert handshake completed");
 
         // While we have some message, read them and wait for the next one
-        // this does not spam the CPU as per ws_stream.next() will block until a message is received.
-        while let Some(msg) = ws_stream.next().await {
+        // We also combine both stream into "one", this is not really true but
+        // we do poll both of them using tokio::select! macro.
+        while let Some(msg) = tokio::select! {
+            v = ws_update.next() => v,
+            v = ws_insert.next() => v,
+        } {
+            // TODO - Handle error
             let msg = msg.unwrap();
+            // Check if the message we got is text and not binary, ping, ...
             if msg.is_text() {
                 // TODO - Decode and handle update/insert
                 debug!("WS: Message received: \"{}\"", msg);

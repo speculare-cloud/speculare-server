@@ -9,3 +9,5 @@ KEY_CERT = "cert.pem"			# (optional)
 HTTPS = true					# (optional [default = false])
 
 API_TOKEN = "secret_password"	# (used in Speculare-client)
+
+WSS_DOMAIN = "domain.xyz"		# only used in Alerts (needed in Alerts.toml)

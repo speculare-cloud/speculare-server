@@ -96,29 +96,36 @@ fn launch_monitoring(pool: Pool) -> Result<(), AppError> {
     // This client will abort a task of an Alarm that is being updated and restart it
     // and will also create new task for new Alarms that are just being created after the startup.
     tokio::spawn(async {
+        let domain = CONFIG
+            .get_str("WSS_DOMAIN")
+            .expect("Missing WSS_DOMAIN in the config file.");
         // Connect to the WS for the update type
         let (mut ws_update, _) =
-            match connect_async("wss://cdc.speculare.cloud/ws?query=update:hosts").await {
-                Ok(val) => val,
+            match connect_async(format!("wss://{}/ws?query=update:alerts", domain)).await {
+                Ok(val) => {
+                    debug!("WS: update handshake completed");
+                    val
+                }
                 Err(err) => {
                     error!("WS: error while connecting update: \"{}\"", err);
                     // TODO - Check, return should exit the task
                     return;
                 }
             };
-        debug!("WS: update handshake completed");
 
         // Connect to the WS for the insert type
         let (mut ws_insert, _) =
-            match connect_async("wss://cdc.speculare.cloud/ws?query=update:hosts").await {
-                Ok(val) => val,
+            match connect_async(format!("wss://{}/ws?query=update:alerts", domain)).await {
+                Ok(val) => {
+                    debug!("WS: insert handshake completed");
+                    val
+                }
                 Err(err) => {
                     error!("WS: error while connecting insert: \"{}\"", err);
                     // TODO - Check, return should exit the task
                     return;
                 }
             };
-        debug!("WS: insert handshake completed");
 
         // While we have some message, read them and wait for the next one
         // We also combine both stream into "one", this is not really true but

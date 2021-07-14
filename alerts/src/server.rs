@@ -33,7 +33,7 @@ pub async fn server(pool: Pool) -> std::io::Result<()> {
         serv.bind(binding)?.run().await
     } else {
         info!("Server started as HTTPS");
-        serv.bind_openssl(
+        serv.bind_rustls(
             binding,
             sproot::get_ssl_builder(
                 CONFIG.get_str("KEY_PRIV").unwrap(),

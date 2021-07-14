@@ -4,6 +4,7 @@ DATABASE_URL = "postgres://postgres:azerty@localhost/speculare?sslmode=disable"
 
 DATABASE_MAX_CONNECTION = 10	# (optional [default = 10])
 
+# The KEY need to be a rsa key
 KEY_PRIV = "key.pem"			# (optional)
 KEY_CERT = "cert.pem"			# (optional)
 HTTPS = true					# (optional [default = false])
@@ -11,3 +12,5 @@ HTTPS = true					# (optional [default = false])
 API_TOKEN = "secret_password"	# (used in Speculare-client)
 
 WSS_DOMAIN = "domain.xyz"		# only used in Alerts (needed in Alerts.toml)
+
+RUST_LOG = "info,alerts=info,server=info,actix_server=info,actix_web=info"	# (optional)

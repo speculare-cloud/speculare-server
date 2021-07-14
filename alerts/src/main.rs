@@ -16,6 +16,16 @@ mod routes;
 mod server;
 mod utils;
 
+/// Evaluate an Enum into the value it hold
+macro_rules! as_variant {
+    ($value:expr, $variant:path) => {
+        match $value {
+            $variant(x) => Some(x),
+            _ => None,
+        }
+    };
+}
+
 // Lazy static of the Config which is loaded from Alerts.toml
 lazy_static::lazy_static! {
     static ref CONFIG: Config = {
@@ -42,6 +52,36 @@ lazy_static::lazy_static! {
 
 // Embed migrations into the binary
 embed_migrations!();
+
+/// Enum used to hold either i32, String or Option<String> (from CDC)
+///
+/// Using untagged to give serde the opportinity to try match without a structure.
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(untagged)]
+enum Thing {
+    Number(i32),
+    String(String),
+    OptionString(Option<String>),
+}
+
+/// Enum to represente the kind of the CdcChange message
+///
+/// Convert to lowercase to match with the message "update", "insert"
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[serde(rename_all = "lowercase")]
+enum CdcKind {
+    Update,
+    Insert,
+}
+
+/// Structure holding the info we need from the WebSocket
+#[derive(Serialize, Deserialize, Debug)]
+struct CdcChange {
+    columnnames: Vec<String>,
+    columnvalues: Vec<Thing>,
+    kind: CdcKind,
+    table: String,
+}
 
 /// Create the task for a particular alert and add it to the ALERTS_LIST.
 fn launch_alert_task(alert: Alerts, pool: Pool) {
@@ -78,38 +118,6 @@ fn launch_alert_task(alert: Alerts, pool: Pool) {
     });
     // Add information into our HashMap protected by RwLock (multiple readers, one write at most)
     ALERTS_LIST.write().unwrap().insert(alert_id, alert_task);
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(untagged)]
-enum Thing {
-    Number(i32),
-    String(String),
-    OptionString(Option<String>),
-}
-
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
-#[serde(rename_all = "lowercase")]
-enum CdcKind {
-    Update,
-    Insert,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-struct CdcChange {
-    columnnames: Vec<String>,
-    columnvalues: Vec<Thing>,
-    kind: CdcKind,
-    table: String,
-}
-
-macro_rules! as_variant {
-    ($value:expr, $variant:path) => {
-        match $value {
-            $variant(x) => Some(x),
-            _ => None,
-        }
-    };
 }
 
 /// Start the monitoring tasks for each alarms

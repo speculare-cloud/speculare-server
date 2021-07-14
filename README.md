@@ -45,7 +45,7 @@ So you don't have to do anything, just launch and enjoy.
 # And you also need to install diesel cli
 $ cargo install diesel_cli --no-default-features --features postgres
 # For diesel setup to works you need to be at the root of the project
-$ diesel setup
+$ diesel setup --database-url="postgres://xxx"
 ```
 
 Contributing

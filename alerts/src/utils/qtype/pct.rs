@@ -1,4 +1,4 @@
-use super::PctDTORaw;
+use crate::utils::PctDTORaw;
 
 /// Compute the percentage of difference between a Vec containing two DTORaw
 ///

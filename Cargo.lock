@@ -264,6 +264,7 @@ dependencies = [
  "log",
  "r2d2",
  "serde 1.0.126",
+ "serde_json",
  "sproot",
  "tokio",
  "tokio-tungstenite",

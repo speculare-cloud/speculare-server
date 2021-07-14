@@ -39,8 +39,9 @@ pub fn get_ssl_builder(key: String, cert: String) -> ServerConfig {
     let cert_file = &mut BufReader::new(
         File::open(&cert).unwrap_or_else(|_| panic!("Certificate file not found at {}", cert)),
     );
-    let key_file =
-        &mut BufReader::new(File::open(&key).unwrap_or_else(|_| panic!("Key file not found at {}", key)));
+    let key_file = &mut BufReader::new(
+        File::open(&key).unwrap_or_else(|_| panic!("Key file not found at {}", key)),
+    );
     // Create a Vec of certificate by extracting all cert from cert_file
     let cert_chain = certs(cert_file).unwrap();
     // Extract all PKCS8-encoded private key from key_file and generate a Vec from them
@@ -48,8 +49,9 @@ pub fn get_ssl_builder(key: String, cert: String) -> ServerConfig {
     // If no keys are found, we try using the rsa type
     if keys.is_empty() {
         // Reopen a new BufReader as pkcs8_private_keys took over the previous one
-        let key_file =
-            &mut BufReader::new(File::open(&key).unwrap_or_else(|_| panic!("Key file not found at {}", key)));
+        let key_file = &mut BufReader::new(
+            File::open(&key).unwrap_or_else(|_| panic!("Key file not found at {}", key)),
+        );
         keys = rsa_private_keys(key_file).unwrap();
     }
     // Set a single certificate to be used for all subsequent request

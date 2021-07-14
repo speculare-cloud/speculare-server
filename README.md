@@ -14,9 +14,9 @@
 
 This repo is the place for both server & alerts of Speculare, doing it this way to share models and some common code.
 
-Speculare server is intended to recieve data from speculare-client childrens.
+Server is intended to recieve data from speculare-client childrens.
 
-Speculare alerts is intended to create and send notifications about incidents.
+Alerts is intended to create incidents and send notifications about them.
 
 This project is meant to evolve in something more complete and more complexe in a somewhat near future.
 

@@ -30,6 +30,17 @@ pub async fn alerts_list(
     }
 }
 
+pub async fn alerts_one(
+    db: web::Data<Pool>,
+    path: web::Path<u16>,
+) -> Result<HttpResponse, AppError> {
+    let id = path.into_inner();
+    info!("Route GET /api/alerts/{}", id);
+    // use web::block to offload blocking Diesel code without blocking server thread
+    let data = web::block(move || Alerts::get(&db.get()?, id.into())).await??;
+    Ok(HttpResponse::Ok().json(data))
+}
+
 /// POST /api/guard/alerts
 /// Save data of an alerts into the db
 pub async fn alerts_add(
@@ -37,8 +48,8 @@ pub async fn alerts_add(
     item: web::Json<Vec<HttpAlerts>>,
 ) -> Result<HttpResponse, AppError> {
     info!("Route POST /api/guard/alerts : {:?}", item);
-    // make all insert taking advantage of web::block to offload the request thread
-    web::block(move || Alerts::create_new(&db.get()?, &item.into_inner())).await??;
+    // use web::block to offload blocking Diesel code without blocking server thread
+    web::block(move || Alerts::insert(&db.get()?, &item.into_inner())).await??;
     // Return a 200 status code as everything went well
     Ok(HttpResponse::Ok().finish())
 }
@@ -52,8 +63,8 @@ pub async fn alerts_update(
 ) -> Result<HttpResponse, AppError> {
     let id = path.into_inner();
     info!("Route PATCH /api/guard/alerts/{} : {:?}", id, item);
-    // make all insert taking advantage of web::block to offload the request thread
-    web::block(move || Alerts::modify(&db.get()?, &item, id.into())).await??;
+    // use web::block to offload blocking Diesel code without blocking server thread
+    web::block(move || Alerts::update(&db.get()?, &item, id.into())).await??;
     // Return a 200 status code as everything went well
     Ok(HttpResponse::Ok().finish())
 }
@@ -66,7 +77,7 @@ pub async fn alerts_delete(
 ) -> Result<HttpResponse, AppError> {
     let id = path.into_inner();
     info!("Route DELETE /api/guard/alerts/{}", id);
-    // make all insert taking advantage of web::block to offload the request thread
+    // use web::block to offload blocking Diesel code without blocking server thread
     web::block(move || Alerts::delete(&db.get()?, id.into())).await??;
     // Return a 200 status code as everything went well
     Ok(HttpResponse::Ok().finish())

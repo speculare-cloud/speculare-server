@@ -18,6 +18,7 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
                         .route("/alerts/{id}", web::patch().to(api::alerts::alerts_update))
                         .route("/alerts/{id}", web::delete().to(api::alerts::alerts_delete)),
                 )
-                .route("/alerts", web::get().to(api::alerts::alerts_list)),
+                .route("/alerts", web::get().to(api::alerts::alerts_list))
+                .route("/alerts/{id}", web::get().to(api::alerts::alerts_one)),
         );
 }

@@ -71,16 +71,24 @@ impl Alerts {
         Ok(data)
     }
 
-    /// Insert a new alarm inside the database
+    /// Return a single Alerts
+    /// # Params
+    /// * `conn` - The r2d2 connection needed to fetch the data from the db
+    /// * `target_id` - The id of the alerts to get
+    pub fn get(conn: &ConnType, target_id: i32) -> Result<Self, AppError> {
+        Ok(dsl_alerts.find(target_id).first(conn)?)
+    }
+
+    /// Insert a new Alerts inside the database
     /// # Params
     /// * `conn` - The r2d2 connection needed to fetch the data from the db
     /// * `alert` - The HttpAlerts struct containing the new alert information
-    pub fn create_new(conn: &ConnType, alerts: &[HttpAlerts]) -> Result<(), AppError> {
+    pub fn insert(conn: &ConnType, alerts: &[HttpAlerts]) -> Result<(), AppError> {
         insert_into(dsl_alerts).values(alerts).execute(conn)?;
         Ok(())
     }
 
-    /// Remove an alarm inside the database
+    /// Remove an Alerts inside the database
     /// # Params
     /// * `conn` - The r2d2 connection needed to fetch the data from the db
     /// * `target_id` - The id of the alerts to delete
@@ -89,12 +97,12 @@ impl Alerts {
         Ok(())
     }
 
-    /// Update an alarm inside the database
+    /// Update an Alerts inside the database
     /// # Params
     /// * `conn` - The r2d2 connection needed to fetch the data from the db
     /// * `alert` - The HttpAlerts struct containing the updated alert information
     /// * `target_id` - The id of the alerts to update
-    pub fn modify(conn: &ConnType, alert: &HttpAlerts, target_id: i32) -> Result<(), AppError> {
+    pub fn update(conn: &ConnType, alert: &HttpAlerts, target_id: i32) -> Result<(), AppError> {
         update(dsl_alerts.filter(id.eq(target_id)))
             .set(alert)
             .execute(conn)?;

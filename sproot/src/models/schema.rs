@@ -135,6 +135,25 @@ table! {
     }
 }
 
+table! {
+    incidents (id) {
+        id -> Int4,
+        result -> Text,
+        updated_at -> Timestamp,
+        host_uuid -> Varchar,
+        status -> Int4,
+        alerts_id -> Int4,
+        alerts_name -> Varchar,
+        alerts_table -> Varchar,
+        alerts_lookup -> Text,
+        alerts_timing -> Int4,
+        alerts_warn -> Text,
+        alerts_crit -> Text,
+        alerts_info -> Nullable<Text>,
+        alerts_where_clause -> Nullable<Text>,
+    }
+}
+
 allow_tables_to_appear_in_same_query!(
     cpustats, cputimes, disks, hosts, ionets, ioblocks, loadavg, memory, swap,
 );

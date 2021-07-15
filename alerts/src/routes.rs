@@ -16,9 +16,22 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
                         .guard(guard::Header("SPTK", super::TOKEN.as_ref().unwrap()))
                         .route("/alerts", web::post().to(api::alerts::alerts_add))
                         .route("/alerts/{id}", web::patch().to(api::alerts::alerts_update))
-                        .route("/alerts/{id}", web::delete().to(api::alerts::alerts_delete)),
+                        .route("/alerts/{id}", web::delete().to(api::alerts::alerts_delete))
+                        .route(
+                            "/incidents/{id}",
+                            web::patch().to(api::incidents::incidents_update),
+                        )
+                        .route(
+                            "/incidents/{id}",
+                            web::delete().to(api::incidents::incidents_delete),
+                        ),
                 )
                 .route("/alerts", web::get().to(api::alerts::alerts_list))
-                .route("/alerts/{id}", web::get().to(api::alerts::alerts_one)),
+                .route("/alerts/{id}", web::get().to(api::alerts::alerts_one))
+                .route("/incidents", web::get().to(api::incidents::incidents_list))
+                .route(
+                    "/incidents/{id}",
+                    web::get().to(api::incidents::incidents_one),
+                ),
         );
 }

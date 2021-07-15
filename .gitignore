@@ -2,3 +2,5 @@
 Alerts.toml
 Server.toml
 *.pem
+/src
+diesel.toml

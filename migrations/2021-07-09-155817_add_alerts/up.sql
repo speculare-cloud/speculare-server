@@ -11,5 +11,4 @@ CREATE TABLE alerts (
 	where_clause TEXT
 );
 
-CREATE INDEX alerts_idx_id ON alerts(id);
 CREATE INDEX alerts_idx_uuid ON alerts(host_uuid);

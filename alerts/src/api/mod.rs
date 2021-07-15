@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 pub mod alerts;
+pub mod incidents;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PagedInfo {

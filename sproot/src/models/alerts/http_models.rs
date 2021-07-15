@@ -1,4 +1,4 @@
-use crate::models::schema::alerts;
+use crate::models::schema::{alerts, incidents};
 
 use serde::{Deserialize, Serialize};
 
@@ -21,4 +21,22 @@ pub struct HttpAlerts {
     pub info: Option<String>,
     pub host_uuid: String,
     pub where_clause: Option<String>,
+}
+
+#[derive(Insertable, AsChangeset, Deserialize, Serialize, Debug)]
+#[table_name = "incidents"]
+pub struct HttpIncidents {
+    pub result: String,
+    pub updated_at: chrono::NaiveDateTime,
+    pub host_uuid: String,
+    pub status: i32,
+    pub alerts_id: i32,
+    pub alerts_name: String,
+    pub alerts_table: String,
+    pub alerts_lookup: String,
+    pub alerts_timing: i32,
+    pub alerts_warn: String,
+    pub alerts_crit: String,
+    pub alerts_info: Option<String>,
+    pub alerts_where_clause: Option<String>,
 }

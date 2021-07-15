@@ -13,7 +13,7 @@ chrono = { version = "0.4", features = ["serde"] }
 config = "0.11"
 diesel = { version = "1.4", features = ["postgres", "r2d2", "chrono"] }
 diesel_migrations = "1.4"
-env_logger = "0.8"
+env_logger = "0.9"
 lazy_static = "1.4"
 log = "0.4"
 r2d2 = "0.8"

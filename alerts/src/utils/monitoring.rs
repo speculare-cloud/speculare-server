@@ -88,10 +88,10 @@ fn launch_websocket(pool: Pool) {
                     continue;
                 }
                 // Convert msg into String
-                let msg = msg.into_text().expect("Cannot convert message to text");
+                let mut msg = msg.into_text().expect("Cannot convert message to text");
                 trace!("WS: Message received: \"{}\"", msg);
                 // Construct data from str using Serde
-                let data: CdcChange = serde_json::from_str(&msg).unwrap();
+                let data: CdcChange = simd_json::from_str(&mut msg).unwrap();
                 // Construct alert from CdcChange (using columnname and columnvalues)
                 let alert: Result<Alerts, Error> = (&data).into();
                 // Check if alert is an error (happen if not all fields are presents)

@@ -26,14 +26,14 @@ Server setup / Dev setup
 - Install all deps
 ```bash
 $ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-$ sudo apt-get install libssl-dev libpq-dev pkg-config build-essential
+$ sudo apt-get install cmake libssl-dev libpq-dev pkg-config build-essential
 ```
 
 - Create both Alerts.toml and Server.toml files based on Example.toml
 
 > **⚠ WARNING: The TimescaleDB instance you're going to use need to be configured for logical replication, check the [docs](https://docs.speculare.cloud).**
 
-- (Solution A) Setup the database without doing anything
+- (Solution A - recommended) Setup the database without doing anything
 ```
 When running the binary, it will automatically check if all available migrations have been applied.
 So you don't have to do anything, just launch and enjoy.

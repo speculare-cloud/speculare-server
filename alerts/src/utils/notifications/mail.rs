@@ -32,7 +32,7 @@ pub fn send_alert(incident: &Incidents) {
 
     // Send the email
     match MAILER.send(&email) {
-        Ok(_) => println!("Email sent successfully!"),
+        Ok(_) => debug!("Email sent successfully!"),
         Err(e) => panic!("Could not send email: {:?}", e),
     }
 }

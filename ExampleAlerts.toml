@@ -14,3 +14,9 @@ API_TOKEN = "secret_password"	# (used in Speculare-client)
 WSS_DOMAIN = "domain.xyz"		# only used in Alerts (needed in Alerts.toml)
 
 RUST_LOG = "info,alerts=info,server=info,actix_server=info,actix_web=info"	# (optional)
+
+SMTP_HOST = "smtp.gmail.com"
+SMTP_USER = "mail@gmail.com"
+SMTP_PASSWORD = "password_super_secret"
+SMTP_EMAIL_SENDER = "Speculare <alerts@speculare.cloud>"
+SMTP_EMAIL_RECEIVER = "myemail@mail.com"

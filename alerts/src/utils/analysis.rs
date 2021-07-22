@@ -111,7 +111,7 @@ pub fn execute_analysis(query: &str, alert: &Alerts, qtype: &QueryType, conn: &C
             };
             let incident =
                 Incidents::ginsert(conn, &[incident]).expect("Failed to insert a new incident");
-            super::mail::send_alert(alert, &incident);
+            super::mail::send_alert(&incident);
         }
     }
 }

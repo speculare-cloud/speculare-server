@@ -2,9 +2,9 @@ use crate::utils::Severity;
 use crate::{CONFIG, MAILER};
 
 use lettre::{Message, Transport};
-use sproot::models::{Alerts, Incidents};
+use sproot::models::Incidents;
 
-pub fn send_alert(alert: &Alerts, incident: &Incidents) {
+pub fn send_alert(incident: &Incidents) {
     let sender = CONFIG
         .get_str("SMTP_EMAIL_SENDER")
         .expect("Missing SMTP_EMAIL_SENDER in the config.");
@@ -16,15 +16,17 @@ pub fn send_alert(alert: &Alerts, incident: &Incidents) {
     let email = Message::builder()
         .from(sender.parse().unwrap())
         .to(receiver.parse().unwrap())
-        .subject(format!("Speculare: new Incident for {}", alert.name))
+        .subject(format!("Speculare: new Incident for {}", incident.alerts_name))
         .body(format!(
-            "Incident n°{} - {}\n\nTable: {}\nLookup: {}\nResult: {}\nUpdated At: {}",
+            "Incident n°{} - {}\n\nTable: {}\nLookup: {}\nResult: {}\nWarn: {}\nCrit: {}\n\nUpdated At: {}",
             incident.id,
             Severity::from(incident.severity).to_string(),
-            alert.table,
-            alert.lookup,
+            incident.alerts_table,
+            incident.alerts_lookup,
             incident.result,
-            incident.updated_at.to_string()
+            incident.alerts_warn,
+            incident.alerts_crit,
+            incident.updated_at.format("%Y-%m-%d %H:%M:%S").to_string()
         ))
         .unwrap();
 

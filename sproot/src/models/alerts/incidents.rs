@@ -1,12 +1,9 @@
 use crate::errors::AppError;
-use crate::ConnType;
-
 use crate::models::schema::incidents;
 use crate::models::schema::incidents::dsl::{
-    host_uuid, id, incidents as dsl_incidents, updated_at,
+    alerts_id, host_uuid, id, incidents as dsl_incidents, status, updated_at,
 };
-
-use super::HttpIncidents;
+use crate::ConnType;
 
 use diesel::*;
 use serde::{Deserialize, Serialize};
@@ -15,7 +12,7 @@ use serde::{Deserialize, Serialize};
 /// Yes it's a lot of duplicate from the Alerts but as the Alerts can be updated
 /// we need to store a snapshot of the configuration of the said alerts at the
 /// time the incidents was created.
-#[derive(Identifiable, Queryable, Debug, Serialize, Deserialize, Clone, Insertable)]
+#[derive(Identifiable, Queryable, Debug, Serialize, Deserialize, Clone)]
 #[table_name = "incidents"]
 pub struct Incidents {
     pub id: i32,
@@ -23,11 +20,11 @@ pub struct Incidents {
     pub updated_at: chrono::NaiveDateTime,
     pub host_uuid: String,
     pub status: i32,
+    pub severity: i32,
     pub alerts_id: i32,
     pub alerts_name: String,
     pub alerts_table: String,
     pub alerts_lookup: String,
-    pub alerts_timing: i32,
     pub alerts_warn: String,
     pub alerts_crit: String,
     pub alerts_info: Option<String>,
@@ -65,6 +62,17 @@ impl Incidents {
         Ok(data)
     }
 
+    /// Determine if the incidents for that specific alert exist and is currently active.
+    /// If one is found, return it, otherwise return a Err(NotFound).
+    /// # Params
+    /// * `conn` - The r2d2 connection needed to fetch the data from the db
+    /// * `alert_id` - The id of the alert related to the incident
+    pub fn exist(conn: &ConnType, alert_id: i32) -> Result<Self, diesel::result::Error> {
+        dsl_incidents
+            .filter(alerts_id.eq(alert_id).and(status.eq(0)))
+            .first(conn)
+    }
+
     /// Return a single Incidents
     /// # Params
     /// * `conn` - The r2d2 connection needed to fetch the data from the db
@@ -77,7 +85,7 @@ impl Incidents {
     /// # Params
     /// * `conn` - The r2d2 connection needed to fetch the data from the db
     /// * `incidents` - The Incidents struct containing the new incident information
-    pub fn insert(conn: &ConnType, incidents: &[Incidents]) -> Result<(), AppError> {
+    pub fn insert(conn: &ConnType, incidents: &[IncidentsDTO]) -> Result<(), AppError> {
         insert_into(dsl_incidents).values(incidents).execute(conn)?;
         Ok(())
     }
@@ -98,12 +106,90 @@ impl Incidents {
     /// * `target_id` - The id of the incident to update
     pub fn update(
         conn: &ConnType,
-        incidents: &HttpIncidents,
+        incidents: &IncidentsDTOUpdate,
         target_id: i32,
     ) -> Result<(), AppError> {
         update(dsl_incidents.filter(id.eq(target_id)))
             .set(incidents)
             .execute(conn)?;
         Ok(())
+    }
+}
+
+/// Insertable struct (no id fields => which is auto generated)
+#[derive(Insertable, Deserialize, Serialize, Debug)]
+#[table_name = "incidents"]
+pub struct IncidentsDTO {
+    pub result: String,
+    pub updated_at: chrono::NaiveDateTime,
+    pub host_uuid: String,
+    pub status: i32,
+    pub severity: i32,
+    pub alerts_id: i32,
+    pub alerts_name: String,
+    pub alerts_table: String,
+    pub alerts_lookup: String,
+    pub alerts_warn: String,
+    pub alerts_crit: String,
+    pub alerts_info: Option<String>,
+    pub alerts_where_clause: Option<String>,
+}
+
+/// Using a specific struct for the Update allow us to pass all as None expect the fields we want to update
+#[derive(AsChangeset, Deserialize, Serialize, Debug, Default)]
+#[table_name = "incidents"]
+pub struct IncidentsDTOUpdate {
+    pub result: Option<String>,
+    pub updated_at: Option<chrono::NaiveDateTime>,
+    pub host_uuid: Option<String>,
+    pub status: Option<i32>,
+    pub severity: Option<i32>,
+    pub alerts_id: Option<i32>,
+    pub alerts_name: Option<String>,
+    pub alerts_table: Option<String>,
+    pub alerts_lookup: Option<String>,
+    pub alerts_warn: Option<String>,
+    pub alerts_crit: Option<String>,
+    pub alerts_info: Option<String>,
+    pub alerts_where_clause: Option<String>,
+}
+
+impl From<Incidents> for IncidentsDTO {
+    fn from(incident: Incidents) -> IncidentsDTO {
+        IncidentsDTO {
+            result: incident.result,
+            updated_at: incident.updated_at,
+            host_uuid: incident.host_uuid,
+            status: incident.alerts_id,
+            severity: incident.alerts_id,
+            alerts_id: incident.alerts_id,
+            alerts_name: incident.alerts_name,
+            alerts_table: incident.alerts_table,
+            alerts_lookup: incident.alerts_lookup,
+            alerts_warn: incident.alerts_warn,
+            alerts_crit: incident.alerts_crit,
+            alerts_info: incident.alerts_info,
+            alerts_where_clause: incident.alerts_where_clause,
+        }
+    }
+}
+
+impl From<Incidents> for IncidentsDTOUpdate {
+    fn from(incident: Incidents) -> IncidentsDTOUpdate {
+        IncidentsDTOUpdate {
+            result: Some(incident.result),
+            updated_at: Some(incident.updated_at),
+            host_uuid: Some(incident.host_uuid),
+            status: Some(incident.alerts_id),
+            severity: Some(incident.alerts_id),
+            alerts_id: Some(incident.alerts_id),
+            alerts_name: Some(incident.alerts_name),
+            alerts_table: Some(incident.alerts_table),
+            alerts_lookup: Some(incident.alerts_lookup),
+            alerts_warn: Some(incident.alerts_warn),
+            alerts_crit: Some(incident.alerts_crit),
+            alerts_info: incident.alerts_info,
+            alerts_where_clause: incident.alerts_where_clause,
+        }
     }
 }

@@ -1,10 +1,7 @@
 use crate::errors::AppError;
-use crate::ConnType;
-
 use crate::models::schema::alerts;
 use crate::models::schema::alerts::dsl::{_name, alerts as dsl_alerts, host_uuid, id};
-
-use super::HttpAlerts;
+use crate::ConnType;
 
 use diesel::*;
 use serde::{Deserialize, Serialize};
@@ -82,8 +79,8 @@ impl Alerts {
     /// Insert a new Alerts inside the database
     /// # Params
     /// * `conn` - The r2d2 connection needed to fetch the data from the db
-    /// * `alert` - The HttpAlerts struct containing the new alert information
-    pub fn insert(conn: &ConnType, alerts: &[HttpAlerts]) -> Result<(), AppError> {
+    /// * `alert` - The AlertsDTO struct containing the new alert information
+    pub fn insert(conn: &ConnType, alerts: &[AlertsDTO]) -> Result<(), AppError> {
         insert_into(dsl_alerts).values(alerts).execute(conn)?;
         Ok(())
     }
@@ -100,12 +97,50 @@ impl Alerts {
     /// Update an Alerts inside the database
     /// # Params
     /// * `conn` - The r2d2 connection needed to fetch the data from the db
-    /// * `alert` - The HttpAlerts struct containing the updated alert information
+    /// * `alert` - The AlertsDTOUpdate struct containing the updated alert information
     /// * `target_id` - The id of the alerts to update
-    pub fn update(conn: &ConnType, alert: &HttpAlerts, target_id: i32) -> Result<(), AppError> {
+    pub fn update(
+        conn: &ConnType,
+        alert: &AlertsDTOUpdate,
+        target_id: i32,
+    ) -> Result<(), AppError> {
         update(dsl_alerts.filter(id.eq(target_id)))
             .set(alert)
             .execute(conn)?;
         Ok(())
     }
+}
+
+/// Insertable struct (no id fields => which is auto generated)
+#[derive(Insertable, Deserialize, Serialize, Debug)]
+#[table_name = "alerts"]
+pub struct AlertsDTO {
+    #[column_name = "_name"]
+    pub name: String,
+    #[column_name = "_table"]
+    pub table: String,
+    pub lookup: String,
+    pub timing: i32,
+    pub warn: String,
+    pub crit: String,
+    pub info: Option<String>,
+    pub host_uuid: String,
+    pub where_clause: Option<String>,
+}
+
+/// Using a specific struct for the Update allow us to pass all as None expect the fields we want to update
+#[derive(AsChangeset, Deserialize, Serialize, Debug)]
+#[table_name = "alerts"]
+pub struct AlertsDTOUpdate {
+    #[column_name = "_name"]
+    pub name: Option<String>,
+    #[column_name = "_table"]
+    pub table: Option<String>,
+    pub lookup: Option<String>,
+    pub timing: Option<i32>,
+    pub warn: Option<String>,
+    pub crit: Option<String>,
+    pub info: Option<String>,
+    pub host_uuid: Option<String>,
+    pub where_clause: Option<String>,
 }

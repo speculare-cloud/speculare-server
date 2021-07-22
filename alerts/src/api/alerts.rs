@@ -2,7 +2,7 @@ use super::PagedInfo;
 
 use actix_web::{web, HttpResponse};
 use sproot::errors::{AppError, AppErrorType};
-use sproot::models::{Alerts, HttpAlerts};
+use sproot::models::{Alerts, AlertsDTO, AlertsDTOUpdate};
 use sproot::Pool;
 
 /// GET /api/alerts
@@ -47,7 +47,7 @@ pub async fn alerts_one(
 /// Save data of an alerts into the db
 pub async fn alerts_add(
     db: web::Data<Pool>,
-    item: web::Json<Vec<HttpAlerts>>,
+    item: web::Json<Vec<AlertsDTO>>,
 ) -> Result<HttpResponse, AppError> {
     info!("Route POST /api/guard/alerts : {:?}", item);
     // use web::block to offload blocking Diesel code without blocking server thread
@@ -61,7 +61,7 @@ pub async fn alerts_add(
 pub async fn alerts_update(
     db: web::Data<Pool>,
     path: web::Path<u16>,
-    item: web::Json<HttpAlerts>,
+    item: web::Json<AlertsDTOUpdate>,
 ) -> Result<HttpResponse, AppError> {
     let id = path.into_inner();
     info!("Route PATCH /api/guard/alerts/{} : {:?}", id, item);

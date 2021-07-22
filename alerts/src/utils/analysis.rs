@@ -1,7 +1,11 @@
-use super::{query::execute_query, QueryType};
+use super::{query::execute_query, IncidentStatus, QueryType, Severity};
 
+use chrono::prelude::Utc;
 use evalexpr::*;
-use sproot::{models::Alerts, ConnType};
+use sproot::{
+    models::{Alerts, Incidents, IncidentsDTO, IncidentsDTOUpdate},
+    ConnType,
+};
 
 /// This function is the core of the monitoring, this is where we:
 /// - Execute the query and get the result
@@ -12,8 +16,94 @@ pub fn execute_analysis(query: &str, alert: &Alerts, qtype: &QueryType, conn: &C
     trace!("{}", &result);
 
     // Determine if we are in a Warn or Crit level of incidents
-    let should_warn = eval_boolean(&alert.warn.replace("$this", &result));
-    let should_crit = eval_boolean(&alert.crit.replace("$this", &result));
+    let should_warn = eval_boolean(&alert.warn.replace("$this", &result)).unwrap_or_else(|_| {
+        panic!(
+            "Failed to parse the String to an expression (warn: {})",
+            alert.warn
+        )
+    });
+    let should_crit = eval_boolean(&alert.crit.replace("$this", &result)).unwrap_or_else(|_| {
+        panic!(
+            "Failed to parse the String to an expression (crit: {})",
+            alert.crit
+        )
+    });
     trace!("{:?}, {:?}", should_warn, should_crit);
-    // Create an incidents based on above level (should_warn, should_crit)
+
+    // Check if an active incident already exist for this alarm.
+    let prev_incident = Incidents::exist(conn, alert.id);
+    let prev_incident: Option<Incidents> = match prev_incident {
+        Ok(res) => Some(res),
+        Err(err) => {
+            // If the error if not NofFound, this mean we have something else to care about
+            if err != diesel::result::Error::NotFound {
+                panic!("prev_incident returned an error that is not NotFound");
+            }
+            None
+        }
+    };
+
+    // Assert that we do not create an incident for nothing
+    if !(should_warn && should_crit) {
+        // Check if an incident was active
+        if let Some(prev_incident) = prev_incident {
+            let incident_id = prev_incident.id;
+            let incident_dto = IncidentsDTOUpdate {
+                status: Some(IncidentStatus::Resolved as i32),
+                ..Default::default()
+            };
+            Incidents::update(conn, &incident_dto, incident_id)
+                .expect("Failed to update (resolve) the incidents");
+        }
+        return;
+    }
+
+    // Determine the incident severity
+    let severity = match (should_warn, should_crit) {
+        (true, false) => Severity::Warning,
+        (false, true) => Severity::Critical,
+        (true, true) => Severity::Critical,
+        (false, false) => {
+            panic!("should_warn && should_crit are both false, this should never happens.")
+        }
+    };
+
+    // If it exist we create an update in the cases where:
+    // - We need to update the severity of the incidents
+    // - The result changed
+    // In all cases we need to update the updated_at field.
+    match prev_incident {
+        Some(incident) => {
+            let incident_id = incident.id;
+            // Update the previous incident
+            let incident_dto = IncidentsDTOUpdate {
+                result: Some(result),
+                updated_at: Some(Utc::now().naive_local()),
+                severity: Some(severity as i32),
+                ..Default::default()
+            };
+            Incidents::update(conn, &incident_dto, incident_id)
+                .expect("Failed to update the incidents");
+        }
+        None => {
+            // Clone the alert to allow us to own it in the IncidentsDTO
+            let calert = alert.clone();
+            let incident = IncidentsDTO {
+                result,
+                updated_at: Utc::now().naive_local(),
+                host_uuid: calert.host_uuid,
+                status: IncidentStatus::Active as i32,
+                severity: severity as i32,
+                alerts_id: calert.id,
+                alerts_name: calert.name,
+                alerts_table: calert.table,
+                alerts_lookup: calert.lookup,
+                alerts_warn: calert.warn,
+                alerts_crit: calert.crit,
+                alerts_info: calert.info,
+                alerts_where_clause: calert.where_clause,
+            };
+            Incidents::insert(conn, &[incident]).expect("Failed to insert a new incident");
+        }
+    }
 }

@@ -2,7 +2,7 @@ use super::PagedInfo;
 
 use actix_web::{web, HttpResponse};
 use sproot::errors::{AppError, AppErrorType};
-use sproot::models::{HttpIncidents, Incidents};
+use sproot::models::{Incidents, IncidentsDTOUpdate};
 use sproot::Pool;
 
 /// GET /api/incidents
@@ -49,7 +49,7 @@ pub async fn incidents_one(
 pub async fn incidents_update(
     db: web::Data<Pool>,
     path: web::Path<u16>,
-    item: web::Json<HttpIncidents>,
+    item: web::Json<IncidentsDTOUpdate>,
 ) -> Result<HttpResponse, AppError> {
     let id = path.into_inner();
     info!("Route PATCH /api/guard/incidents/{} : {:?}", id, item);

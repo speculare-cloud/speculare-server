@@ -78,3 +78,16 @@ pub const DISALLOWED_STATEMENT: &[&str] = &[
     "SAVEPOINT",
     "ROLLBACK",
 ];
+
+/// Enum representing the current Status of the Incidents
+#[allow(dead_code)]
+pub enum IncidentStatus {
+    Active,
+    Resolved,
+}
+
+/// Enum representing the Severity of the Incidents
+pub enum Severity {
+    Warning,
+    Critical,
+}

@@ -80,13 +80,14 @@ pub const DISALLOWED_STATEMENT: &[&str] = &[
 ];
 
 /// Enum representing the current Status of the Incidents
-#[allow(dead_code)]
+#[derive(Debug)]
 pub enum IncidentStatus {
     Active,
     Resolved,
 }
 
 /// Enum representing the Severity of the Incidents
+#[derive(Debug)]
 pub enum Severity {
     Warning,
     Critical,

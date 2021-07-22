@@ -39,7 +39,7 @@ impl From<&CdcChange> for Result<Alerts, Error> {
                     // Increment 1 for the matched count
                     matched += 1;
                 },
-                "name" => unsafe {
+                "_name" => unsafe {
                     addr_of_mut!((*alert_ptr).name).write(
                         as_variant!(&data.columnvalues[pos], Thing::String)
                             .expect("name is not a String")
@@ -47,7 +47,7 @@ impl From<&CdcChange> for Result<Alerts, Error> {
                     );
                     matched += 1;
                 },
-                "table" => unsafe {
+                "_table" => unsafe {
                     addr_of_mut!((*alert_ptr).table).write(
                         as_variant!(&data.columnvalues[pos], Thing::String)
                             .expect("table is not a String")
@@ -92,7 +92,6 @@ impl From<&CdcChange> for Result<Alerts, Error> {
                             .expect("info is not a Option<String>")
                             .to_owned(),
                     );
-                    matched += 1;
                 },
                 "host_uuid" => unsafe {
                     addr_of_mut!((*alert_ptr).host_uuid).write(
@@ -108,7 +107,6 @@ impl From<&CdcChange> for Result<Alerts, Error> {
                             .expect("where_clause is not an Option<String>")
                             .to_owned(),
                     );
-                    matched += 1;
                 },
                 // In case we don't have a known field
                 _ => {
@@ -120,7 +118,7 @@ impl From<&CdcChange> for Result<Alerts, Error> {
             }
         }
         // Sanitizer to assure we got all our fields
-        if matched != 10 {
+        if matched != 8 {
             error!("Not all fields were found. Count : {}", matched);
             return Err(Error::new(ErrorKind::Other, "Not all fields were found."));
         }

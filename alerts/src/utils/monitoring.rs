@@ -72,7 +72,7 @@ fn launch_websocket(pool: Pool) {
         let mut ws_update = connect_to_ws(&update_url).await.unwrap();
 
         // Connect to the WS for the insert type
-        let insert_url = format!("wss://{}/ws?query=update:alerts", domain);
+        let insert_url = format!("wss://{}/ws?query=insert:alerts", domain);
         let mut ws_insert = connect_to_ws(&insert_url).await.unwrap();
 
         // While we have some message, read them and wait for the next one

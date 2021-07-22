@@ -16,16 +16,16 @@ pub fn execute_analysis(query: &str, alert: &Alerts, qtype: &QueryType, conn: &C
     trace!("{}", &result);
 
     // Determine if we are in a Warn or Crit level of incidents
-    let should_warn = eval_boolean(&alert.warn.replace("$this", &result)).unwrap_or_else(|_| {
+    let should_warn = eval_boolean(&alert.warn.replace("$this", &result)).unwrap_or_else(|e| {
         panic!(
-            "Failed to parse the String to an expression (warn: {})",
-            alert.warn
+            "Failed to parse the String to an expression (warn: {}): {}",
+            alert.warn, e
         )
     });
-    let should_crit = eval_boolean(&alert.crit.replace("$this", &result)).unwrap_or_else(|_| {
+    let should_crit = eval_boolean(&alert.crit.replace("$this", &result)).unwrap_or_else(|e| {
         panic!(
-            "Failed to parse the String to an expression (crit: {})",
-            alert.crit
+            "Failed to parse the String to an expression (crit: {}): {}",
+            alert.crit, e
         )
     });
     trace!("{:?}, {:?}", should_warn, should_crit);
@@ -42,11 +42,14 @@ pub fn execute_analysis(query: &str, alert: &Alerts, qtype: &QueryType, conn: &C
             None
         }
     };
+    trace!("Previous incident is some: {}", prev_incident.is_some());
 
     // Assert that we do not create an incident for nothing
-    if !(should_warn && should_crit) {
+    if !(should_warn || should_crit) {
+        trace!("We don't need to create an incident");
         // Check if an incident was active
         if let Some(prev_incident) = prev_incident {
+            trace!("We need to resolve the previous incident however");
             let incident_id = prev_incident.id;
             let incident_dto = IncidentsDTOUpdate {
                 status: Some(IncidentStatus::Resolved as i32),
@@ -67,6 +70,7 @@ pub fn execute_analysis(query: &str, alert: &Alerts, qtype: &QueryType, conn: &C
             panic!("should_warn && should_crit are both false, this should never happens.")
         }
     };
+    trace!("The severity of this one is: {:?}", severity);
 
     // If it exist we create an update in the cases where:
     // - We need to update the severity of the incidents
@@ -74,6 +78,7 @@ pub fn execute_analysis(query: &str, alert: &Alerts, qtype: &QueryType, conn: &C
     // In all cases we need to update the updated_at field.
     match prev_incident {
         Some(incident) => {
+            trace!("Update the previous incident using the new values");
             let incident_id = incident.id;
             // Update the previous incident
             let incident_dto = IncidentsDTOUpdate {
@@ -86,6 +91,7 @@ pub fn execute_analysis(query: &str, alert: &Alerts, qtype: &QueryType, conn: &C
                 .expect("Failed to update the incidents");
         }
         None => {
+            trace!("Create a new incident based on the current values");
             // Clone the alert to allow us to own it in the IncidentsDTO
             let calert = alert.clone();
             let incident = IncidentsDTO {

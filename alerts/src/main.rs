@@ -5,6 +5,10 @@ extern crate log;
 
 use config::{Config, ConfigError};
 use diesel::{prelude::PgConnection, r2d2::ConnectionManager};
+use lettre::{
+    transport::smtp::{authentication::Credentials, PoolConfig},
+    SmtpTransport,
+};
 use std::{collections::HashMap, sync::RwLock};
 use utils::monitoring::launch_monitoring;
 
@@ -37,6 +41,29 @@ lazy_static::lazy_static! {
 lazy_static::lazy_static! {
     static ref TOKEN: Result<String, ConfigError> = {
         CONFIG.get_str("API_TOKEN")
+    };
+}
+
+lazy_static::lazy_static! {
+    static ref MAILER: SmtpTransport = {
+        let username = CONFIG
+            .get_str("SMTP_USER")
+            .expect("Missing SMTP_USER in the config.");
+        let password = CONFIG
+            .get_str("SMTP_PASSWORD")
+            .expect("Missing SMTP_PASSWORD in the config.");
+        let creds = Credentials::new(username, password);
+
+        // Open a remote connection to gmail
+        SmtpTransport::relay(
+            &CONFIG
+                .get_str("SMTP_HOST")
+                .unwrap_or_else(|_| "smtp.gmail.com".into()),
+        )
+        .unwrap()
+        .credentials(creds)
+        .pool_config(PoolConfig::new().max_size(16))
+        .build()
     };
 }
 

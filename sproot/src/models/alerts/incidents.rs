@@ -90,6 +90,16 @@ impl Incidents {
         Ok(())
     }
 
+    /// Insert a new Incidents inside the database and return the inserted row
+    /// # Params
+    /// * `conn` - The r2d2 connection needed to fetch the data from the db
+    /// * `incidents` - The Incidents struct containing the new incident information
+    pub fn ginsert(conn: &ConnType, incidents: &[IncidentsDTO]) -> Result<Self, AppError> {
+        Ok(insert_into(dsl_incidents)
+            .values(incidents)
+            .get_result(conn)?)
+    }
+
     /// Remove an Incidents inside the database
     /// # Params
     /// * `conn` - The r2d2 connection needed to fetch the data from the db

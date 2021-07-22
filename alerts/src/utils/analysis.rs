@@ -70,7 +70,7 @@ pub fn execute_analysis(query: &str, alert: &Alerts, qtype: &QueryType, conn: &C
             panic!("should_warn && should_crit are both false, this should never happens.")
         }
     };
-    trace!("The severity of this one is: {:?}", severity);
+    trace!("The severity of this one is: {}", severity.to_string());
 
     // If it exist we create an update in the cases where:
     // - We need to update the severity of the incidents
@@ -109,7 +109,9 @@ pub fn execute_analysis(query: &str, alert: &Alerts, qtype: &QueryType, conn: &C
                 alerts_info: calert.info,
                 alerts_where_clause: calert.where_clause,
             };
-            Incidents::insert(conn, &[incident]).expect("Failed to insert a new incident");
+            let incident =
+                Incidents::ginsert(conn, &[incident]).expect("Failed to insert a new incident");
+            super::mail::send_alert(alert, &incident);
         }
     }
 }

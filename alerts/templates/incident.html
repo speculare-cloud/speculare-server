@@ -202,7 +202,10 @@
         .content-cell {
             padding: 45px;
         }
-        /*Media Queries ------------------------------ */
+        
+        .code {
+            background-color: #bcbcbc;
+        }
         
         @media only screen and (max-width: 600px) {
             .email-body_inner,
@@ -235,6 +238,9 @@
             }
             .email-masthead_name {
                 text-shadow: none !important;
+            }
+            .code {
+                background-color: #5c5c5c;
             }
         }
         
@@ -290,7 +296,7 @@
                                             <p>A new incident is reported because the lookup query returned a value which is above the threshold.</p>
                                             <p>This incident has a severity level equaling <span {% if severity=="Warning" %}class="warning" {% else %}class="critical" {% endif %} style="padding: 3px; padding-left:4px; padding-right: 4px; border-radius: 3px; color:#FFF">{{ severity }}</span>.</p>
                                             <p><strong>Details:</strong></p>
-                                            <div style="background-color: #bcbcbc; padding: 1rem;">
+                                            <div class="code" style="padding: 1rem;">
                                                 <code>
 												    Lookup: {{ lookup }}<br>
 												    Result: {{ result }}<br><br>

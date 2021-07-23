@@ -35,6 +35,10 @@ impl AppError {
                 cause: Some(cause), ..
             } => cause.clone(),
             AppError {
+                error_type: AppErrorType::NotFound,
+                ..
+            } => "The requested ressource doesn't exists.".to_string(),
+            AppError {
                 error_type: AppErrorType::PoolError,
                 ..
             } => "Cannot get a connection from the pool for the database".to_string(),

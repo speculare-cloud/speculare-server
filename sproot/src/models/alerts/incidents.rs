@@ -1,4 +1,4 @@
-use crate::errors::AppError;
+use crate::errors::{AppError, AppErrorType};
 use crate::models::schema::incidents;
 use crate::models::schema::incidents::dsl::{
     alerts_id, host_uuid, id, incidents as dsl_incidents, status, updated_at,
@@ -105,8 +105,16 @@ impl Incidents {
     /// * `conn` - The r2d2 connection needed to fetch the data from the db
     /// * `target_id` - The id of the incident to delete
     pub fn delete(conn: &ConnType, target_id: i32) -> Result<(), AppError> {
-        delete(dsl_incidents.filter(id.eq(target_id))).execute(conn)?;
-        Ok(())
+        let res = delete(dsl_incidents.filter(id.eq(target_id))).execute(conn)?;
+        if res == 1 {
+            Ok(())
+        } else {
+            Err(AppError {
+                message: None,
+                cause: None,
+                error_type: AppErrorType::NotFound,
+            })
+        }
     }
 
     /// Update an Incidents inside the database
@@ -119,10 +127,19 @@ impl Incidents {
         incidents: &IncidentsDTOUpdate,
         target_id: i32,
     ) -> Result<(), AppError> {
-        update(dsl_incidents.filter(id.eq(target_id)))
+        let res = update(dsl_incidents.filter(id.eq(target_id)))
             .set(incidents)
             .execute(conn)?;
-        Ok(())
+
+        if res == 1 {
+            Ok(())
+        } else {
+            Err(AppError {
+                message: None,
+                cause: None,
+                error_type: AppErrorType::NotFound,
+            })
+        }
     }
 }
 

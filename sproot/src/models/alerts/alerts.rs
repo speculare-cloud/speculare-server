@@ -1,4 +1,4 @@
-use crate::errors::AppError;
+use crate::errors::{AppError, AppErrorType};
 use crate::models::schema::alerts;
 use crate::models::schema::alerts::dsl::{_name, alerts as dsl_alerts, host_uuid, id};
 use crate::ConnType;
@@ -90,8 +90,16 @@ impl Alerts {
     /// * `conn` - The r2d2 connection needed to fetch the data from the db
     /// * `target_id` - The id of the alerts to delete
     pub fn delete(conn: &ConnType, target_id: i32) -> Result<(), AppError> {
-        delete(dsl_alerts.filter(id.eq(target_id))).execute(conn)?;
-        Ok(())
+        let res = delete(dsl_alerts.filter(id.eq(target_id))).execute(conn)?;
+        if res == 1 {
+            Ok(())
+        } else {
+            Err(AppError {
+                message: None,
+                cause: None,
+                error_type: AppErrorType::NotFound,
+            })
+        }
     }
 
     /// Update an Alerts inside the database
@@ -104,10 +112,18 @@ impl Alerts {
         alert: &AlertsDTOUpdate,
         target_id: i32,
     ) -> Result<(), AppError> {
-        update(dsl_alerts.filter(id.eq(target_id)))
+        let res = update(dsl_alerts.filter(id.eq(target_id)))
             .set(alert)
             .execute(conn)?;
-        Ok(())
+        if res == 1 {
+            Ok(())
+        } else {
+            Err(AppError {
+                message: None,
+                cause: None,
+                error_type: AppErrorType::NotFound,
+            })
+        }
     }
 }
 

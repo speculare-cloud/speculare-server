@@ -27,8 +27,6 @@ struct IncidentTemplate<'a> {
 }
 
 /// Send an email alerting that a new incident was created.
-///
-/// TODO - Pass in async
 pub fn send_alert(incident: &Incidents) {
     // Retreive the sender and receiver from the config.
     let sender = CONFIG
@@ -38,14 +36,15 @@ pub fn send_alert(incident: &Incidents) {
         .get_str("SMTP_EMAIL_RECEIVER")
         .expect("Missing SMTP_EMAIL_RECEIVER in the config.");
 
-    // Convert the status, severity & updated_at to string
+    // Convert the status, severity, started_at & updated_at to string
     let incident_status = IncidentStatus::from(incident.status).to_string();
     let incident_severity = Severity::from(incident.severity).to_string();
     let started_at = incident.started_at.format("%Y-%m-%d %H:%M:%S").to_string();
     let updated_at = incident.updated_at.format("%Y-%m-%d %H:%M:%S").to_string();
-    let started_at_subject = incident.started_at.format("%d %b %Y at %H:%M").to_string();
 
     // Build the IncidentTemplate (html code)
+    // The IncidentTemplate struct is used to hold all the information
+    // about the template, which values are needed, ...
     let incident_template = IncidentTemplate {
         incident_id: incident.id,
         alert_name: &incident.alerts_name,
@@ -60,14 +59,21 @@ pub fn send_alert(incident: &Incidents) {
         warn: &incident.alerts_warn,
         crit: &incident.alerts_crit,
     }
+    // We then render it (which mean subsitute all the {{ }} by their value)
+    // and return the String of the html
     .render()
+    // And unwrap because I don't handle the error here as of now
     .unwrap();
 
     // Build the email with all params
     let email = Message::builder()
+        // Sender is the email of the sender, which is used by the SMTP
+        // if the sender is not equals to the smtp server account, the mail will ends in the spam.
         .from(sender.parse().unwrap())
+        // Receiver is the person who should get the email
         .to(receiver.parse().unwrap())
-        .subject(format!("{} [{}] - {}", incident.hostname, incident.alerts_name, started_at_subject))
+        // Subject will looks like: "Hostname [alert_name] - 23 Jul 2021 at 17:51"
+        .subject(format!("{} [{}] - {}", incident.hostname, incident.alerts_name, incident.started_at.format("%d %b %Y at %H:%M").to_string()))
         .multipart(
                 // Use multipart to have a fallback
             MultiPart::alternative()
@@ -102,6 +108,6 @@ pub fn send_alert(incident: &Incidents) {
     // Send the email
     match MAILER.send(&email) {
         Ok(_) => debug!("Email sent successfully!"),
-        Err(e) => panic!("Could not send email: {:?}", e),
+        Err(e) => error!("Could not send email: {:?}", e),
     }
 }

@@ -44,6 +44,8 @@ lazy_static::lazy_static! {
     };
 }
 
+// Lazy static for SmtpTransport used to send mails
+// Build it using rustls and a pool of 16 items.
 lazy_static::lazy_static! {
     static ref MAILER: SmtpTransport = {
         let username = CONFIG
@@ -60,7 +62,7 @@ lazy_static::lazy_static! {
                 .get_str("SMTP_HOST")
                 .unwrap_or_else(|_| "smtp.gmail.com".into()),
         )
-        .unwrap()
+        .unwrap_or_else(|e| panic!("Cannot instanciate SmtpTransport due to: {}", e))
         .credentials(creds)
         .pool_config(PoolConfig::new().max_size(16))
         .build()

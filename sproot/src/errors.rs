@@ -5,6 +5,7 @@ use std::fmt;
 #[derive(Debug)]
 pub enum AppErrorType {
     DbError,
+    NotFound,
     PoolError,
     InvalidRequest,
     InvalidToken,
@@ -23,6 +24,11 @@ impl AppError {
         match &*self {
             AppError {
                 message: Some(message),
+                cause: Some(cause),
+                ..
+            } => format!("{} : {}", message, cause),
+            AppError {
+                message: Some(message),
                 ..
             } => message.clone(),
             AppError {
@@ -31,11 +37,11 @@ impl AppError {
             AppError {
                 error_type: AppErrorType::PoolError,
                 ..
-            } => "Cannot get the connection pool to the database".to_string(),
+            } => "Cannot get a connection from the pool for the database".to_string(),
             AppError {
                 error_type: AppErrorType::InvalidToken,
                 ..
-            } => "The token is invalid or has been expired".to_string(),
+            } => "The token is invalid or has expired".to_string(),
             AppError {
                 error_type: AppErrorType::InvalidRequest,
                 ..
@@ -61,6 +67,7 @@ impl ResponseError for AppError {
         match self.error_type {
             AppErrorType::InvalidRequest => StatusCode::BAD_REQUEST,
             AppErrorType::InvalidToken => StatusCode::UNAUTHORIZED,
+            AppErrorType::NotFound => StatusCode::NOT_FOUND,
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
@@ -93,10 +100,14 @@ impl From<r2d2::Error> for AppError {
 
 impl From<diesel::result::Error> for AppError {
     fn from(error: diesel::result::Error) -> AppError {
+        let error_type = match error {
+            diesel::result::Error::NotFound => AppErrorType::NotFound,
+            _ => AppErrorType::DbError,
+        };
         AppError {
             message: None,
             cause: Some(error.to_string()),
-            error_type: AppErrorType::DbError,
+            error_type,
         }
     }
 }

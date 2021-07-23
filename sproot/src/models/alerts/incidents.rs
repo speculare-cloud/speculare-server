@@ -17,7 +17,9 @@ use serde::{Deserialize, Serialize};
 pub struct Incidents {
     pub id: i32,
     pub result: String,
+    pub started_at: chrono::NaiveDateTime,
     pub updated_at: chrono::NaiveDateTime,
+    pub resolved_at: Option<chrono::NaiveDateTime>,
     pub host_uuid: String,
     pub status: i32,
     pub severity: i32,
@@ -148,7 +150,9 @@ impl Incidents {
 #[table_name = "incidents"]
 pub struct IncidentsDTO {
     pub result: String,
+    pub started_at: chrono::NaiveDateTime,
     pub updated_at: chrono::NaiveDateTime,
+    pub resolved_at: Option<chrono::NaiveDateTime>,
     pub host_uuid: String,
     pub status: i32,
     pub severity: i32,
@@ -167,7 +171,9 @@ pub struct IncidentsDTO {
 #[table_name = "incidents"]
 pub struct IncidentsDTOUpdate {
     pub result: Option<String>,
+    pub started_at: Option<chrono::NaiveDateTime>,
     pub updated_at: Option<chrono::NaiveDateTime>,
+    pub resolved_at: Option<chrono::NaiveDateTime>,
     pub host_uuid: Option<String>,
     pub status: Option<i32>,
     pub severity: Option<i32>,
@@ -185,7 +191,9 @@ impl From<Incidents> for IncidentsDTO {
     fn from(incident: Incidents) -> IncidentsDTO {
         IncidentsDTO {
             result: incident.result,
+            started_at: incident.started_at,
             updated_at: incident.updated_at,
+            resolved_at: incident.resolved_at,
             host_uuid: incident.host_uuid,
             status: incident.alerts_id,
             severity: incident.alerts_id,
@@ -205,7 +213,9 @@ impl From<Incidents> for IncidentsDTOUpdate {
     fn from(incident: Incidents) -> IncidentsDTOUpdate {
         IncidentsDTOUpdate {
             result: Some(incident.result),
+            started_at: Some(incident.started_at),
             updated_at: Some(incident.updated_at),
+            resolved_at: incident.resolved_at,
             host_uuid: Some(incident.host_uuid),
             status: Some(incident.alerts_id),
             severity: Some(incident.alerts_id),

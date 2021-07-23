@@ -111,6 +111,7 @@ impl From<i32> for IncidentStatus {
 }
 
 /// Enum representing the Severity of the Incidents
+#[derive(Clone)]
 pub enum Severity {
     Warning,
     Critical,

@@ -17,6 +17,7 @@ struct IncidentTemplate<'a> {
     host_uuid: &'a str,
     status: &'a str,
     severity: &'a str,
+    started_at: &'a str,
     updated_at: &'a str,
     lookup: &'a str,
     result: &'a str,
@@ -39,7 +40,9 @@ pub fn send_alert(incident: &Incidents) {
     // Convert the status, severity & updated_at to string
     let incident_status = IncidentStatus::from(incident.status).to_string();
     let incident_severity = Severity::from(incident.severity).to_string();
+    let started_at = incident.started_at.format("%Y-%m-%d %H:%M:%S").to_string();
     let updated_at = incident.updated_at.format("%Y-%m-%d %H:%M:%S").to_string();
+    let started_at_subject = incident.started_at.format("%d %b %Y at %H:%M").to_string();
 
     // Build the IncidentTemplate (html code)
     let incident_template = IncidentTemplate {
@@ -48,6 +51,7 @@ pub fn send_alert(incident: &Incidents) {
         host_uuid: &incident.host_uuid,
         status: &incident_status,
         severity: &&incident_severity,
+        started_at: &started_at,
         updated_at: &updated_at,
         lookup: &incident.alerts_lookup,
         result: &incident.result,
@@ -61,7 +65,7 @@ pub fn send_alert(incident: &Incidents) {
     let email = Message::builder()
         .from(sender.parse().unwrap())
         .to(receiver.parse().unwrap())
-        .subject(format!("Speculare: Incident n°{} for {}", incident.id, incident.alerts_name))
+        .subject(format!("{} - {}", incident.alerts_name, started_at_subject))
         .multipart(
                 // Use multipart to have a fallback
             MultiPart::alternative()

@@ -139,7 +139,9 @@ table! {
     incidents (id) {
         id -> Int4,
         result -> Text,
+        started_at -> Timestamp,
         updated_at -> Timestamp,
+        resolved_at -> Nullable<Timestamp>,
         host_uuid -> Varchar,
         status -> Int4,
         severity -> Int4,

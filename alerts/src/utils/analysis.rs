@@ -53,6 +53,7 @@ pub fn execute_analysis(query: &str, alert: &Alerts, qtype: &QueryType, conn: &C
             let incident_id = prev_incident.id;
             let incident_dto = IncidentsDTOUpdate {
                 status: Some(IncidentStatus::Resolved as i32),
+                resolved_at: Some(Utc::now().naive_local()),
                 ..Default::default()
             };
             Incidents::update(conn, &incident_dto, incident_id)
@@ -80,15 +81,20 @@ pub fn execute_analysis(query: &str, alert: &Alerts, qtype: &QueryType, conn: &C
         Some(incident) => {
             trace!("Update the previous incident using the new values");
             let incident_id = incident.id;
+            let incident_severity = severity as i32;
             // Update the previous incident
             let incident_dto = IncidentsDTOUpdate {
                 result: Some(result),
                 updated_at: Some(Utc::now().naive_local()),
-                severity: Some(severity as i32),
+                severity: Some(incident_severity),
                 ..Default::default()
             };
             Incidents::update(conn, &incident_dto, incident_id)
                 .expect("Failed to update the incidents");
+            if incident.severity != incident_severity {
+                // Might want to send a new mail alerting the severity as changed.
+                // TODO
+            }
         }
         None => {
             trace!("Create a new incident based on the current values");
@@ -96,7 +102,9 @@ pub fn execute_analysis(query: &str, alert: &Alerts, qtype: &QueryType, conn: &C
             let calert = alert.clone();
             let incident = IncidentsDTO {
                 result,
+                started_at: Utc::now().naive_local(),
                 updated_at: Utc::now().naive_local(),
+                resolved_at: None,
                 host_uuid: calert.host_uuid,
                 status: IncidentStatus::Active as i32,
                 severity: severity as i32,

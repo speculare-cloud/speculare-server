@@ -115,9 +115,10 @@
             -premailer-cellspacing: 0;
         }
         
-        body {
-            background-color: #F2F4F6;
-            color: #51545E;
+        .email-body_inner,
+        .email-footer {
+            background-color: #F2F4F6 !important;
+            color: #51545E !important;
         }
         
         p {
@@ -131,7 +132,6 @@
             -premailer-width: 100%;
             -premailer-cellpadding: 0;
             -premailer-cellspacing: 0;
-            background-color: #F2F4F6;
         }
         
         .email-content {
@@ -144,16 +144,8 @@
         }
         
         .email-masthead {
-            padding: 25px 0;
+            padding: 12.5px 0;
             text-align: center;
-        }
-        
-        .email-masthead_name {
-            font-size: 16px;
-            font-weight: bold;
-            color: #A8AAAF;
-            text-decoration: none;
-            text-shadow: 0 1px 0 white;
         }
         
         .email-body {
@@ -172,7 +164,6 @@
             -premailer-width: 570px;
             -premailer-cellpadding: 0;
             -premailer-cellspacing: 0;
-            background-color: #FFFFFF;
         }
         
         .email-footer {
@@ -201,6 +192,8 @@
         
         .content-cell {
             padding: 45px;
+            padding-top: 22.5px;
+            padding-bottom: 22.5px;
         }
         
         .code {
@@ -216,12 +209,7 @@
         }
         
         @media (prefers-color-scheme: dark) {
-            body,
-            .email-body,
             .email-body_inner,
-            .email-content,
-            .email-wrapper,
-            .email-masthead,
             .email-footer {
                 background-color: #333333 !important;
                 color: #FFF !important;
@@ -236,9 +224,6 @@
             span,
             .purchase_item {
                 color: #FFF !important;
-            }
-            .email-masthead_name {
-                text-shadow: none !important;
             }
         }
         
@@ -269,6 +254,10 @@
         
         .border-resolved {
             border-color: #22BC66!important;
+        }
+        
+        .im {
+            color: #fcfcfc!important;
         }
     </style>
     <!--[if mso]>
@@ -363,6 +352,10 @@
                                     </td>
                                 </tr>
                             </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="email-masthead">
                         </td>
                     </tr>
                 </table>

@@ -144,6 +144,21 @@ impl Incidents {
             })
         }
     }
+
+    /// Update an Incidents inside the database and return the updated Struct
+    /// # Params
+    /// * `conn` - The r2d2 connection needed to fetch the data from the db
+    /// * `incidents` - The HttpIncidents struct containing the updated incident information
+    /// * `target_id` - The id of the incident to update
+    pub fn gupdate(
+        conn: &ConnType,
+        incidents: &IncidentsDTOUpdate,
+        target_id: i32,
+    ) -> Result<Self, AppError> {
+        Ok(update(dsl_incidents.filter(id.eq(target_id)))
+            .set(incidents)
+            .get_result(conn)?)
+    }
 }
 
 /// Insertable struct (no id fields => which is auto generated)

@@ -57,8 +57,9 @@ pub fn execute_analysis(query: &str, alert: &Alerts, qtype: &QueryType, conn: &C
                 resolved_at: Some(Utc::now().naive_local()),
                 ..Default::default()
             };
-            Incidents::update(conn, &incident_dto, incident_id)
+            let incident = Incidents::gupdate(conn, &incident_dto, incident_id)
                 .expect("Failed to update (resolve) the incidents");
+            super::mail::send_alert(&incident);
         }
         return;
     }

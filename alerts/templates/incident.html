@@ -204,7 +204,8 @@
         }
         
         .code {
-            background-color: #bcbcbc;
+            color: #fcfcfc;
+            background-color: #5c5c5c;
         }
         
         @media only screen and (max-width: 600px) {
@@ -239,9 +240,6 @@
             .email-masthead_name {
                 text-shadow: none !important;
             }
-            .code {
-                background-color: #5c5c5c;
-            }
         }
         
          :root {
@@ -258,7 +256,19 @@
         }
         
         .resolved {
-            background-color: rgb(45, 153, 117);
+            background-color: #22BC66;
+        }
+        
+        .border-warning {
+            border-color: #FF6600!important;
+        }
+        
+        .border-critical {
+            border-color: #ff1e00!important;
+        }
+        
+        .border-resolved {
+            border-color: #22BC66!important;
         }
     </style>
     <!--[if mso]>
@@ -277,15 +287,12 @@
                 <table class="email-content" width="100%" cellpadding="0" cellspacing="0" role="presentation">
                     <tr>
                         <td class="email-masthead">
-                            <a href="#" class="f-fallback email-masthead_name">
-								New incident started
-							</a>
                         </td>
                     </tr>
                     <!-- Email Body -->
                     <tr>
                         <td class="email-body" width="570" cellpadding="0" cellspacing="0">
-                            <table class="email-body_inner" align="center" width="570" cellpadding="0" cellspacing="0" role="presentation">
+                            <table class='email-body_inner {% if status=="Active" %}border-warning{% else %}border-resolved{% endif %}' align="center" width="570" cellpadding="0" cellspacing="0" role="presentation" style="border-top: 5px solid;">
                                 <!-- Body content -->
                                 <tr>
                                     <td class="content-cell">

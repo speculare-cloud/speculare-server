@@ -20,10 +20,6 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
                         .route(
                             "/incidents/{id}",
                             web::patch().to(api::incidents::incidents_update),
-                        )
-                        .route(
-                            "/incidents/{id}",
-                            web::delete().to(api::incidents::incidents_delete),
                         ),
                 )
                 .route("/alerts", web::get().to(api::alerts::alerts_list))

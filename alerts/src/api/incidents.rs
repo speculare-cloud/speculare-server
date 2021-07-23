@@ -59,16 +59,16 @@ pub async fn incidents_update(
     Ok(HttpResponse::Ok().finish())
 }
 
-/// DELETE /api/guard/incidents/{id}
-/// Delete an alert previously created from the database
-pub async fn incidents_delete(
-    db: web::Data<Pool>,
-    path: web::Path<u16>,
-) -> Result<HttpResponse, AppError> {
-    let id = path.into_inner();
-    info!("Route DELETE /api/guard/incidents/{}", id);
-    // use web::block to offload blocking Diesel code without blocking server thread
-    web::block(move || Incidents::delete(&db.get()?, id.into())).await??;
-    // Return a 200 status code as everything went well
-    Ok(HttpResponse::Ok().finish())
-}
+// /// DELETE /api/guard/incidents/{id}
+// /// Delete an alert previously created from the database
+// pub async fn incidents_delete(
+//     db: web::Data<Pool>,
+//     path: web::Path<u16>,
+// ) -> Result<HttpResponse, AppError> {
+//     let id = path.into_inner();
+//     info!("Route DELETE /api/guard/incidents/{}", id);
+//     // use web::block to offload blocking Diesel code without blocking server thread
+//     web::block(move || Incidents::delete(&db.get()?, id.into())).await??;
+//     // Return a 200 status code as everything went well
+//     Ok(HttpResponse::Ok().finish())
+// }

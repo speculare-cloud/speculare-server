@@ -55,7 +55,7 @@ lazy_static::lazy_static! {
         let creds = Credentials::new(username, password);
 
         // Open a remote connection to gmail
-        SmtpTransport::relay(
+        SmtpTransport::starttls_relay(
             &CONFIG
                 .get_str("SMTP_HOST")
                 .unwrap_or_else(|_| "smtp.gmail.com".into()),

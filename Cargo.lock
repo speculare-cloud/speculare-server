@@ -962,6 +962,9 @@ dependencies = [
  "quoted_printable",
  "r2d2",
  "regex",
+ "rustls",
+ "webpki",
+ "webpki-roots",
 ]
 
 [[package]]

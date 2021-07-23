@@ -77,7 +77,8 @@ pub fn send_alert(incident: &Incidents) {
                         SinglePart::builder()
                         .header(header::ContentType::TEXT_PLAIN)
                         .body(format!(
-                            "Host: {}\nStatus: {}\n\nSeverity level: {}\nTable: {}\nLookup: {}\nResult: {}\nWarn: {}\nCrit: {}\n\nUpdated At: {}",
+                            "Hostname: {}\nHost_uuid: {}\nStatus: {}\n\nSeverity level: {}\nTable: {}\nLookup: {}\nResult: {}\nWarn: {}\nCrit: {}\n\nUpdated At: {}",
+                            incident.hostname,
                             incident.host_uuid,
                             incident_status,
                             incident_severity,

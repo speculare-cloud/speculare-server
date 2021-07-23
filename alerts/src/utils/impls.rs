@@ -101,6 +101,14 @@ impl From<&CdcChange> for Result<Alerts, Error> {
                     );
                     matched += 1;
                 },
+                "hostname" => unsafe {
+                    addr_of_mut!((*alert_ptr).hostname).write(
+                        as_variant!(&data.columnvalues[pos], Thing::String)
+                            .expect("hostname is not a String")
+                            .to_owned(),
+                    );
+                    matched += 1;
+                },
                 "where_clause" => unsafe {
                     addr_of_mut!((*alert_ptr).where_clause).write(
                         as_variant!(&data.columnvalues[pos], Thing::OptionString)
@@ -118,7 +126,7 @@ impl From<&CdcChange> for Result<Alerts, Error> {
             }
         }
         // Sanitizer to assure we got all our fields
-        if matched != 8 {
+        if matched != 9 {
             error!("Not all fields were found. Count : {}", matched);
             return Err(Error::new(ErrorKind::Other, "Not all fields were found."));
         }

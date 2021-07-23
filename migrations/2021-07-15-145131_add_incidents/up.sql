@@ -5,6 +5,7 @@ CREATE TABLE incidents (
 	updated_at TIMESTAMP NOT NULL,
 	resolved_at TIMESTAMP,
 	host_uuid VARCHAR(48) NOT NULL,
+	hostname VARCHAR(64) NOT NULL,
 	status INTEGER DEFAULT 0 NOT NULL,
 	severity INTEGER DEFAULT 0 NOT NULL,
 	alerts_id SERIAL NOT NULL,

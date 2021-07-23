@@ -65,7 +65,7 @@ pub fn send_alert(incident: &Incidents) {
     let email = Message::builder()
         .from(sender.parse().unwrap())
         .to(receiver.parse().unwrap())
-        .subject(format!("{} - {}", incident.alerts_name, started_at_subject))
+        .subject(format!("{} [{}] - {}", incident.hostname, incident.alerts_name, started_at_subject))
         .multipart(
                 // Use multipart to have a fallback
             MultiPart::alternative()

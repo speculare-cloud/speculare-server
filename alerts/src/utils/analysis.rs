@@ -53,6 +53,7 @@ pub fn execute_analysis(query: &str, alert: &Alerts, qtype: &QueryType, conn: &C
             let incident_id = prev_incident.id;
             let incident_dto = IncidentsDTOUpdate {
                 status: Some(IncidentStatus::Resolved as i32),
+                updated_at: Some(Utc::now().naive_local()),
                 resolved_at: Some(Utc::now().naive_local()),
                 ..Default::default()
             };
@@ -106,6 +107,7 @@ pub fn execute_analysis(query: &str, alert: &Alerts, qtype: &QueryType, conn: &C
                 updated_at: Utc::now().naive_local(),
                 resolved_at: None,
                 host_uuid: calert.host_uuid,
+                hostname: calert.hostname,
                 status: IncidentStatus::Active as i32,
                 severity: severity as i32,
                 alerts_id: calert.id,

@@ -33,6 +33,8 @@ pub struct Alerts {
     pub info: Option<String>,
     // Targeted host
     pub host_uuid: String,
+    // Targeted hostname
+    pub hostname: String,
     // Where SQL condition
     pub where_clause: Option<String>,
 }
@@ -141,6 +143,7 @@ pub struct AlertsDTO {
     pub crit: String,
     pub info: Option<String>,
     pub host_uuid: String,
+    pub hostname: String,
     pub where_clause: Option<String>,
 }
 
@@ -158,5 +161,6 @@ pub struct AlertsDTOUpdate {
     pub crit: Option<String>,
     pub info: Option<String>,
     pub host_uuid: Option<String>,
+    pub hostname: Option<String>,
     pub where_clause: Option<String>,
 }

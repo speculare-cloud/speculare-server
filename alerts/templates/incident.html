@@ -291,6 +291,7 @@
                                     <td class="content-cell">
                                         <div class="f-fallback">
                                             <h1>Alert {{ alert_name }}</h1>
+                                            <small>{{ hostname }}</small><br>
                                             <small>{{ host_uuid }}</small>
                                             <p>The incident is <span {% if status=="Active" %}class="warning" {% else %}class="resolved" {% endif %} style="padding: 3px; padding-left:4px; padding-right: 4px; border-radius: 3px; color:#FFF">{{ status }}</span>.</p>
                                             <p>A new incident is reported because the lookup query returned a value which is above the threshold.</p>

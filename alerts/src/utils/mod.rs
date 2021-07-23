@@ -101,6 +101,15 @@ impl std::fmt::Display for IncidentStatus {
     }
 }
 
+impl From<i32> for IncidentStatus {
+    fn from(v: i32) -> Self {
+        match v {
+            0 => IncidentStatus::Active,
+            _ => IncidentStatus::Resolved,
+        }
+    }
+}
+
 /// Enum representing the Severity of the Incidents
 pub enum Severity {
     Warning,

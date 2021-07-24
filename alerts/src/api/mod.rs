@@ -1,0 +1,11 @@
+use serde::{Deserialize, Serialize};
+
+pub mod alerts;
+pub mod incidents;
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct PagedInfo {
+    pub size: Option<i64>,
+    pub page: Option<i64>,
+    pub uuid: Option<String>,
+}

@@ -12,7 +12,11 @@
   </p>
 </div>
 
-Speculare server is intended to recieve data from speculare-client childrens.
+This repo is the place for both server & alerts of Speculare, doing it this way to share models and some common code.
+
+Server is intended to recieve data from speculare-client childrens.
+
+Alerts is intended to create incidents and send notifications about them.
 
 This project is meant to evolve in something more complete and more complexe in a somewhat near future.
 
@@ -22,50 +26,30 @@ Server setup / Dev setup
 - Install all deps
 ```bash
 $ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-$ sudo apt-get install libssl-dev libpq-dev pkg-config build-essential
+$ sudo apt-get install cmake libssl-dev libpq-dev pkg-config build-essential
 ```
 
-- Create a .env file based on .env.example
+- Create both Alerts.toml and Server.toml files based on Example*.toml
 
 > **⚠ WARNING: The TimescaleDB instance you're going to use need to be configured for logical replication, check the [docs](https://docs.speculare.cloud).**
 
-- (Solution A) Setup the database without doing anything
+- (Solution A - recommended) Setup the database without doing anything
 ```
-When running the binary, it will automatically check if all available migrations have been applied.
-So you don't have to do anything, just launch and enjoy.
+You might just have to create the database (inside psql `CREATE DATABASE name`).
+When running the binary, it will automatically check if all available migrations have been applied. So you don't have to do anything, just launch and enjoy.
 ```
 
 - (Solution B) Setup the database based on diesel
 ```bash
-# You first need to setup a postgresql 13 instance
-# And you also need to install diesel cli
+# Install the diesel_cli tool
 $ cargo install diesel_cli --no-default-features --features postgres
 # For diesel setup to works you need to be at the root of the project
-$ diesel setup
+$ diesel setup --database-url="postgres://xxx"
 ```
-
-Information
---------------------------
-By default (and until configuration is implemented) the data retention is set to 7 days. If you've configured everything and each service are running correctly, you don't have to do anything. Partman will take care of cleaning old PARTITION and creating new one.
-
-Using PARTITION instead of regular DELETE ... WHERE created_at ... is better to avoid any performance impact. DELETE on a big table can take several minutes and block incoming transaction, whereas DROPing a TABLE is faster and don't block incoming transaction.
-
-Run in Docker
---------------------------
-
-You might want to take advantage of Docker to run the server inside a container.
-
-You first need to build the image:
+If you've installed the diesel_cli you can also use it's migration commands
 ```bash
-$ docker build -t speculare_server .
+$ diesel migration run/add/revert/redo --database-url="postgres://xxx"
 ```
-
-And then you can simply launch it:
-```bash
-$ docker run -d -p 8080:8080 --env-file .env speculare_server
-```
-
-_Note: the Dockerfile is configured to use the *port* 8080 by default and is running in *debug* mode._
 
 Contributing
 --------------------------

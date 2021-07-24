@@ -255,7 +255,7 @@ dependencies = [
 
 [[package]]
 name = "alerts"
-version = "0.1.0"
+version = "0.0.4"
 dependencies = [
  "actix-cors",
  "actix-web",
@@ -1690,7 +1690,7 @@ dependencies = [
 
 [[package]]
 name = "server"
-version = "0.1.0"
+version = "0.0.4"
 dependencies = [
  "actix-cors",
  "actix-web",
@@ -1801,7 +1801,7 @@ checksum = "6e63cff320ae2c57904679ba7cb63280a3dc4613885beafb148ee7bf9aa9042d"
 
 [[package]]
 name = "sproot"
-version = "0.1.0"
+version = "0.0.4"
 dependencies = [
  "actix-web",
  "chrono",

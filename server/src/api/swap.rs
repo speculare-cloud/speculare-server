@@ -15,8 +15,6 @@ pub async fn swap(
     info!("Route GET /api/swap : {:?}", info);
 
     let uuid = info.uuid.to_owned();
-    let size = info.size.unwrap_or(100);
-    let page = info.page.unwrap_or(0);
     // If min_date and max_date are specified, it's a dated request, otherwise, normal
     // use web::block to offload blocking Diesel code without blocking server thread
     if info.min_date.is_some() && info.max_date.is_some() {
@@ -24,7 +22,6 @@ pub async fn swap(
             Swap::get_data_dated(
                 &db.get()?,
                 &uuid,
-                size,
                 info.min_date.unwrap(),
                 info.max_date.unwrap(),
             )
@@ -33,6 +30,8 @@ pub async fn swap(
         // Return the data as form of JSON
         Ok(HttpResponse::Ok().json(data))
     } else {
+        let size = info.size.unwrap_or(100);
+        let page = info.page.unwrap_or(0);
         // Define the max size someone can request
         if !(30..=5000).contains(&size) {
             Err(AppError {

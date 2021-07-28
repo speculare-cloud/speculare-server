@@ -5,13 +5,10 @@ use crate::models::schema::swap;
 use crate::models::schema::swap::dsl::{
     created_at, free, host_uuid, swap as dsl_swap, total, used,
 };
-use crate::models::{get_granularity, get_query_range_values, HttpPostHost};
+use crate::models::{get_granularity, HttpPostHost};
 
-use diesel::{
-    pg::expression::extensions::IntervalDsl,
-    sql_types::{Int8, Interval, Text},
-    *,
-};
+use diesel::sql_types::Timestamp;
+use diesel::{sql_types::Text, *};
 use serde::{Deserialize, Serialize};
 
 // ========================
@@ -59,10 +56,10 @@ impl Swap {
     pub fn get_data_dated(
         conn: &ConnType,
         uuid: &str,
-        size: i64,
         min_date: chrono::NaiveDateTime,
         max_date: chrono::NaiveDateTime,
     ) -> Result<Vec<SwapDTORaw>, AppError> {
+        let size = (max_date - min_date).num_seconds();
         let granularity = get_granularity(size);
         if granularity <= 1 {
             Ok(dsl_swap
@@ -76,9 +73,6 @@ impl Swap {
                 .order_by(created_at.desc())
                 .load(conn)?)
         } else {
-            // Compute values if granularity > 60
-            let (min, sec_supp, granularity) = get_query_range_values(granularity);
-
             // Dummy require to ensure no issue if table name change.
             // If the table's name is to be changed, we have to change it from the sql_query below.
             {
@@ -86,34 +80,25 @@ impl Swap {
                 use crate::models::schema::swap;
             }
 
+            // Generate the interval from granularity and convert it to VAL + 's' => String
+            let interval = format!("{}s", granularity);
+
             // Prepare and run the query
             Ok(sql_query(
                 "
-                WITH s AS 
-                    (SELECT total, free, used, created_at as time 
-                        FROM swap 
-                        WHERE host_uuid=$1 
-                        ORDER BY created_at 
-                        DESC LIMIT $2
-                    ) 
                 SELECT 
                     avg(total)::int8 as total, 
                     avg(free)::int8 as free, 
                     avg(used)::int8 as used, 
-                    time::date + 
-                        (extract(hour from time)::int)* '1h'::interval +
-                        (extract(minute from time)::int/$3)* $4 +
-                        (extract(second from time)::int/$5)* $6 as created_at 
-                    FROM s 
-                    GROUP BY created_at 
-                    ORDER BY created_at DESC",
+                    time_bucket($1, created_at) as created_at 
+                FROM swap 
+                WHERE host_uuid=$2 AND created_at BETWEEN $3 AND $4 
+                GROUP BY created_at ORDER BY created_at DESC",
             )
+            .bind::<Text, _>(interval)
             .bind::<Text, _>(uuid)
-            .bind::<Int8, _>(size)
-            .bind::<Int8, _>(min)
-            .bind::<Interval, _>(min.minute() + sec_supp.second())
-            .bind::<Int8, _>(granularity)
-            .bind::<Interval, _>(granularity.second())
+            .bind::<Timestamp, _>(min_date)
+            .bind::<Timestamp, _>(max_date)
             .load(conn)?)
         }
     }

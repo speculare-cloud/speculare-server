@@ -7,8 +7,11 @@ use crate::models::schema::loadavg::dsl::{
 };
 use crate::models::{get_granularity, HttpPostHost};
 
-use diesel::sql_types::Timestamp;
-use diesel::{sql_types::Text, *};
+use diesel::{
+    pg::expression::extensions::IntervalDsl,
+    sql_types::{Interval, Text, Timestamp},
+    *,
+};
 use serde::{Deserialize, Serialize};
 
 // ========================
@@ -81,7 +84,7 @@ impl LoadAvg {
             }
 
             // Generate the interval from granularity and convert it to VAL + 's' => String
-            let interval = format!("{}s", granularity);
+            // let interval = format!("{}s", granularity);
 
             // Prepare and run the query
             Ok(sql_query(
@@ -95,7 +98,7 @@ impl LoadAvg {
                 WHERE host_uuid=$2 AND created_at BETWEEN $3 AND $4 
                 GROUP BY created_at ORDER BY created_at DESC",
             )
-            .bind::<Text, _>(interval)
+            .bind::<Interval, _>((granularity as i64).second())
             .bind::<Text, _>(uuid)
             .bind::<Timestamp, _>(min_date)
             .bind::<Timestamp, _>(max_date)

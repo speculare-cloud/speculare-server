@@ -102,6 +102,7 @@ impl IoNet {
                     GROUP BY time,interface ORDER BY time DESC
                 )
                 SELECT 
+                    interface,
                     rx_bytes,
                     tx_bytes,
                     time as created_at

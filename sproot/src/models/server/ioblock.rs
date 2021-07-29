@@ -99,6 +99,7 @@ impl IoBlock {
                     GROUP BY time,device_name ORDER BY time DESC
                 )
                 SELECT 
+                    device_name,
                     read_bytes,
                     write_bytes,
                     time as created_at

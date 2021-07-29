@@ -97,6 +97,7 @@ impl Disks {
                     GROUP BY time,disk_name ORDER BY time DESC
                 )
                 SELECT 
+                    disk_name,
                     total_space,
                     avail_space,
                     time as created_at

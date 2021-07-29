@@ -89,10 +89,10 @@ impl LoadAvg {
                     avg(one)::float8 as one, 
                     avg(five)::float8 as five, 
                     avg(fifteen)::float8 as fifteen, 
-                    time_bucket('{}s', created_at) as created_at 
+                    time_bucket('{}s', created_at) as time 
                 FROM loadavg 
                 WHERE host_uuid=$1 AND created_at BETWEEN $2 AND $3 
-                GROUP BY created_at ORDER BY created_at DESC",
+                GROUP BY time ORDER BY time DESC",
                 granularity
             ))
             .bind::<Text, _>(uuid)

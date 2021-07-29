@@ -104,10 +104,10 @@ impl CpuStats {
                     avg(processes)::int8 as processes,
                     avg(procs_running)::int8 as procs_running,
                     avg(procs_blocked)::int8 as procs_blocked, 
-                    time_bucket('{}s', created_at) as created_at 
+                    time_bucket('{}s', created_at) as time 
                 FROM cpustats 
                 WHERE host_uuid=$1 AND created_at BETWEEN $2 AND $3 
-                GROUP BY created_at ORDER BY created_at DESC",
+                GROUP BY time ORDER BY time DESC",
                 granularity
             ))
             .bind::<Text, _>(uuid)

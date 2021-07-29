@@ -90,10 +90,10 @@ impl Disks {
                     disk_name, 
                     avg(total_space)::int8 as total_space, 
                     avg(avail_space)::int8 as avail_space,
-                    time_bucket('{}s', created_at) as created_at 
+                    time_bucket('{}s', created_at) as time 
                 FROM disks 
                 WHERE host_uuid=$1 AND created_at BETWEEN $2 AND $3 
-                GROUP BY created_at,disk_name ORDER BY created_at DESC",
+                GROUP BY time,disk_name ORDER BY time DESC",
                 granularity
             ))
             .bind::<Text, _>(uuid)

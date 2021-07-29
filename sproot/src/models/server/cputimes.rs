@@ -104,10 +104,10 @@ impl CpuTimes {
                     avg(irq)::int8 as irq, 
                     avg(softirq)::int8 as softirq, 
                     avg(steal)::int8 as steal, 
-                    time_bucket('{}s', created_at) as created_at 
+                    time_bucket('{}s', created_at) as time 
                 FROM cputimes 
                 WHERE host_uuid=$1 AND created_at BETWEEN $2 AND $3 
-                GROUP BY created_at ORDER BY created_at DESC",
+                GROUP BY time ORDER BY time DESC",
                 granularity
             ))
             .bind::<Text, _>(uuid)

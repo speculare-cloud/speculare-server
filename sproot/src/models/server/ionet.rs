@@ -95,10 +95,10 @@ impl IoNet {
                     interface, 
                     avg(rx_bytes)::int8 as rx_bytes, 
                     avg(tx_bytes)::int8 as tx_bytes, 
-                    time_bucket('{}s', created_at) as created_at 
+                    time_bucket('{}s', created_at) as time 
                 FROM ionets 
                 WHERE host_uuid=$1 AND created_at BETWEEN $2 AND $3 
-                GROUP BY created_at,interface ORDER BY created_at DESC",
+                GROUP BY time,interface ORDER BY time DESC",
                 granularity
             ))
             .bind::<Text, _>(uuid)

@@ -100,7 +100,7 @@ impl IoNet {
                     avg(rx_bytes)::int8 as rx_bytes, 
                     avg(tx_bytes)::int8 as tx_bytes, 
                     time_bucket($1, created_at) as created_at 
-                FROM memory 
+                FROM ionets 
                 WHERE host_uuid=$2 AND created_at BETWEEN $3 AND $4 
                 GROUP BY created_at,interface ORDER BY created_at DESC",
             )

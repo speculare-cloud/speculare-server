@@ -97,7 +97,7 @@ impl IoBlock {
                     avg(read_bytes)::int8 as read_bytes, 
                     avg(write_bytes)::int8 as write_bytes, 
                     time_bucket($1, created_at) as created_at 
-                FROM memory 
+                FROM ioblocks 
                 WHERE host_uuid=$2 AND created_at BETWEEN $3 AND $4 
                 GROUP BY created_at,device_name ORDER BY created_at DESC",
             )

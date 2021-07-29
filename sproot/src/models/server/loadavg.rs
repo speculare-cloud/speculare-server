@@ -94,7 +94,7 @@ impl LoadAvg {
                     avg(five)::float8 as five, 
                     avg(fifteen)::float8 as fifteen, 
                     time_bucket($1, created_at) as created_at 
-                FROM memory 
+                FROM loadavg 
                 WHERE host_uuid=$2 AND created_at BETWEEN $3 AND $4 
                 GROUP BY created_at ORDER BY created_at DESC",
             )

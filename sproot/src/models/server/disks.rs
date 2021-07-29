@@ -95,7 +95,7 @@ impl Disks {
                     avg(total_space)::int8 as total_space, 
                     avg(avail_space)::int8 as avail_space,
                     time_bucket($1, created_at) as created_at 
-                FROM memory 
+                FROM disks 
                 WHERE host_uuid=$2 AND created_at BETWEEN $3 AND $4 
                 GROUP BY created_at,disk_name ORDER BY created_at DESC",
             )

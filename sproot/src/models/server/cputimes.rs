@@ -109,7 +109,7 @@ impl CpuTimes {
                     avg(softirq)::int8 as softirq, 
                     avg(steal)::int8 as steal, 
                     time_bucket($1, created_at) as created_at 
-                FROM memory 
+                FROM cputimes 
                 WHERE host_uuid=$2 AND created_at BETWEEN $3 AND $4 
                 GROUP BY created_at ORDER BY created_at DESC",
             )

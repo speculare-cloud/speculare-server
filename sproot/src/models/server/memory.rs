@@ -8,8 +8,7 @@ use crate::models::schema::memory::dsl::{
 use crate::models::{get_granularity, HttpPostHost};
 
 use diesel::{
-    pg::expression::extensions::IntervalDsl,
-    sql_types::{Interval, Text, Timestamp},
+    sql_types::{Text, Timestamp},
     *,
 };
 use serde::{Deserialize, Serialize};
@@ -86,9 +85,6 @@ impl Memory {
                 use crate::models::schema::memory;
             }
 
-            // Generate the interval from granularity and convert it to VAL + 's' => String
-            // let interval = format!("{}s", granularity);
-
             // Prepare and run the query
             Ok(sql_query(
                 "
@@ -102,7 +98,6 @@ impl Memory {
                 WHERE host_uuid=$2 AND created_at BETWEEN $3 AND $4 
                 GROUP BY created_at ORDER BY created_at DESC",
             )
-            .bind::<Interval, _>((granularity as i64).second())
             .bind::<Text, _>(uuid)
             .bind::<Timestamp, _>(min_date)
             .bind::<Timestamp, _>(max_date)

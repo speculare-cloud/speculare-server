@@ -8,8 +8,7 @@ use crate::models::schema::ioblocks::dsl::{
 use crate::models::{get_granularity, HttpPostHost};
 
 use diesel::{
-    pg::expression::extensions::IntervalDsl,
-    sql_types::{Int8, Interval, Text, Timestamp},
+    sql_types::{Int8, Text, Timestamp},
     *,
 };
 use serde::{Deserialize, Serialize};
@@ -86,22 +85,19 @@ impl IoBlock {
                 use crate::models::schema::ioblocks;
             }
 
-            // Generate the interval from granularity and convert it to VAL + 's' => String
-            // let interval = format!("{}s", granularity);
-
             // Prepare and run the query
-            Ok(sql_query(
+            Ok(sql_query(format!(
                 "
                 SELECT 
                     device_name, 
                     avg(read_bytes)::int8 as read_bytes, 
                     avg(write_bytes)::int8 as write_bytes, 
-                    time_bucket($1, created_at) as created_at 
+                    time_bucket('{}s', created_at) as created_at 
                 FROM ioblocks 
-                WHERE host_uuid=$2 AND created_at BETWEEN $3 AND $4 
+                WHERE host_uuid=$1 AND created_at BETWEEN $2 AND $3 
                 GROUP BY created_at,device_name ORDER BY created_at DESC",
-            )
-            .bind::<Interval, _>((granularity as i64).second())
+                granularity
+            ))
             .bind::<Text, _>(uuid)
             .bind::<Timestamp, _>(min_date)
             .bind::<Timestamp, _>(max_date)

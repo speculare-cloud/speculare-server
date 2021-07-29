@@ -34,6 +34,7 @@ enum Thing {
 enum CdcKind {
     Update,
     Insert,
+    Delete,
 }
 
 /// Structure holding the info we need from the WebSocket

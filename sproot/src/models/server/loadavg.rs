@@ -85,14 +85,22 @@ impl LoadAvg {
             // Prepare and run the query
             Ok(sql_query(format!(
                 "
+                WITH s AS (
+                    SELECT 
+                        avg(one)::float8 as one, 
+                        avg(five)::float8 as five, 
+                        avg(fifteen)::float8 as fifteen, 
+                        time_bucket('{}s', created_at) as time 
+                    FROM loadavg 
+                    WHERE host_uuid=$1 AND created_at BETWEEN $2 AND $3 
+                    GROUP BY time ORDER BY time DESC
+                )
                 SELECT 
-                    avg(one)::float8 as one, 
-                    avg(five)::float8 as five, 
-                    avg(fifteen)::float8 as fifteen, 
-                    time_bucket('{}s', created_at) as time 
-                FROM loadavg 
-                WHERE host_uuid=$1 AND created_at BETWEEN $2 AND $3 
-                GROUP BY time ORDER BY time DESC",
+                    one,
+                    five,
+                    fifteen,
+                    time as created_at
+                FROM s",
                 granularity
             ))
             .bind::<Text, _>(uuid)

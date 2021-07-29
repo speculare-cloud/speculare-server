@@ -88,14 +88,21 @@ impl IoBlock {
             // Prepare and run the query
             Ok(sql_query(format!(
                 "
+                WITH s AS (
+                    SELECT 
+                        device_name, 
+                        avg(read_bytes)::int8 as read_bytes, 
+                        avg(write_bytes)::int8 as write_bytes, 
+                        time_bucket('{}s', created_at) as time 
+                    FROM ioblocks 
+                    WHERE host_uuid=$1 AND created_at BETWEEN $2 AND $3 
+                    GROUP BY time,device_name ORDER BY time DESC
+                )
                 SELECT 
-                    device_name, 
-                    avg(read_bytes)::int8 as read_bytes, 
-                    avg(write_bytes)::int8 as write_bytes, 
-                    time_bucket('{}s', created_at) as time 
-                FROM ioblocks 
-                WHERE host_uuid=$1 AND created_at BETWEEN $2 AND $3 
-                GROUP BY time,device_name ORDER BY time DESC",
+                    read_bytes,
+                    write_bytes,
+                    time as created_at
+                FROM s",
                 granularity
             ))
             .bind::<Text, _>(uuid)

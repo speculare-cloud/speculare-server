@@ -97,17 +97,28 @@ impl CpuStats {
             // Prepare and run the query
             Ok(sql_query(format!(
                 "
+                WITH s AS (
+                    SELECT 
+                        avg(interrupts)::int8 as interrupts, 
+                        avg(ctx_switches)::int8 as ctx_switches, 
+                        avg(soft_interrupts)::int8 as soft_interrupts,
+                        avg(processes)::int8 as processes,
+                        avg(procs_running)::int8 as procs_running,
+                        avg(procs_blocked)::int8 as procs_blocked, 
+                        time_bucket('{}s', created_at) as time 
+                    FROM cpustats 
+                    WHERE host_uuid=$1 AND created_at BETWEEN $2 AND $3 
+                    GROUP BY time ORDER BY time DESC
+                )
                 SELECT 
-                    avg(interrupts)::int8 as interrupts, 
-                    avg(ctx_switches)::int8 as ctx_switches, 
-                    avg(soft_interrupts)::int8 as soft_interrupts,
-                    avg(processes)::int8 as processes,
-                    avg(procs_running)::int8 as procs_running,
-                    avg(procs_blocked)::int8 as procs_blocked, 
-                    time_bucket('{}s', created_at) as time 
-                FROM cpustats 
-                WHERE host_uuid=$1 AND created_at BETWEEN $2 AND $3 
-                GROUP BY time ORDER BY time DESC",
+                    interrupts, 
+                    ctx_switches, 
+                    soft_interrupts, 
+                    processes, 
+                    procs_running, 
+                    procs_blocked, 
+                    time as created_at 
+                FROM s",
                 granularity
             ))
             .bind::<Text, _>(uuid)

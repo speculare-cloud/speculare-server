@@ -86,14 +86,21 @@ impl Disks {
             // Prepare and run the query
             Ok(sql_query(format!(
                 "
+                WITH s AS (
+                    SELECT 
+                        disk_name, 
+                        avg(total_space)::int8 as total_space, 
+                        avg(avail_space)::int8 as avail_space,
+                        time_bucket('{}s', created_at) as time 
+                    FROM disks 
+                    WHERE host_uuid=$1 AND created_at BETWEEN $2 AND $3 
+                    GROUP BY time,disk_name ORDER BY time DESC
+                )
                 SELECT 
-                    disk_name, 
-                    avg(total_space)::int8 as total_space, 
-                    avg(avail_space)::int8 as avail_space,
-                    time_bucket('{}s', created_at) as time 
-                FROM disks 
-                WHERE host_uuid=$1 AND created_at BETWEEN $2 AND $3 
-                GROUP BY time,disk_name ORDER BY time DESC",
+                    total_space,
+                    avail_space,
+                    time as created_at
+                FROM s",
                 granularity
             ))
             .bind::<Text, _>(uuid)

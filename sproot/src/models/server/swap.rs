@@ -85,14 +85,22 @@ impl Swap {
             // Prepare and run the query
             Ok(sql_query(format!(
                 "
+                WITH s AS (
+                    SELECT 
+                        avg(total)::int8 as total, 
+                        avg(free)::int8 as free, 
+                        avg(used)::int8 as used, 
+                        time_bucket('{}s', created_at) as time 
+                    FROM swap 
+                    WHERE host_uuid=$1 AND created_at BETWEEN $2 AND $3 
+                    GROUP BY time ORDER BY time DESC
+                )
                 SELECT 
-                    avg(total)::int8 as total, 
-                    avg(free)::int8 as free, 
-                    avg(used)::int8 as used, 
-                    time_bucket('{}s', created_at) as time 
-                FROM swap 
-                WHERE host_uuid=$1 AND created_at BETWEEN $2 AND $3 
-                GROUP BY time ORDER BY time DESC",
+                    total,
+                    free,
+                    used,
+                    time as created_at
+                FROM s",
                 granularity
             ))
             .bind::<Text, _>(uuid)

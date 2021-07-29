@@ -95,19 +95,32 @@ impl CpuTimes {
             // Prepare and run the query
             Ok(sql_query(format!(
                 "
+                WITH s AS (
+                    SELECT 
+                        avg(cuser)::int8 as cuser, 
+                        avg(nice)::int8 as nice, 
+                        avg(system)::int8 as system, 
+                        avg(idle)::int8 as idle, 
+                        avg(iowait)::int8 as iowait, 
+                        avg(irq)::int8 as irq, 
+                        avg(softirq)::int8 as softirq, 
+                        avg(steal)::int8 as steal, 
+                        time_bucket('{}s', created_at) as time 
+                    FROM cputimes 
+                    WHERE host_uuid=$1 AND created_at BETWEEN $2 AND $3 
+                    GROUP BY time ORDER BY time DESC
+                )
                 SELECT 
-                    avg(cuser)::int8 as cuser, 
-                    avg(nice)::int8 as nice, 
-                    avg(system)::int8 as system, 
-                    avg(idle)::int8 as idle, 
-                    avg(iowait)::int8 as iowait, 
-                    avg(irq)::int8 as irq, 
-                    avg(softirq)::int8 as softirq, 
-                    avg(steal)::int8 as steal, 
-                    time_bucket('{}s', created_at) as time 
-                FROM cputimes 
-                WHERE host_uuid=$1 AND created_at BETWEEN $2 AND $3 
-                GROUP BY time ORDER BY time DESC",
+                    cuser,
+                    nice,
+                    system,
+                    idle,
+                    iowait,
+                    irq,
+                    softirq,
+                    steal,
+                    time as created_at
+                FROM s",
                 granularity
             ))
             .bind::<Text, _>(uuid)

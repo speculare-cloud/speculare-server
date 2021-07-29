@@ -12,7 +12,7 @@ pub async fn ionets(
     db: web::Data<Pool>,
     info: web::Query<PagedInfoSpecific>,
 ) -> Result<HttpResponse, AppError> {
-    info!("Route GET /api/ionets : {:?}", info);
+    trace!("Route GET /api/ionets : {:?}", info);
 
     let uuid = info.uuid.to_owned();
     // If min_date and max_date are specified, it's a dated request, otherwise, normal
@@ -53,7 +53,7 @@ pub async fn ionets_count(
     db: web::Data<Pool>,
     info: web::Query<PagedInfoSpecific>,
 ) -> Result<HttpResponse, AppError> {
-    info!("Route GET /api/ionets_count : {:?}", info);
+    trace!("Route GET /api/ionets_count : {:?}", info);
 
     let uuid = info.uuid.to_owned();
     // If size is over 5000 or less than 30, return error

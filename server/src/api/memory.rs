@@ -12,7 +12,7 @@ pub async fn memory(
     db: web::Data<Pool>,
     info: web::Query<PagedInfoSpecific>,
 ) -> Result<HttpResponse, AppError> {
-    info!("Route GET /api/memory : {:?}", info);
+    trace!("Route GET /api/memory : {:?}", info);
 
     let uuid = info.uuid.to_owned();
     // If min_date and max_date are specified, it's a dated request, otherwise, normal

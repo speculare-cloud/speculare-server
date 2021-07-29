@@ -12,7 +12,8 @@ pub async fn host_all(
     db: web::Data<Pool>,
     info: web::Query<PagedInfo>,
 ) -> Result<HttpResponse, AppError> {
-    info!("Route GET /api/hosts");
+    trace!("Route GET /api/hosts");
+
     // If size is over 500 or less than 30, return error
     let size = info.size.unwrap_or(100);
     let page = info.page.unwrap_or(0);
@@ -36,7 +37,8 @@ pub async fn host_ingest(
     db: web::Data<Pool>,
     item: web::Json<Vec<HttpPostHost>>,
 ) -> Result<HttpResponse, AppError> {
-    info!("Route POST /api/guard/hosts");
+    trace!("Route POST /api/guard/hosts");
+
     // make all insert taking advantage of web::block to offload the request thread
     web::block(move || Host::insert(&db.get()?, &item.into_inner())).await??;
     // Return a 200 status code as everything went well

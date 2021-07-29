@@ -12,7 +12,7 @@ pub async fn swap(
     db: web::Data<Pool>,
     info: web::Query<PagedInfoSpecific>,
 ) -> Result<HttpResponse, AppError> {
-    info!("Route GET /api/swap : {:?}", info);
+    trace!("Route GET /api/swap : {:?}", info);
 
     let uuid = info.uuid.to_owned();
     // If min_date and max_date are specified, it's a dated request, otherwise, normal

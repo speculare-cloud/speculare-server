@@ -12,7 +12,7 @@ pub async fn ioblocks(
     db: web::Data<Pool>,
     info: web::Query<PagedInfoSpecific>,
 ) -> Result<HttpResponse, AppError> {
-    info!("Route GET /api/ioblocks : {:?}", info);
+    trace!("Route GET /api/ioblocks : {:?}", info);
 
     let uuid = info.uuid.to_owned();
     // If min_date and max_date are specified, it's a dated request, otherwise, normal
@@ -54,7 +54,7 @@ pub async fn ioblocks_count(
     db: web::Data<Pool>,
     info: web::Query<PagedInfoSpecific>,
 ) -> Result<HttpResponse, AppError> {
-    info!("Route GET /api/ioblocks_count : {:?}", info);
+    trace!("Route GET /api/ioblocks_count : {:?}", info);
 
     let uuid = info.uuid.to_owned();
     // If size is over 5000 or less than 30, return error

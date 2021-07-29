@@ -36,7 +36,7 @@ pub async fn host_ingest(
     db: web::Data<Pool>,
     item: web::Json<Vec<HttpPostHost>>,
 ) -> Result<HttpResponse, AppError> {
-    info!("Route POST /api/guard/hosts : {:?}", item);
+    info!("Route POST /api/guard/hosts");
     // make all insert taking advantage of web::block to offload the request thread
     web::block(move || Host::insert(&db.get()?, &item.into_inner())).await??;
     // Return a 200 status code as everything went well

@@ -14,7 +14,6 @@ use sproot::models::Incidents;
 struct IncidentTemplate<'a> {
     incident_id: i32,
     alert_name: &'a str,
-    host_uuid: &'a str,
     hostname: &'a str,
     status: &'a str,
     severity: &'a str,
@@ -48,7 +47,6 @@ pub fn send_alert(incident: &Incidents) {
     let incident_template = IncidentTemplate {
         incident_id: incident.id,
         alert_name: &incident.alerts_name,
-        host_uuid: &incident.host_uuid,
         hostname: &incident.hostname,
         status: &incident_status,
         severity: &incident_severity,

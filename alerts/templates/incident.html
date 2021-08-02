@@ -288,10 +288,10 @@
                                         <div class="f-fallback">
                                             <h1>Alert {{ alert_name }}</h1>
                                             <small>{{ hostname }}</small><br>
-                                            <p>Incident: <span {% if status=="Active" %}class="warning" {% else %}class="resolved" {% endif %} style="padding: 3px; padding-left:4px; padding-right: 4px; border-radius: 3px; color:#FFF">{{ status }}</span>.</p>
+                                            <p>Incident: <span {% if status=="Active" %}class="warning" {% else %}class="resolved" {% endif %} style="padding: 3px; padding-left:4px; padding-right: 4px; border-radius: 3px; color:#FFF">{{ status }}</span></p>
                                             {% if status=="Active" %}
                                             <p>A new incident is reported because the lookup query returned a value which is above the threshold.</p>
-                                            <p>This incident has a severity level equaling <span {% if severity=="Warning" %}class="warning" {% else %}class="critical" {% endif %} style="padding: 3px; padding-left:4px; padding-right: 4px; border-radius: 3px; color:#FFF">{{ severity }}</span>.</p>
+                                            <p>This incident has a severity level equaling <span {% if severity=="Warning" %}class="warning" {% else %}class="critical" {% endif %} style="padding: 3px; padding-left:4px; padding-right: 4px; border-radius: 3px; color:#FFF">{{ severity }}</span></p>
                                             <p><strong>Details:</strong></p>
                                             <div class="code" style="padding: 1rem;">
                                                 <code>
@@ -301,7 +301,6 @@
                                                         Critical: {{ crit }}
                                                     </code>
                                             </div>
-                                            {% endif %}
                                             <!-- Action -->
                                             <table class="body-action" align="center" width="100%" cellpadding="0" cellspacing="0" role="presentation">
                                                 <tr>
@@ -318,6 +317,7 @@
                                                     </td>
                                                 </tr>
                                             </table>
+                                            {% endif %}
                                             <table class="time_details" width="100%" cellpadding="0" cellspacing="0">
                                                 <tr>
                                                     <td>
@@ -329,7 +329,11 @@
                                                 </tr>
                                                 <tr>
                                                     <td>
+                                                        {% if status=="Active" %}
                                                         <h3>Updated at</h3>
+                                                        {% else %}
+                                                        <h3>Resolved at</h3>
+                                                        {% endif %}
                                                     </td>
                                                     <td>
                                                         <h3 class="align-right">{{ updated_at }}</h3>

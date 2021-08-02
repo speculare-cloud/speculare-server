@@ -93,10 +93,6 @@ pub fn execute_analysis(query: &str, alert: &Alerts, qtype: &QueryType, conn: &C
             };
             Incidents::update(conn, &incident_dto, incident_id)
                 .expect("Failed to update the incidents");
-            if incident.severity != incident_severity {
-                // Might want to send a new mail alerting the severity as changed.
-                // TODO
-            }
         }
         None => {
             trace!("Create a new incident based on the current values");

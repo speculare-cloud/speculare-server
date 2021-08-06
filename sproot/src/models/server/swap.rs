@@ -13,9 +13,7 @@ use diesel::{
 };
 use serde::{Deserialize, Serialize};
 
-// ========================
-// DATABASE Specific struct
-// ========================
+/// DB Specific struct for swap table
 #[derive(Identifiable, Queryable, Debug, Serialize, Deserialize)]
 #[table_name = "swap"]
 pub struct Swap {

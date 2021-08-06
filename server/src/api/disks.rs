@@ -1,5 +1,5 @@
 use sproot::errors::{AppError, AppErrorType};
-use sproot::models::Disks;
+use sproot::models::Disk;
 use sproot::Pool;
 
 use super::PagedInfoSpecific;
@@ -19,7 +19,7 @@ pub async fn disks(
     // use web::block to offload blocking Diesel code without blocking server thread
     if info.min_date.is_some() && info.max_date.is_some() {
         let data = web::block(move || {
-            Disks::get_data_dated(
+            Disk::get_data_dated(
                 &db.get()?,
                 &uuid,
                 info.min_date.unwrap(),
@@ -40,7 +40,7 @@ pub async fn disks(
                 error_type: AppErrorType::InvalidRequest,
             })
         } else {
-            let data = web::block(move || Disks::get_data(&db.get()?, &uuid, size, page)).await??;
+            let data = web::block(move || Disk::get_data(&db.get()?, &uuid, size, page)).await??;
             // Return the data as form of JSON
             Ok(HttpResponse::Ok().json(data))
         }
@@ -66,7 +66,7 @@ pub async fn disks_count(
         })
     } else {
         // use web::block to offload blocking Diesel code without blocking server thread
-        let data = web::block(move || Disks::count(&db.get()?, &uuid, size)).await??;
+        let data = web::block(move || Disk::count(&db.get()?, &uuid, size)).await??;
         // Return the data as form of JSON
         Ok(HttpResponse::Ok().body(data.to_string()))
     }

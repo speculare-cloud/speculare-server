@@ -4,8 +4,8 @@ pub use cpustats::*;
 mod cputimes;
 pub use cputimes::*;
 
-mod disks;
-pub use disks::*;
+mod disk;
+pub use disk::*;
 
 mod hosts;
 pub use hosts::*;

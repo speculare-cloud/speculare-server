@@ -13,12 +13,10 @@ use diesel::{
 };
 use serde::{Deserialize, Serialize};
 
-// ========================
-// DATABASE Specific struct
-// ========================
+/// DB Specific struct for disks table
 #[derive(Identifiable, Queryable, Debug, Serialize, Deserialize)]
 #[table_name = "disks"]
-pub struct Disks {
+pub struct Disk {
     pub id: i64,
     pub disk_name: String,
     pub mount_point: String,
@@ -28,7 +26,7 @@ pub struct Disks {
     pub created_at: chrono::NaiveDateTime,
 }
 
-impl Disks {
+impl Disk {
     /// Return a Vector of Disks
     /// # Params
     /// * `conn` - The r2d2 connection needed to fetch the data from the db
@@ -61,7 +59,7 @@ impl Disks {
         uuid: &str,
         min_date: chrono::NaiveDateTime,
         max_date: chrono::NaiveDateTime,
-    ) -> Result<Vec<DisksDTORaw>, AppError> {
+    ) -> Result<Vec<DiskDTORaw>, AppError> {
         let size = (max_date - min_date).num_seconds();
         let granularity = get_granularity(size);
         if granularity <= 1 {
@@ -151,9 +149,8 @@ impl Disks {
 
 #[derive(Queryable, QueryableByName, Serialize)]
 #[table_name = "disks"]
-pub struct DisksDTORaw {
+pub struct DiskDTORaw {
     pub disk_name: String,
-    // pub mount_point: String,
     pub total_space: i64,
     pub avail_space: i64,
     pub created_at: chrono::NaiveDateTime,
@@ -170,7 +167,7 @@ pub struct DisksCount {
 // ================
 #[derive(Insertable)]
 #[table_name = "disks"]
-pub struct DisksDTO<'a> {
+pub struct DiskDTO<'a> {
     pub disk_name: &'a str,
     pub mount_point: &'a str,
     pub total_space: i64,
@@ -179,13 +176,13 @@ pub struct DisksDTO<'a> {
     pub created_at: chrono::NaiveDateTime,
 }
 
-pub type DisksDTOList<'a> = Vec<DisksDTO<'a>>;
-impl<'a> From<&'a HttpPostHost> for Option<DisksDTOList<'a>> {
-    fn from(item: &'a HttpPostHost) -> Option<DisksDTOList<'a>> {
+pub type DiskDTOList<'a> = Vec<DiskDTO<'a>>;
+impl<'a> From<&'a HttpPostHost> for Option<DiskDTOList<'a>> {
+    fn from(item: &'a HttpPostHost) -> Option<DiskDTOList<'a>> {
         let disks = item.disks.as_ref()?;
         let mut list = Vec::with_capacity(disks.len());
         for disk in disks {
-            list.push(DisksDTO {
+            list.push(DiskDTO {
                 disk_name: &disk.name,
                 mount_point: &disk.mount_point,
                 total_space: disk.total_space,

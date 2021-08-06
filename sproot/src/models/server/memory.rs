@@ -13,9 +13,7 @@ use diesel::{
 };
 use serde::{Deserialize, Serialize};
 
-// ========================
-// DATABASE Specific struct
-// ========================
+/// DB Specific struct for memory table
 #[derive(Identifiable, Queryable, Debug, Serialize, Deserialize)]
 #[table_name = "memory"]
 pub struct Memory {

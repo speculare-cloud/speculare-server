@@ -13,9 +13,7 @@ use diesel::{
 };
 use serde::{Deserialize, Serialize};
 
-// ========================
-// DATABASE Specific struct
-// ========================
+/// DB Specific struct for ioblocks table
 #[derive(Identifiable, Queryable, Debug, Serialize, Deserialize)]
 #[table_name = "ioblocks"]
 pub struct IoBlock {

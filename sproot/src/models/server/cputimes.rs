@@ -14,9 +14,7 @@ use diesel::{
 };
 use serde::{Deserialize, Serialize};
 
-// ========================
-// DATABASE Specific struct
-// ========================
+/// DB Specific struct for cputimes table
 #[derive(Identifiable, Queryable, Debug, Serialize, Deserialize)]
 #[table_name = "cputimes"]
 pub struct CpuTimes {

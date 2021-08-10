@@ -3,13 +3,14 @@ extern crate diesel_migrations;
 #[macro_use]
 extern crate log;
 
+use ahash::AHashMap;
 use config::{Config, ConfigError};
 use diesel::{prelude::PgConnection, r2d2::ConnectionManager};
 use lettre::{
     transport::smtp::{authentication::Credentials, PoolConfig},
     SmtpTransport,
 };
-use std::{collections::HashMap, sync::RwLock};
+use std::sync::RwLock;
 use utils::monitoring::launch_monitoring;
 
 mod api;
@@ -74,7 +75,7 @@ lazy_static::lazy_static! {
 lazy_static::lazy_static! {
     // Be warned that it is not guarantee that the task is currently running.
     // The task could have been aborted sooner due to the sanity check of the query.
-    static ref ALERTS_LIST: RwLock<HashMap<i32, tokio::task::JoinHandle<()>>> = RwLock::new(HashMap::new());
+    static ref ALERTS_LIST: RwLock<AHashMap<i32, tokio::task::JoinHandle<()>>> = RwLock::new(AHashMap::new());
 }
 
 // Embed migrations into the binary

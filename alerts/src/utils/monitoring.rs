@@ -61,7 +61,7 @@ fn launch_alert_task(alert: Alerts, pool: Pool) {
             execute_analysis(&query, &alert, &qtype, &pool.get().unwrap());
         }
     });
-    // Add information into our HashMap protected by RwLock (multiple readers, one write at most)
+    // Add information into our AHashMap protected by RwLock (multiple readers, one write at most)
     ALERTS_LIST.write().unwrap().insert(alert_id, alert_task);
 }
 
@@ -107,7 +107,7 @@ fn launch_websocket(pool: Pool) {
                 let alert = alert.unwrap();
                 // If the kind is Update, we might need to shutdown the previous task
                 if data.kind == CdcKind::Update || data.kind == CdcKind::Delete {
-                    // Get the HashMap from the RwLock
+                    // Get the AHashMap from the RwLock
                     let running = ALERTS_LIST.read().unwrap();
                     // Get the task using the alert's id
                     let task = running.get(&alert.id);

@@ -259,6 +259,7 @@ version = "0.0.5"
 dependencies = [
  "actix-cors",
  "actix-web",
+ "ahash 0.7.4",
  "askama",
  "chrono",
  "config",

@@ -4,3 +4,4 @@ Server.toml
 *.pem
 /src
 diesel.toml
+*.lock

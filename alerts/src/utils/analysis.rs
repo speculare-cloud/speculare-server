@@ -31,8 +31,7 @@ pub fn execute_analysis(query: &str, alert: &Alerts, qtype: &QueryType, conn: &C
     trace!("{:?}, {:?}", should_warn, should_crit);
 
     // Check if an active incident already exist for this alarm.
-    let prev_incident = Incidents::exist(conn, alert.id);
-    let prev_incident: Option<Incidents> = match prev_incident {
+    let prev_incident: Option<Incidents> = match Incidents::exist(conn, alert.id) {
         Ok(res) => Some(res),
         Err(err) => {
             // If the error if not NofFound, this mean we have something else to care about
@@ -83,12 +82,20 @@ pub fn execute_analysis(query: &str, alert: &Alerts, qtype: &QueryType, conn: &C
         Some(incident) => {
             trace!("Update the previous incident using the new values");
             let incident_id = incident.id;
-            let incident_severity = severity as i32;
+            // Determine the severity of this incident.
+            // We won't downgrade an incident because it's been a "critical" incident in the past.
+            // And reporting it as a simple warning thanks to the "fix" or smthg is not relevant. (for me, I guess)
+            let curr_severity = severity as i32;
+            let incident_severity = if incident.severity > curr_severity {
+                None
+            } else {
+                Some(curr_severity)
+            };
             // Update the previous incident
             let incident_dto = IncidentsDTOUpdate {
                 result: Some(result),
                 updated_at: Some(Utc::now().naive_local()),
-                severity: Some(incident_severity),
+                severity: incident_severity,
                 ..Default::default()
             };
             Incidents::update(conn, &incident_dto, incident_id)

@@ -8,8 +8,7 @@ pub mod errors;
 pub mod models;
 
 use diesel::{prelude::PgConnection, r2d2::ConnectionManager};
-use rustls::internal::pemfile::{certs, pkcs8_private_keys, rsa_private_keys};
-use rustls::{NoClientAuth, ServerConfig};
+use rustls::{Certificate, PrivateKey, ServerConfig};
 use std::fs::File;
 use std::io::BufReader;
 
@@ -33,8 +32,6 @@ pub fn configure_logger(level: String) {
 ///
 /// Use key and cert for the path to find the files.
 pub fn get_ssl_builder(key: String, cert: String) -> ServerConfig {
-    // Init the ServerConfig with no Client's cert verifiction
-    let mut config = ServerConfig::new(NoClientAuth::new());
     // Open BufReader on the key and cert files to read their content
     let cert_file = &mut BufReader::new(
         File::open(&cert).unwrap_or_else(|_| panic!("Certificate file not found at {}", cert)),
@@ -43,19 +40,28 @@ pub fn get_ssl_builder(key: String, cert: String) -> ServerConfig {
         File::open(&key).unwrap_or_else(|_| panic!("Key file not found at {}", key)),
     );
     // Create a Vec of certificate by extracting all cert from cert_file
-    let cert_chain = certs(cert_file).unwrap();
+    let cert_chain = rustls_pemfile::certs(cert_file)
+        .unwrap()
+        .iter()
+        .map(|v| Certificate(v.clone()))
+        .collect();
     // Extract all PKCS8-encoded private key from key_file and generate a Vec from them
-    let mut keys = pkcs8_private_keys(key_file).unwrap();
+    let mut keys = rustls_pemfile::pkcs8_private_keys(key_file).unwrap();
     // If no keys are found, we try using the rsa type
     if keys.is_empty() {
         // Reopen a new BufReader as pkcs8_private_keys took over the previous one
         let key_file = &mut BufReader::new(
             File::open(&key).unwrap_or_else(|_| panic!("Key file not found at {}", key)),
         );
-        keys = rsa_private_keys(key_file).unwrap();
+        keys = rustls_pemfile::rsa_private_keys(key_file).unwrap();
     }
-    // Set a single certificate to be used for all subsequent request
-    config.set_single_cert(cert_chain, keys.remove(0)).unwrap();
+    // Convert the first key to be a PrivateKey
+    let key: PrivateKey = PrivateKey(keys.remove(0));
 
-    config
+    // Return the ServerConfig to be used
+    ServerConfig::builder()
+        .with_safe_defaults()
+        .with_no_client_auth()
+        .with_single_cert(cert_chain, key)
+        .expect("bad certificate/key")
 }

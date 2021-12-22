@@ -32,8 +32,20 @@ macro_rules! as_variant {
 // Lazy static of the Config which is loaded from Alerts.toml
 lazy_static::lazy_static! {
     static ref CONFIG: Config = {
+        // Get arguments
+        let args: Vec<String> = std::env::args().collect();
+
+        // Verify if we have the correct number of arguments
+        if args.len() != 2 {
+            println!(
+                "speculare-alerts: too {} arguments: missing a \"path/to/Config.toml\"",
+                if args.len() > 2 { "many" } else { "few" }
+            );
+            std::process::exit(1);
+        }
+
         let mut config = Config::default();
-        config.merge(config::File::with_name("Alerts")).unwrap();
+        config.merge(config::File::with_name(&args[1])).unwrap();
         config
     };
 }

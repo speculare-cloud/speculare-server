@@ -71,7 +71,7 @@ pub fn send_alert(incident: &Incidents) {
         // Receiver is the person who should get the email
         .to(receiver.parse().unwrap())
         // Subject will looks like: "Hostname [alert_name] - 23 Jul 2021 at 17:51"
-        .subject(format!("{} [{}] - {}", incident.hostname, incident.alerts_name, incident.started_at.format("%d %b %Y at %H:%M").to_string()))
+        .subject(format!("{} [{}] - {}", incident.hostname, incident.alerts_name, incident.started_at.format("%d %b %Y at %H:%M")))
         .multipart(
                 // Use multipart to have a fallback
             MultiPart::alternative()

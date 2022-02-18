@@ -7,8 +7,8 @@ edition = "2018"
 
 [dependencies]
 sproot = { path = "../sproot" }
-actix-cors = { version = "0.6.0-beta.3" }
-actix-web = { version = "4.0.0-beta.10", features = ["rustls"] }
+actix-cors = { version = "0.6.0-beta.10" }
+actix-web = { version = "4.0.0-rc.3", features = ["rustls"] }
 chrono = { version = "0.4", features = ["serde"] }
 config = "0.11"
 diesel = { version = "1.4", features = ["postgres", "r2d2", "chrono"] }

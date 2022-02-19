@@ -63,6 +63,7 @@ impl IoBlock {
         max_date: chrono::NaiveDateTime,
     ) -> Result<Vec<IoBlockDTORaw>, AppError> {
         let size = (max_date - min_date).num_seconds();
+
         let granularity = get_granularity(size);
         if granularity <= 1 {
             Ok(dsl_ioblocks
@@ -72,7 +73,9 @@ impl IoBlock {
                         .eq(uuid)
                         .and(created_at.gt(min_date).and(created_at.le(max_date))),
                 )
-                .limit(size)
+                // size * 10 as workaround for the moment
+                // TODO - Size * by the number of disks in the system
+                .limit(size * 10)
                 .order_by(created_at.desc())
                 .load(conn)?)
         } else {

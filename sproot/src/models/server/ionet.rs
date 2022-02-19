@@ -75,7 +75,9 @@ impl IoNet {
                         .eq(uuid)
                         .and(created_at.gt(min_date).and(created_at.le(max_date))),
                 )
-                .limit(size)
+                // size * 10 as workaround for the moment
+                // TODO - Size * by the number of interfaces in the system
+                .limit(size * 10)
                 .order_by(created_at.desc())
                 .load(conn)?)
         } else {

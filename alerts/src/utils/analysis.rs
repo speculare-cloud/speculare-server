@@ -13,7 +13,7 @@ use sproot::{
 pub fn execute_analysis(query: &str, alert: &Alerts, qtype: &QueryType, conn: &ConnType) {
     // Execute the query passed as arguement (this query was build previously)
     let result = execute_query(query, &alert.host_uuid, qtype, conn);
-    trace!("{}", &result);
+    trace!("result of the query is {}", &result);
 
     // Determine if we are in a Warn or Crit level of incidents
     let should_warn = eval_boolean(&alert.warn.replace("$this", &result)).unwrap_or_else(|e| {
@@ -28,7 +28,7 @@ pub fn execute_analysis(query: &str, alert: &Alerts, qtype: &QueryType, conn: &C
             alert.crit, e
         )
     });
-    trace!("{:?}, {:?}", should_warn, should_crit);
+    trace!("should warn/crit {:?}, {:?}", should_warn, should_crit);
 
     // Check if an active incident already exist for this alarm.
     let prev_incident: Option<Incidents> = match Incidents::exist(conn, alert.id) {

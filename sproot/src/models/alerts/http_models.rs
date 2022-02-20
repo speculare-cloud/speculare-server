@@ -1,3 +1,5 @@
+use std::io::ErrorKind;
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -24,5 +26,49 @@ pub struct Alerts {
     // Targeted hostname
     pub hostname: String,
     // Where SQL condition
+    pub where_clause: Option<String>,
+}
+
+impl Alerts {
+    /// Need to be sure that id, host_uuid and hostname are not None
+    pub fn from_xo(xo: AlertsXo) -> Result<Self, std::io::Error> {
+        if xo.host_uuid.is_none() || xo.hostname.is_none() {
+            return Err(std::io::Error::new(
+                ErrorKind::Other,
+                "host_uuid and/or hostname cannot be None",
+            ));
+        }
+
+        Ok(Self {
+            id: xo.id,
+            name: xo.name,
+            table: xo.table,
+            lookup: xo.lookup,
+            timing: xo.timing,
+            warn: xo.warn,
+            crit: xo.crit,
+            info: xo.info,
+            host_uuid: xo.host_uuid.unwrap(),
+            hostname: xo.hostname.unwrap(),
+            where_clause: xo.where_clause,
+        })
+    }
+}
+
+/// Used for folder structure in the ALERT_PATH
+/// Hostname & host_uuid can depends on the parent
+/// folder.
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct AlertsXo {
+    pub id: i32,
+    pub name: String,
+    pub table: String,
+    pub lookup: String,
+    pub timing: i32,
+    pub warn: String,
+    pub crit: String,
+    pub info: Option<String>,
+    pub host_uuid: Option<String>,
+    pub hostname: Option<String>,
     pub where_clause: Option<String>,
 }

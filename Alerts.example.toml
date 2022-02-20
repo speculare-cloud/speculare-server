@@ -19,3 +19,5 @@ SMTP_USER = "mail@gmail.com"
 SMTP_PASSWORD = "password_super_secret"
 SMTP_EMAIL_SENDER = "Speculare <alerts@speculare.cloud>"
 SMTP_EMAIL_RECEIVER = "myemail@mail.com"
+
+ALERTS_PATH = ".alerts/"

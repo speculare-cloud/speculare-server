@@ -32,6 +32,9 @@ pub struct Alerts {
 impl Alerts {
     /// Need to be sure that id, host_uuid and hostname are not None
     pub fn from_xo(xo: AlertsXo) -> Result<Self, std::io::Error> {
+        if xo.id.is_none() {
+            return Err(std::io::Error::new(ErrorKind::Other, "id cannot be None"));
+        }
         if xo.host_uuid.is_none() || xo.hostname.is_none() {
             return Err(std::io::Error::new(
                 ErrorKind::Other,
@@ -40,7 +43,7 @@ impl Alerts {
         }
 
         Ok(Self {
-            id: xo.id,
+            id: xo.id.unwrap(),
             name: xo.name,
             table: xo.table,
             lookup: xo.lookup,
@@ -60,7 +63,7 @@ impl Alerts {
 /// folder.
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct AlertsXo {
-    pub id: i32,
+    pub id: Option<i32>,
     pub name: String,
     pub table: String,
     pub lookup: String,

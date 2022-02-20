@@ -1,11 +1,12 @@
 use super::{analysis::execute_analysis, query::*};
-use crate::{ALERTS_LIST, CONFIG, RUNNING_ALERT};
+use crate::{ALERTS_CURR_ID, ALERTS_LIST, CONFIG, RUNNING_ALERT};
 
 use sproot::{
     errors::AppError,
     models::{Alerts, AlertsXo, Host},
     Pool,
 };
+use std::sync::atomic::Ordering;
 use std::{path::PathBuf, time::Duration};
 use walkdir::WalkDir;
 
@@ -75,7 +76,6 @@ fn get_alerts(pool: &Pool) -> Result<Vec<Alerts>, AppError> {
         if let Some(parent_entry) = entry.path().parent() {
             // TODO - Do we want to force a particular folder for all hosts ?
             if parent_entry == PathBuf::from(&path) {
-                trace!("Will be applied to all hosts");
                 for_all = true;
             } else if let Some(parent_name) = parent_entry.file_name() {
                 specific_host_uuid = parent_name.to_str();
@@ -101,9 +101,12 @@ fn get_alerts(pool: &Pool) -> Result<Vec<Alerts>, AppError> {
                             // Create as many alerts as needed for each hosts
                             for host in &hosts {
                                 let mut alertxo_tmp = &mut alertxo;
+                                alertxo_tmp.id =
+                                    Some(ALERTS_CURR_ID.fetch_add(1, Ordering::Relaxed) as i32);
                                 alertxo_tmp.host_uuid = Some(host.uuid.to_owned());
                                 alertxo_tmp.hostname = Some(host.hostname.to_owned());
 
+                                trace!("ID is {:?}", alertxo_tmp.id);
                                 if let Ok(alert) = Alerts::from_xo(alertxo_tmp.to_owned()) {
                                     trace!("Created alert {} for {}", alert.name, host.hostname);
                                     alerts.push(alert);
@@ -126,6 +129,10 @@ fn get_alerts(pool: &Pool) -> Result<Vec<Alerts>, AppError> {
                                 alertxo.hostname = Some(targeted_hosts.hostname.to_owned());
                             }
 
+                            alertxo.id =
+                                Some(ALERTS_CURR_ID.fetch_add(1, Ordering::Relaxed) as i32);
+
+                            trace!("ID is {:?}", alertxo.id);
                             // Convert to alerts and push to the Vec
                             if let Ok(alert) = Alerts::from_xo(alertxo) {
                                 trace!("Created alert {} for {}", alert.name, alert.hostname);

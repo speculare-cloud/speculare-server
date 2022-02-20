@@ -15,27 +15,18 @@ pub async fn alerts_list(info: web::Query<PagedInfo>) -> Result<HttpResponse, Ap
     let xyz = ALERTS_LIST.read();
     match xyz {
         Ok(content) => {
-            let simded: Result<String, simd_json::Error> = if info.uuid.is_some() {
-                simd_json::to_string(
-                    &content
+            let response = if info.uuid.is_some() {
+                HttpResponse::Ok().json(
+                    content
                         .iter()
                         .filter(|a| &a.host_uuid == info.uuid.as_ref().unwrap())
                         .collect::<Vec<&Alerts>>(),
                 )
             } else {
-                simd_json::to_string(&(*content))
+                HttpResponse::Ok().json(&(*content))
             };
-            match simded {
-                Ok(val) => Ok(HttpResponse::Ok().json(val)),
-                Err(e) => {
-                    error!("Couldn't convert the VEC to JSON: {}", e);
-                    Err(AppError {
-                        message: Some("Couldn't convert the VEC to JSON".to_string()),
-                        cause: None,
-                        error_type: AppErrorType::ServerError,
-                    })
-                }
-            }
+
+            Ok(response)
         }
         Err(e) => {
             error!("Cannot get the LOCK on the ALERTS_LIST: {}", e);

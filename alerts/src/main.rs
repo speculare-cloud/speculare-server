@@ -10,7 +10,10 @@ use lettre::{
     transport::smtp::{authentication::Credentials, PoolConfig},
     SmtpTransport,
 };
+use signal_hook::low_level::exit;
+use sproot::models::Alerts;
 use std::sync::RwLock;
+
 use utils::monitoring::launch_monitoring;
 
 mod api;
@@ -44,16 +47,23 @@ lazy_static::lazy_static! {
             std::process::exit(1);
         }
 
-        let mut config = Config::default();
-        config.merge(config::File::with_name(&args[1])).unwrap();
-        config
+        let config_builder = Config::builder()
+            .add_source(config::File::with_name(&args[1]));
+
+        match config_builder.build() {
+            Ok(conf) => conf,
+            Err(e) => {
+                error!("Cannot build the config: {}", e);
+                exit(1);
+            }
+        }
     };
 }
 
 // Lazy static of the Token from Config to use in validator
 lazy_static::lazy_static! {
     static ref TOKEN: Result<String, ConfigError> = {
-        CONFIG.get_str("API_TOKEN")
+        CONFIG.get_string("API_TOKEN")
     };
 }
 
@@ -62,17 +72,17 @@ lazy_static::lazy_static! {
 lazy_static::lazy_static! {
     static ref MAILER: SmtpTransport = {
         let username = CONFIG
-            .get_str("SMTP_USER")
+            .get_string("SMTP_USER")
             .expect("Missing SMTP_USER in the config.");
         let password = CONFIG
-            .get_str("SMTP_PASSWORD")
+            .get_string("SMTP_PASSWORD")
             .expect("Missing SMTP_PASSWORD in the config.");
         let creds = Credentials::new(username, password);
 
         // Open a remote connection to gmail
         SmtpTransport::starttls_relay(
             &CONFIG
-                .get_str("SMTP_HOST")
+                .get_string("SMTP_HOST")
                 .unwrap_or_else(|_| "smtp.gmail.com".into()),
         )
         .unwrap_or_else(|e| panic!("Cannot instanciate SmtpTransport due to: {}", e))
@@ -87,7 +97,8 @@ lazy_static::lazy_static! {
 lazy_static::lazy_static! {
     // Be warned that it is not guarantee that the task is currently running.
     // The task could have been aborted sooner due to the sanity check of the query.
-    static ref ALERTS_LIST: RwLock<AHashMap<i32, tokio::task::JoinHandle<()>>> = RwLock::new(AHashMap::new());
+    static ref RUNNING_ALERT: RwLock<AHashMap<i32, tokio::task::JoinHandle<()>>> = RwLock::new(AHashMap::new());
+    static ref ALERTS_LIST: RwLock<Vec<Alerts>> = RwLock::new(Vec::new());
 }
 
 // Embed migrations into the binary
@@ -98,12 +109,12 @@ async fn main() -> std::io::Result<()> {
     // Init the logger and set the debug level correctly
     sproot::configure_logger(
         CONFIG
-            .get_str("RUST_LOG")
+            .get_string("RUST_LOG")
             .unwrap_or_else(|_| "error,actix_server=info,actix_web=error".into()),
     );
     // Init the connection to the postgresql
     let database_url = CONFIG
-        .get_str("DATABASE_URL")
+        .get_string("DATABASE_URL")
         .expect("DATABASE_URL must be set");
     let manager = ConnectionManager::<PgConnection>::new(database_url);
     // Get the max number of connection to open

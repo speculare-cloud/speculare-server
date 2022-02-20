@@ -29,10 +29,10 @@ struct IncidentTemplate<'a> {
 pub fn send_alert(incident: &Incidents) {
     // Retreive the sender and receiver from the config.
     let sender = CONFIG
-        .get_str("SMTP_EMAIL_SENDER")
+        .get_string("SMTP_EMAIL_SENDER")
         .expect("Missing SMTP_EMAIL_SENDER in the config.");
     let receiver = CONFIG
-        .get_str("SMTP_EMAIL_RECEIVER")
+        .get_string("SMTP_EMAIL_RECEIVER")
         .expect("Missing SMTP_EMAIL_RECEIVER in the config.");
 
     // Convert the status, severity, started_at & updated_at to string

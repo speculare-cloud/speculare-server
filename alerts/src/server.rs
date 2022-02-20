@@ -20,7 +20,7 @@ pub async fn server(pool: Pool) -> std::io::Result<()> {
             .configure(routes::routes)
     });
     // Bind and run the server on HTTP or HTTPS depending on the mode of compilation.
-    let binding = CONFIG.get_str("BINDING").expect("Missing binding");
+    let binding = CONFIG.get_string("BINDING").expect("Missing binding");
     // Check if we should enable https
     let https = CONFIG.get_bool("HTTPS");
     // Bind the server (https or no)
@@ -36,8 +36,8 @@ pub async fn server(pool: Pool) -> std::io::Result<()> {
         serv.bind_rustls(
             binding,
             sproot::get_ssl_builder(
-                CONFIG.get_str("KEY_PRIV").unwrap(),
-                CONFIG.get_str("KEY_CERT").unwrap(),
+                CONFIG.get_string("KEY_PRIV").unwrap(),
+                CONFIG.get_string("KEY_CERT").unwrap(),
             ),
         )?
         .run()

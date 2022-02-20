@@ -5,3 +5,4 @@ Server.toml
 /src
 diesel.toml
 *.lock
+.alerts

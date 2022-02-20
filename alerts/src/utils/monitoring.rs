@@ -1,31 +1,13 @@
-use super::{analysis::execute_analysis, query::*, CdcChange, CdcKind};
-use crate::{ALERTS_LIST, CONFIG};
+use super::{analysis::execute_analysis, query::*};
+use crate::{ALERTS_LIST, CONFIG, RUNNING_ALERT};
 
-use futures_util::StreamExt;
 use sproot::{errors::AppError, models::Alerts, Pool};
-use std::{
-    io::{Error, ErrorKind},
-    time::Duration,
-};
-use tokio::net::TcpStream;
-use tokio_tungstenite::{connect_async, MaybeTlsStream, WebSocketStream};
+use std::time::Duration;
+use walkdir::WalkDir;
 
-/// Helper method that connect to the WS passed as URL and return the Stream
-async fn connect_to_ws(url: &str) -> Result<WebSocketStream<MaybeTlsStream<TcpStream>>, Error> {
-    match connect_async(url).await {
-        Ok(val) => {
-            debug!("Websocket: {} handshake completed", url);
-            Ok(val.0)
-        }
-        Err(err) => {
-            error!("Websocket: error while connecting {}: \"{}\"", url, err);
-            Err(Error::new(ErrorKind::Other, err.to_string()))
-        }
-    }
-}
-
-/// Create the task for a particular alert and add it to the ALERTS_LIST.
+/// Create the task for a particular alert and add it to the ALERTS_LIST & RUNNING_ALERT.
 fn launch_alert_task(alert: Alerts, pool: Pool) {
+    let calert = alert.clone();
     // Temp value because alert is borrowed inside the tokio task later
     let alert_id = alert.id;
     // Spawn a new task which will do the check for that particular alerts
@@ -42,7 +24,7 @@ fn launch_alert_task(alert: Alerts, pool: Pool) {
             if tmp_query.contains(statement) {
                 error!(
                     "Alerts[{}] contains disallowed statement \"{}\"",
-                    alert.id, statement
+                    alert_id, statement
                 );
                 return;
             }
@@ -62,85 +44,53 @@ fn launch_alert_task(alert: Alerts, pool: Pool) {
         }
     });
     // Add information into our AHashMap protected by RwLock (multiple readers, one write at most)
-    ALERTS_LIST.write().unwrap().insert(alert_id, alert_task);
+    RUNNING_ALERT.write().unwrap().insert(alert_id, alert_task);
+    ALERTS_LIST.write().unwrap().push(calert);
 }
 
-/// Connect to websocket and dispatch task
-fn launch_websocket(pool: Pool) {
-    tokio::spawn(async move {
-        let domain = CONFIG
-            .get_str("WSS_DOMAIN")
-            .expect("Missing WSS_DOMAIN in the config file.");
-        // Construct the update_url using domain
-        let mut update_url = String::with_capacity(24 + domain.len());
-        update_url.push_str("wss://");
-        update_url.push_str(&domain);
-        update_url.push_str("/ws?query=*:alerts");
-        // Connect to the WS for the * (insert, update, delete) type
-        let mut ws_stream = connect_to_ws(&update_url).await.unwrap();
+fn get_alerts() -> Result<Vec<Alerts>, AppError> {
+    let mut alerts = Vec::new();
+    let path = CONFIG
+        .get_string("ALERTS_PATH")
+        .expect("No ALERTS_PATH defined.");
 
-        // While we have some message, read them and wait for the next one
-        // We also combine both stream into "one", this is not really true but
-        // we do poll both of them using tokio::select! macro.
-        while let Some(msg) = ws_stream.next().await {
-            if let Ok(msg) = msg {
-                // Assert that msg is text (should always be as it's JSON)
-                if !msg.is_text() {
-                    continue;
-                }
-                // Convert msg into String
-                let mut msg = msg.into_text().expect("Cannot convert message to text");
-                trace!("Websocket: Message received: \"{}\"", msg);
-                // Construct data from str using Serde
-                let data: CdcChange = simd_json::from_str(&mut msg).unwrap();
-                // Construct alert from CdcChange (using columnname and columnvalues)
-                let alert: Result<Alerts, Error> = (&data).into();
-                // Check if alert is an error (happen if not all fields are presents)
-                if alert.is_err() {
-                    error!(
-                        "Websocket: Cannot build Alerts from CdcChange: {}",
-                        alert.unwrap_err()
-                    );
-                    continue;
-                }
-                // Unwrap as we checked before
-                let alert = alert.unwrap();
-                // If the kind is Update, we might need to shutdown the previous task
-                if data.kind == CdcKind::Update || data.kind == CdcKind::Delete {
-                    // Get the AHashMap from the RwLock
-                    let running = ALERTS_LIST.read().unwrap();
-                    // Get the task using the alert's id
-                    let task = running.get(&alert.id);
-                    // If exist, abort the task
-                    if let Some(task) = task {
-                        task.abort();
-                    }
-                }
-                // TODO - In the future when pausing an alert is implemented
-                //        this is where we should make the check.
-                if data.kind != CdcKind::Delete {
-                    launch_alert_task(alert, pool.clone());
+    for entry in WalkDir::new(path).min_depth(1) {
+        let entry = entry.unwrap();
+        trace!("Creating alert for {}", entry.path().display());
+
+        let content = std::fs::read_to_string(entry.path());
+        match content {
+            Ok(mut alerts_str) => {
+                let alert: Result<Alerts, simd_json::Error> = simd_json::from_str(&mut alerts_str);
+                match alert {
+                    Ok(al) => alerts.push(al),
+                    Err(e) => warn!(
+                        "Cannot convert {:?} into an object due to: {:?}",
+                        entry.path().display(),
+                        e
+                    ),
                 }
             }
+            Err(e) => warn!("Cannot read {:?} due to: {:?}", entry.path().display(), e),
         }
-    });
+    }
+
+    Ok(alerts)
 }
 
 /// Start the monitoring tasks for each alarms
 pub fn launch_monitoring(pool: Pool) -> Result<(), AppError> {
     // Get the alerts from the database currently present
-    let alerts: Vec<Alerts> = Alerts::get_list(&pool.get()?, None, 9999, 0)?;
+    let alerts: Vec<Alerts> = get_alerts()?;
 
-    // Foreach alerts
+    // Start the alerts monitoring for real
     for alert in alerts {
-        // Call the function responsible for the creation of the task
         launch_alert_task(alert, pool.clone())
     }
 
-    // Create a WS client that will connect to the Websocket of PGCDC about Alerts
-    // This client will abort a task of an Alarm that is being updated and restart it
-    // and will also create new task for new Alarms that are just being created after the startup.
-    launch_websocket(pool);
+    // TODO - React to SIGHUP (reload Alerts list)
+    // let signals = Signals::new(&[SIGHUP]).expect("Couldn't register Signal");
+    // tokio::spawn(hot_reload_alerts(signals));
 
     Ok(())
 }

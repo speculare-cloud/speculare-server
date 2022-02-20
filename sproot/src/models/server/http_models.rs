@@ -1,10 +1,5 @@
 use serde::{Deserialize, Serialize};
 
-// ====================
-// Http specific struct
-// Meaning those are used whenever
-// there is a POST request
-// ====================
 #[derive(Debug, Serialize, Deserialize)]
 pub struct HttpCpuStats {
     pub interrupts: i64,

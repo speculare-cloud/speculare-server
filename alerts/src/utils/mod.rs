@@ -11,7 +11,6 @@ mod notifications;
 pub use notifications::*;
 
 pub mod analysis;
-pub mod impls;
 pub mod monitoring;
 pub mod query;
 
@@ -35,15 +34,6 @@ enum CdcKind {
     Update,
     Insert,
     Delete,
-}
-
-/// Structure holding the info we need from the WebSocket
-#[derive(Serialize, Deserialize, Debug)]
-struct CdcChange {
-    columnnames: Vec<String>,
-    columnvalues: Vec<Thing>,
-    kind: CdcKind,
-    table: String,
 }
 
 /// Struct to hold the return from the sql_query for percentage query

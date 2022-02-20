@@ -104,7 +104,7 @@ pub fn execute_analysis(query: &str, alert: &Alerts, qtype: &QueryType, conn: &C
         None => {
             trace!("Create a new incident based on the current values");
             // Clone the alert to allow us to own it in the IncidentsDTO
-            let calert = alert.clone();
+            let calert: Alerts = alert.clone();
             let incident = IncidentsDTO {
                 result,
                 started_at: Utc::now().naive_local(),

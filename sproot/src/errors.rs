@@ -10,6 +10,7 @@ pub enum AppErrorType {
     InvalidRequest,
     InvalidToken,
     BlockingError,
+    ServerError,
 }
 
 #[derive(Debug)]
@@ -50,6 +51,10 @@ impl AppError {
                 error_type: AppErrorType::InvalidRequest,
                 ..
             } => "Invalid request".to_string(),
+            AppError {
+                error_type: AppErrorType::ServerError,
+                ..
+            } => "Server error".to_string(),
             _ => "An unexpected error has occurred".to_string(),
         }
     }

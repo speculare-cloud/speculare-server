@@ -12,17 +12,21 @@ actix-cors = { version = "0.6.0-beta.10" }
 actix-web = { version = "4.0.0-rc.3", features = ["rustls"] }
 askama = "0.11"
 chrono = { version = "0.4", features = ["serde"] }
-config = "0.11"
+config = "0.12"
 diesel = { version = "1.4", features = ["postgres", "r2d2", "chrono"] }
 diesel_migrations = "1.4"
 env_logger = "0.9"
 evalexpr = "7.0"
+futures = "0.3"
 futures-util = "0.3"
 lazy_static = "1.4"
 lettre = { version = "0.10.0-rc.4", features = ["rustls-tls"] }
 log = "0.4"
 r2d2 = "0.8"
 serde = { version = "1.0", features = ["derive"] }
+signal-hook = "0.3"
+signal-hook-tokio = { version = "0.3", features = ["futures-v0_3"]}
 simd-json = "0.4"
 tokio = { version = "1", features = ["macros"] }
 tokio-tungstenite = { version = "0.17", features = ["rustls-tls-native-roots"] }
+walkdir = "2.3"

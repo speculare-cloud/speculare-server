@@ -44,7 +44,7 @@ lazy_static::lazy_static! {
                 "speculare-alerts: too {} arguments: missing a \"path/to/Config.toml\"",
                 if args.len() > 2 { "many" } else { "few" }
             );
-            std::process::exit(1);
+            exit(1);
         }
 
         let config_builder = Config::builder()

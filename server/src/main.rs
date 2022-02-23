@@ -3,6 +3,8 @@ extern crate diesel_migrations;
 #[macro_use]
 extern crate log;
 
+use std::process::exit;
+
 use config::{Config, ConfigError};
 use diesel::{prelude::PgConnection, r2d2::ConnectionManager};
 
@@ -21,19 +23,26 @@ lazy_static::lazy_static! {
                 "speculare-server: too {} arguments: missing a \"path/to/Config.toml\"",
                 if args.len() > 2 { "many" } else { "few" }
             );
-            std::process::exit(1);
+            exit(1);
         }
 
-        let mut config = Config::default();
-        config.merge(config::File::with_name(&args[1])).unwrap();
-        config
+        let config_builder = Config::builder()
+            .add_source(config::File::with_name(&args[1]));
+
+        match config_builder.build() {
+            Ok(conf) => conf,
+            Err(e) => {
+                error!("Cannot build the config: {}", e);
+                exit(1);
+            }
+        }
     };
 }
 
 // Lazy static of the Token from Config to use in validator
 lazy_static::lazy_static! {
     static ref TOKEN: Result<String, ConfigError> = {
-        CONFIG.get_str("API_TOKEN")
+        CONFIG.get_string("API_TOKEN")
     };
 }
 
@@ -45,12 +54,12 @@ async fn main() -> std::io::Result<()> {
     // Init the logger and set the debug level correctly
     sproot::configure_logger(
         CONFIG
-            .get_str("RUST_LOG")
+            .get_string("RUST_LOG")
             .unwrap_or_else(|_| "error,actix_server=info,actix_web=error".into()),
     );
     // Init the connection to the postgresql
     let database_url = CONFIG
-        .get_str("DATABASE_URL")
+        .get_string("DATABASE_URL")
         .expect("DATABASE_URL must be set");
     let manager = ConnectionManager::<PgConnection>::new(database_url);
     // Get the max number of connection to open

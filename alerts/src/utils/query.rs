@@ -96,7 +96,6 @@ pub fn execute_query(query: &str, host_uuid: &str, qtype: &QueryType, conn: &Con
                 .load::<PctDTORaw>(conn);
             trace!("result pct is {:?}", &results);
             let results = results.unwrap();
-            assert!(results.len() >= 2);
             pct::compute_pct(&results).to_string()
         }
         QueryType::Abs => {

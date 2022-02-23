@@ -1,6 +1,17 @@
-use std::io::ErrorKind;
+use std::{
+    io::ErrorKind,
+    path::PathBuf,
+    sync::{
+        atomic::{AtomicUsize, Ordering},
+        Arc,
+    },
+};
 
+use log::error;
 use serde::{Deserialize, Serialize};
+use walkdir::WalkDir;
+
+use crate::models::Host;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Alerts {
@@ -55,6 +66,164 @@ impl Alerts {
             hostname: xo.hostname.unwrap(),
             where_clause: xo.where_clause,
         })
+    }
+
+    pub fn fetch_from_folder(path: &str, hosts: &[Host], counter: Arc<AtomicUsize>) -> Vec<Alerts> {
+        let mut alerts: Vec<Alerts> = Vec::new();
+
+        for entry in WalkDir::new(&path).min_depth(1).max_depth(2) {
+            // Detect if the WalkDir failed to read the folder (permissions/...)
+            let entry = if let Ok(entry) = entry {
+                entry
+            } else {
+                error!("Cannot read the entry due to: {:?}", entry.err());
+                continue;
+            };
+            let mut for_all_hosts = false;
+            let mut specific_host = None;
+            // For each files/folders in the path directory (alerts's folder)
+            // We'll perform the following:
+            // - Skip if it's a folder
+            // - Get the parent folder name and determine if it's for all hosts
+            //   or for a specific host
+            // - Building the alert and adding it to the alerts Vec
+
+            // Skip if folder
+            if entry.path().is_dir() {
+                continue;
+            }
+
+            // Get the parent folder name and determine which hosts is targeted
+            if let Some(parent_entry) = entry.path().parent() {
+                if parent_entry == PathBuf::from(&path) {
+                    for_all_hosts = true;
+                } else if let Some(parent_name) = parent_entry.file_name() {
+                    specific_host = parent_name.to_str();
+                }
+            }
+
+            trace!(
+                "Alerts {:?}; for_all_hosts[{}]; specific_host[{:?}]",
+                entry.path().file_name(),
+                for_all_hosts,
+                specific_host
+            );
+
+            let content = std::fs::read_to_string(entry.path());
+            if content.is_err() {
+                error!(
+                    "Cannot read {:?}: {:?}",
+                    entry.path().file_name(),
+                    content.err()
+                );
+                continue;
+            }
+
+            let alert = simd_json::from_str::<AlertsXo>(&mut content.unwrap());
+            if alert.is_err() {
+                error!(
+                    "Cannot convert {:?} to AlertsXo: {:?}",
+                    entry.path().file_name(),
+                    alert.err()
+                );
+                continue;
+            }
+            let mut alert = alert.unwrap();
+            if for_all_hosts {
+                for host in hosts {
+                    let alert = Self::from_xo_counter(
+                        &mut alert,
+                        &counter,
+                        host.hostname.to_owned(),
+                        host.uuid.to_owned(),
+                    );
+
+                    trace!("Created alert {} for {}", alert.name, alert.hostname);
+                    alerts.push(alert);
+                }
+            } else {
+                if let Some(parent_folder) = specific_host {
+                    let targeted_hosts: Vec<&Host> =
+                        hosts.iter().filter(|h| h.uuid == parent_folder).collect();
+                    if targeted_hosts.len() != 1 {
+                        error!("The alert {} targeting {} using folder structure is invalid as host {} does not exists.", alert.name, parent_folder, parent_folder);
+                        continue;
+                    }
+                    let targeted_hosts = targeted_hosts[0];
+                    alert.host_uuid = Some(targeted_hosts.uuid.to_owned());
+                    alert.hostname = Some(targeted_hosts.hostname.to_owned());
+                } else if alert.hostname.is_none() || alert.host_uuid.is_none() {
+                    error!("The alert {} is invalid as it does not have a hostname/host_uuid and is not in a 'host' folder.", alert.name);
+                    continue;
+                }
+
+                alert.id = Some(counter.fetch_add(1, Ordering::Relaxed) as i32);
+
+                trace!("Created alert {} for {:?}", alert.name, alert.hostname);
+                alerts.push(alert.into());
+            }
+        }
+
+        alerts
+    }
+
+    fn from_xo_counter(
+        alertsxo: &mut AlertsXo,
+        counter: &Arc<AtomicUsize>,
+        hostname: String,
+        host_uuid: String,
+    ) -> Self {
+        alertsxo.id = Some(counter.fetch_add(1, Ordering::Relaxed) as i32);
+        alertsxo.host_uuid = Some(host_uuid);
+        alertsxo.hostname = Some(hostname);
+        alertsxo.into()
+    }
+}
+
+/// Need to be sure that id, host_uuid and hostname are defined.
+impl From<&mut AlertsXo> for Alerts {
+    fn from(alertsxo: &mut AlertsXo) -> Self {
+        assert!(alertsxo.id.is_some());
+        assert!(alertsxo.host_uuid.is_some());
+        assert!(alertsxo.hostname.is_some());
+
+        let alertsxo = alertsxo.to_owned();
+        Self {
+            id: alertsxo.id.unwrap(),
+            name: alertsxo.name,
+            table: alertsxo.table,
+            lookup: alertsxo.lookup,
+            timing: alertsxo.timing,
+            warn: alertsxo.warn,
+            crit: alertsxo.crit,
+            info: alertsxo.info,
+            host_uuid: alertsxo.host_uuid.unwrap(),
+            hostname: alertsxo.hostname.unwrap(),
+            where_clause: alertsxo.where_clause,
+        }
+    }
+}
+
+/// Need to be sure that id, host_uuid and hostname are defined.
+impl From<AlertsXo> for Alerts {
+    fn from(alertsxo: AlertsXo) -> Self {
+        assert!(alertsxo.id.is_some());
+        assert!(alertsxo.host_uuid.is_some());
+        assert!(alertsxo.hostname.is_some());
+
+        Self {
+            id: alertsxo.id.unwrap(),
+            name: alertsxo.name,
+            table: alertsxo.table,
+            lookup: alertsxo.lookup,
+            timing: alertsxo.timing,
+            warn: alertsxo.warn,
+            crit: alertsxo.crit,
+            info: alertsxo.info,
+            host_uuid: alertsxo.host_uuid.unwrap(),
+            hostname: alertsxo.hostname.unwrap(),
+            where_clause: alertsxo.where_clause,
+        }
     }
 }
 

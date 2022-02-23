@@ -10,10 +10,9 @@ use lettre::{
     transport::smtp::{authentication::Credentials, PoolConfig},
     SmtpTransport,
 };
-use signal_hook::low_level::exit;
 use sproot::models::Alerts;
-use std::sync::atomic::AtomicUsize;
-use std::sync::RwLock;
+use std::sync::{atomic::AtomicUsize, Arc};
+use std::{process::exit, sync::RwLock};
 
 use utils::monitoring::launch_monitoring;
 
@@ -100,7 +99,7 @@ lazy_static::lazy_static! {
     // The task could have been aborted sooner due to the sanity check of the query.
     static ref RUNNING_ALERT: RwLock<AHashMap<i32, tokio::task::JoinHandle<()>>> = RwLock::new(AHashMap::new());
     static ref ALERTS_LIST: RwLock<Vec<Alerts>> = RwLock::new(Vec::new());
-    static ref ALERTS_CURR_ID: AtomicUsize = AtomicUsize::new(1);
+    static ref ALERTS_CURR_ID: Arc<AtomicUsize> = Arc::new(AtomicUsize::new(1));
 }
 
 // Embed migrations into the binary

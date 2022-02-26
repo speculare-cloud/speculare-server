@@ -11,9 +11,10 @@ use sproot::{
 /// - Execute the query and get the result
 /// - Evaluate if we need to trigger an incidents or not
 pub fn execute_analysis(query: &str, alert: &Alerts, qtype: &QueryType, conn: &ConnType) {
+    trace!("Executing {} analysis for {}", alert.name, alert.host_uuid);
     // Execute the query passed as arguement (this query was build previously)
     let result = execute_query(query, &alert.host_uuid, qtype, conn);
-    trace!("result of the query is {}", &result);
+    trace!("> Result of the query is {}", &result);
 
     // Determine if we are in a Warn or Crit level of incidents
     let should_warn = eval_boolean(&alert.warn.replace("$this", &result)).unwrap_or_else(|e| {
@@ -28,27 +29,28 @@ pub fn execute_analysis(query: &str, alert: &Alerts, qtype: &QueryType, conn: &C
             alert.crit, e
         )
     });
-    trace!("should warn/crit {:?}, {:?}", should_warn, should_crit);
+    trace!("> Should warn/crit {:?}, {:?}", should_warn, should_crit);
 
     // Check if an active incident already exist for this alarm.
-    let prev_incident: Option<Incidents> = match Incidents::exist(conn, alert.id) {
-        Ok(res) => Some(res),
-        Err(err) => {
-            // If the error if not NofFound, this mean we have something else to care about
-            if err != diesel::result::Error::NotFound {
-                panic!("prev_incident returned an error that is not NotFound");
+    let prev_incident: Option<Incidents> =
+        match Incidents::exist_name(conn, &alert.host_uuid, &alert.name) {
+            Ok(res) => Some(res),
+            Err(err) => {
+                // If the error if not NofFound, this mean we have something else to care about
+                if err != diesel::result::Error::NotFound {
+                    panic!("prev_incident returned an error that is not NotFound");
+                }
+                None
             }
-            None
-        }
-    };
-    trace!("Previous incident is some: {}", prev_incident.is_some());
+        };
+    trace!("> Previous incident is some: {}", prev_incident.is_some());
 
     // Assert that we do not create an incident for nothing
     if !(should_warn || should_crit) {
-        trace!("We don't need to create an incident");
+        trace!("> We don't need to create an incident");
         // Check if an incident was active
         if let Some(prev_incident) = prev_incident {
-            trace!("We need to resolve the previous incident however");
+            trace!("> We need to resolve the previous incident however");
             let incident_id = prev_incident.id;
             let incident_dto = IncidentsDTOUpdate {
                 status: Some(IncidentStatus::Resolved as i32),
@@ -72,7 +74,7 @@ pub fn execute_analysis(query: &str, alert: &Alerts, qtype: &QueryType, conn: &C
             panic!("should_warn && should_crit are both false, this should never happens.")
         }
     };
-    trace!("The severity of this one is: {}", severity.to_string());
+    trace!("> The severity of this one is: {}", severity.to_string());
 
     // If it exist we create an update in the cases where:
     // - We need to update the severity of the incidents
@@ -80,7 +82,7 @@ pub fn execute_analysis(query: &str, alert: &Alerts, qtype: &QueryType, conn: &C
     // In all cases we need to update the updated_at field.
     match prev_incident {
         Some(prev_incident) => {
-            trace!("Update the previous incident using the new values");
+            trace!("> Update the previous incident using the new values");
             let incident_id = prev_incident.id;
             // Determine the severity of this incident.
             // We won't downgrade an incident because it's been a "critical" incident in the past.
@@ -90,7 +92,7 @@ pub fn execute_analysis(query: &str, alert: &Alerts, qtype: &QueryType, conn: &C
             let mut should_alert = false;
             let mut incident_severity = None;
             if prev_incident.severity < curr_severity {
-                trace!("This incident have to be escalated");
+                trace!("> This incident have to be escalated");
                 should_alert = true;
                 incident_severity = Some(curr_severity);
             };
@@ -108,7 +110,7 @@ pub fn execute_analysis(query: &str, alert: &Alerts, qtype: &QueryType, conn: &C
             }
         }
         None => {
-            trace!("Create a new incident based on the current values");
+            trace!("> Create a new incident based on the current values");
             // Clone the alert to allow us to own it in the IncidentsDTO
             let calert: Alerts = alert.clone();
             let incident = IncidentsDTO {

@@ -1,7 +1,7 @@
 use crate::errors::{AppError, AppErrorType};
 use crate::models::schema::incidents;
 use crate::models::schema::incidents::dsl::{
-    alerts_id, host_uuid, id, incidents as dsl_incidents, status, updated_at,
+    alerts_id, alerts_name, host_uuid, id, incidents as dsl_incidents, status, updated_at,
 };
 use crate::ConnType;
 
@@ -73,6 +73,27 @@ impl Incidents {
     pub fn exist(conn: &ConnType, alert_id: i32) -> Result<Self, diesel::result::Error> {
         dsl_incidents
             .filter(alerts_id.eq(alert_id).and(status.eq(0)))
+            .first(conn)
+    }
+
+    /// Determine if the incidents for that specific alert exist and is currently active.
+    /// If one is found, return it, otherwise return a Err(NotFound).
+    /// # Params
+    /// * `conn` - The r2d2 connection needed to fetch the data from the db
+    /// * `aname` - The name of the alert related to the incident
+    /// * `huuid` - The uuid of the host targeted by the alert related to the incident
+    pub fn exist_name(
+        conn: &ConnType,
+        huuid: &str,
+        aname: &str,
+    ) -> Result<Self, diesel::result::Error> {
+        dsl_incidents
+            .filter(
+                alerts_name
+                    .eq(aname)
+                    .and(host_uuid.eq(huuid))
+                    .and(status.eq(0)),
+            )
             .first(conn)
     }
 

@@ -281,24 +281,24 @@
                     <!-- Email Body -->
                     <tr>
                         <td class="email-body" width="570" cellpadding="0" cellspacing="0">
-                            <table class='email-body_inner {% if status=="Active" %}border-warning{% else %}border-resolved{% endif %}' align="center" width="570" cellpadding="0" cellspacing="0" role="presentation" style="border-top: 5px solid;">
+                            <table class='email-body_inner {% if status=="Active" %}{% if severity=="Warning" %}border-warning{% else %}border-critical{% endif %}{% else %}border-resolved{% endif %}' align="center" width="570" cellpadding="0" cellspacing="0" role="presentation"
+                                style="border-top: 5px solid;">
                                 <!-- Body content -->
                                 <tr>
                                     <td class="content-cell">
                                         <div class="f-fallback">
                                             <h1>Alert {{ alert_name }}</h1>
                                             <small>{{ hostname }}</small><br> {% if status=="Active" %}
-                                            <p>Unfortunately things goes worse.</p>
 
                                             <p>The incident escalated and is now considered <span class="critical" style="padding: 3px; padding-left:4px; padding-right: 4px; border-radius: 3px; color:#FFF">{{ severity }}</span>, you should not ignore this.</p>
                                             <p><strong>Details:</strong></p>
                                             <div class="code" style="padding: 1rem;">
                                                 <code>
-														Lookup: {{ lookup }}<br>
-														Result: {{ result }}<br><br>
-														Warning: {{ warn }}<br>
-														Critical: {{ crit }}
-													</code>
+                                                    Lookup: {{ lookup }}<br>
+                                                    Result: {{ result }}<br><br>
+                                                    Warning: {{ warn }}<br>
+                                                    Critical: {{ crit }}
+                                                </code>
                                             </div>
                                             <!-- Action -->
                                             <table class="body-action" align="center" width="100%" cellpadding="0" cellspacing="0" role="presentation">

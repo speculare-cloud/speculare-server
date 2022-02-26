@@ -79,17 +79,20 @@ pub fn execute_analysis(query: &str, alert: &Alerts, qtype: &QueryType, conn: &C
     // - The result changed
     // In all cases we need to update the updated_at field.
     match prev_incident {
-        Some(incident) => {
+        Some(prev_incident) => {
             trace!("Update the previous incident using the new values");
-            let incident_id = incident.id;
+            let incident_id = prev_incident.id;
             // Determine the severity of this incident.
             // We won't downgrade an incident because it's been a "critical" incident in the past.
             // And reporting it as a simple warning thanks to the "fix" or smthg is not relevant. (for me, I guess)
             let curr_severity = severity as i32;
-            let incident_severity = if incident.severity > curr_severity {
-                None
-            } else {
-                Some(curr_severity)
+            // Check if we should update the severity and thus sending an escalation alert
+            let mut should_alert = false;
+            let mut incident_severity = None;
+            if prev_incident.severity < curr_severity {
+                trace!("This incident have to be escalated");
+                should_alert = true;
+                incident_severity = Some(curr_severity);
             };
             // Update the previous incident
             let incident_dto = IncidentsDTOUpdate {
@@ -98,8 +101,11 @@ pub fn execute_analysis(query: &str, alert: &Alerts, qtype: &QueryType, conn: &C
                 severity: incident_severity,
                 ..Default::default()
             };
-            Incidents::update(conn, &incident_dto, incident_id)
+            let incident = Incidents::gupdate(conn, &incident_dto, incident_id)
                 .expect("Failed to update the incidents");
+            if should_alert {
+                super::mail::send_escalate(&incident);
+            }
         }
         None => {
             trace!("Create a new incident based on the current values");

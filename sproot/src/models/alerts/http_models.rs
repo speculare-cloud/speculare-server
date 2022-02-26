@@ -91,7 +91,7 @@ impl AlertsConfig {
                 continue;
             }
 
-            // TODO - Small rewrite needed ?
+            // TODO - Small rewrite needed ? Too much of a stair
             // Get the parent folder name and determine which hosts is targeted
             let host_targeted: HostTargeted = if let Some(parent_entry) = entry.path().parent() {
                 if parent_entry == PathBuf::from(&path) {

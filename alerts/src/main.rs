@@ -10,7 +10,7 @@ use lettre::{
     transport::smtp::{authentication::Credentials, PoolConfig},
     SmtpTransport,
 };
-use sproot::models::Alerts;
+use sproot::models::{Alerts, AlertsConfig};
 use std::sync::{atomic::AtomicUsize, Arc};
 use std::{process::exit, sync::RwLock};
 
@@ -32,8 +32,8 @@ macro_rules! as_variant {
     };
 }
 
-// Lazy static of the Config which is loaded from Alerts.toml
 lazy_static::lazy_static! {
+    // Lazy static of the Config which is loaded from Alerts.toml
     static ref CONFIG: Config = {
         // Get arguments
         let args: Vec<String> = std::env::args().collect();
@@ -58,18 +58,9 @@ lazy_static::lazy_static! {
             }
         }
     };
-}
 
-// Lazy static of the Token from Config to use in validator
-lazy_static::lazy_static! {
-    static ref TOKEN: Result<String, ConfigError> = {
-        CONFIG.get_string("API_TOKEN")
-    };
-}
-
-// Lazy static for SmtpTransport used to send mails
-// Build it using rustls and a pool of 16 items.
-lazy_static::lazy_static! {
+    // Lazy static for SmtpTransport used to send mails
+    // Build it using rustls and a pool of 16 items.
     static ref MAILER: SmtpTransport = {
         let username = CONFIG
             .get_string("SMTP_USER")
@@ -90,16 +81,18 @@ lazy_static::lazy_static! {
         .pool_config(PoolConfig::new().max_size(16))
         .build()
     };
-}
 
-// Lazy static holding the Alerts that are currently running,
-// with their task (allow us to abort them if needed)
-lazy_static::lazy_static! {
     // Be warned that it is not guarantee that the task is currently running.
     // The task could have been aborted sooner due to the sanity check of the query.
     static ref RUNNING_ALERT: RwLock<AHashMap<i32, tokio::task::JoinHandle<()>>> = RwLock::new(AHashMap::new());
+    // List of the Alerts (to be returned in the API call)
     static ref ALERTS_LIST: RwLock<Vec<Alerts>> = RwLock::new(Vec::new());
+    // List of the AlertsConfig (to be used in the WSS)
+    static ref ALERTS_CONFIG: RwLock<Vec<AlertsConfig>> = RwLock::new(Vec::new());
+    // Global counter for the current ID of the Alerts
     static ref ALERTS_CURR_ID: Arc<AtomicUsize> = Arc::new(AtomicUsize::new(1));
+    // Lazy static of the Token from Config to use in validator
+    static ref TOKEN: Result<String, ConfigError> = CONFIG.get_string("API_TOKEN");
 }
 
 // Embed migrations into the binary

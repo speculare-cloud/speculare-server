@@ -1,5 +1,6 @@
-use super::{analysis::execute_analysis, query::*};
 use crate::{ALERTS_LIST, RUNNING_ALERT};
+
+use super::{analysis::execute_analysis, query::*};
 
 use sproot::{models::Alerts, Pool};
 use std::time::Duration;

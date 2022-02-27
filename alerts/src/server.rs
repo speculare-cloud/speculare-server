@@ -1,5 +1,4 @@
-use super::routes;
-use super::CONFIG;
+use super::{routes, CONFIG};
 
 use actix_cors::Cors;
 use actix_web::{middleware, App, HttpServer};

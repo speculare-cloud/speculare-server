@@ -8,6 +8,7 @@ extern crate sproot;
 use ahash::AHashMap;
 use clap::{Parser, Subcommand};
 use clap_verbosity_flag::InfoLevel;
+use diesel::{prelude::PgConnection, r2d2::ConnectionManager};
 use sproot::models::{Alerts, AlertsConfig};
 use sproot::prog;
 use std::sync::RwLock;
@@ -76,12 +77,27 @@ async fn main() -> std::io::Result<()> {
         )
         .init();
 
+    // Init the connection to the postgresql
+    let manager = ConnectionManager::<PgConnection>::new(&CONFIG.database_url);
+    // This step might spam for error CONFIG.database_max_connection of times, this is normal.
+    let pool = match r2d2::Pool::builder()
+        .max_size(CONFIG.database_max_connection)
+        .min_idle(Some((10 * CONFIG.database_max_connection) / 100))
+        .build(manager)
+    {
+        Ok(pool) => pool,
+        Err(e) => {
+            error!("Failed to create db pool: {:?}", e);
+            std::process::exit(1);
+        }
+    };
+
     // Dispatch subcommands
     if let Some(Commands::Check) = &args.command {
-        flow_check::flow_check_start();
+        flow_check::flow_check_start(pool);
         std::process::exit(0);
     }
 
     // Run the normal flow (start alerts, ...)
-    flow_run::flow_run_start().await
+    flow_run::flow_run_start(pool).await
 }

@@ -1,23 +1,9 @@
-use crate::{embedded_migrations, server, utils::monitoring::launch_monitoring, CONFIG};
+use crate::{embedded_migrations, server, utils::monitoring::launch_monitoring};
 
-use diesel::{prelude::PgConnection, r2d2::ConnectionManager};
+use sproot::Pool;
 
 /// Will start the program normally (launch alerts, ...)
-pub async fn flow_run_start() -> std::io::Result<()> {
-    // Init the connection to the postgresql
-    let manager = ConnectionManager::<PgConnection>::new(&CONFIG.database_url);
-    // This step might spam for error CONFIG.database_max_connection of times, this is normal.
-    let pool = match r2d2::Pool::builder()
-        .max_size(CONFIG.database_max_connection)
-        .min_idle(Some((10 * CONFIG.database_max_connection) / 100))
-        .build(manager)
-    {
-        Ok(pool) => pool,
-        Err(e) => {
-            error!("Failed to create db pool: {:?}", e);
-            std::process::exit(1);
-        }
-    };
+pub async fn flow_run_start(pool: Pool) -> std::io::Result<()> {
     // Get a connection from the R2D2 pool
     let pooled_conn = match pool.get() {
         Ok(pooled) => pooled,

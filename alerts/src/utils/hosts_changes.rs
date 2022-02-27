@@ -1,8 +1,9 @@
-use super::CdcChange;
 use crate::{
     utils::{alerts::start_alert_task, CdcKind},
     ALERTS_CONFIG, ALERTS_CURR_ID, ALERTS_LIST, CONFIG, RUNNING_ALERT,
 };
+
+use super::CdcChange;
 
 use futures_util::StreamExt;
 use sproot::{

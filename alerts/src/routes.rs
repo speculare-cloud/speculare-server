@@ -1,6 +1,4 @@
-use crate::CONFIG;
-
-use super::api;
+use super::{api, CONFIG};
 
 use actix_web::{guard, web};
 

@@ -1,3 +1,5 @@
+use crate::utils::DISALLOWED_STATEMENT;
+
 use super::{pct, AbsDTORaw, PctDTORaw, QueryType};
 
 use diesel::{sql_types::Text, *};
@@ -130,6 +132,23 @@ pub fn construct_query(alert: &Alerts) -> Result<(String, QueryType), AppError> 
     let query = format!("SELECT time_bucket('{0}', created_at) as time, {1} FROM {2} WHERE host_uuid=$1 AND created_at > now() at time zone 'utc' - INTERVAL '{0}' {3} GROUP BY time ORDER BY time DESC", req_time, pg_select, alert.table, pg_where);
 
     trace!("Query[{:?}] is {}", req_mode, &query);
+
+    // Assert that we don't have any malicious statement in the query
+    // by changing it to uppercase and checking against our list of banned statement.
+    let tmp_query = query.to_uppercase();
+    for statement in DISALLOWED_STATEMENT {
+        if tmp_query.contains(statement) {
+            return Err(AppError {
+                message: Some(format!(
+                    "Alert {} for host_uuid {:.6} contains disallowed statement \"{}\"",
+                    alert.name, alert.host_uuid, statement
+                )),
+                cause: None,
+                error_type: AppErrorType::ServerError,
+            });
+        }
+    }
+
     Ok((query, req_mode))
 }
 

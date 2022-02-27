@@ -26,18 +26,6 @@ pub fn start_alert_task(alert: Alerts, pool: Pool) {
                 std::process::exit(1);
             }
         };
-        // Assert that we don't have any malicious statement in the query
-        // by changing it to uppercase and checking against our list of banned statement.
-        let tmp_query = query.to_uppercase();
-        for statement in super::DISALLOWED_STATEMENT {
-            if tmp_query.contains(statement) {
-                error!(
-                    "Alert {} for host_uuid {:.6} contains disallowed statement \"{}\"",
-                    alert.name, alert.host_uuid, statement
-                );
-                std::process::exit(1);
-            }
-        }
 
         // Start the real "forever" loop
         loop {

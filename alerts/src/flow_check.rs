@@ -1,8 +1,5 @@
 use crate::{
-    utils::{
-        analysis::execute_analysis, monitoring::alerts_from_config, query::construct_query,
-        DISALLOWED_STATEMENT,
-    },
+    utils::{analysis::execute_analysis, monitoring::alerts_from_config, query::construct_query},
     ALERTS_CONFIG, CONFIG,
 };
 
@@ -38,7 +35,7 @@ pub fn flow_check_start(pool: Pool) {
         }
     };
 
-    // Dry run of the alerts
+    // Dry run for the alerts and exit in case of error
     for alert in alerts {
         let (query, qtype) = match construct_query(&alert) {
             Ok((query, qtype)) => (query, qtype),
@@ -50,19 +47,6 @@ pub fn flow_check_start(pool: Pool) {
                 std::process::exit(1);
             }
         };
-
-        // Assert that we don't have any malicious statement in the query
-        // by changing it to uppercase and checking against our list of banned statement.
-        let tmp_query = query.to_uppercase();
-        for statement in DISALLOWED_STATEMENT {
-            if tmp_query.contains(statement) {
-                error!(
-                    "Alert {} for host_uuid {:.6} contains disallowed statement \"{}\"",
-                    alert.name, alert.host_uuid, statement
-                );
-                std::process::exit(1);
-            }
-        }
 
         execute_analysis(&query, &alert, &qtype, &pool.get().unwrap());
     }

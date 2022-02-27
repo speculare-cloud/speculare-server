@@ -48,7 +48,7 @@ pub fn execute_analysis(query: &str, alert: &Alerts, qtype: &QueryType, conn: &C
         );
         std::process::exit(1);
     });
-    trace!("> Should warn/crit {:?}, {:?}", should_warn, should_crit);
+    trace!("> Should warn/crit {}, {}", should_warn, should_crit);
 
     // Check if an active incident already exist for this alarm.
     let prev_incident: Option<Incidents> =
@@ -57,7 +57,7 @@ pub fn execute_analysis(query: &str, alert: &Alerts, qtype: &QueryType, conn: &C
             Err(e) => {
                 if e != diesel::result::Error::NotFound {
                     error!(
-                        "alert {} for host_uuid {:.6} checking previous exists failed: {:?}",
+                        "alert {} for host_uuid {:.6} checking previous exists failed: {}",
                         alert.name, alert.host_uuid, e
                     );
                 }

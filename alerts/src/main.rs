@@ -5,6 +5,8 @@ extern crate log;
 #[macro_use]
 extern crate sproot;
 
+use crate::utils::config::Config;
+
 use ahash::AHashMap;
 use clap::{Parser, Subcommand};
 use clap_verbosity_flag::InfoLevel;
@@ -13,8 +15,6 @@ use sproot::models::{Alerts, AlertsConfig};
 use sproot::prog;
 use std::sync::RwLock;
 use std::sync::{atomic::AtomicUsize, Arc};
-
-use crate::utils::config::Config;
 
 mod api;
 mod flow_check;
@@ -42,11 +42,11 @@ enum Commands {
 }
 
 lazy_static::lazy_static! {
-    // Lazy static of the Config which is loaded from Alerts.toml
+    // Lazy static of the Config which is loaded from the config file
     static ref CONFIG: Config = match Config::new() {
         Ok(config) => config,
         Err(e) => {
-            error!("Cannot build the Config: {:?}", e);
+            error!("Cannot build the Config: {}", e);
             std::process::exit(1);
         }
     };
@@ -72,7 +72,7 @@ async fn main() -> std::io::Result<()> {
     // Init logger
     env_logger::Builder::new()
         .filter_module(
-            &prog().unwrap_or_else(|| "alerts".to_owned()),
+            &prog().unwrap_or_else(|| "speculare-alerts".to_owned()),
             args.verbose.log_level_filter(),
         )
         .init();
@@ -87,7 +87,7 @@ async fn main() -> std::io::Result<()> {
     {
         Ok(pool) => pool,
         Err(e) => {
-            error!("Failed to create db pool: {:?}", e);
+            error!("Failed to create db pool: {}", e);
             std::process::exit(1);
         }
     };

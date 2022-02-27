@@ -14,7 +14,7 @@ pub async fn flow_run_start() -> std::io::Result<()> {
     {
         Ok(pool) => pool,
         Err(e) => {
-            error!("Failed to create db pool: {:?}", e);
+            error!("Failed to create db pool: {}", e);
             std::process::exit(1);
         }
     };
@@ -31,7 +31,7 @@ pub async fn flow_run_start() -> std::io::Result<()> {
     };
     // Apply the migrations to the database
     if let Err(e) = embedded_migrations::run(&pooled_conn) {
-        error!("Cannot apply the migrations: {:?}", e);
+        error!("Cannot apply the migrations: {}", e);
         std::process::exit(1);
     }
     // Continue the initialization of the actix web server

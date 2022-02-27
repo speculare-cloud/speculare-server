@@ -15,7 +15,7 @@ lazy_static::lazy_static! {
         match Regex::new(r"(\d+)([a-zA-Z' '])|([m,h,d,minutes,hours,days,minute,hour,day])") {
             Ok(reg) => reg,
             Err(e) => {
-                error!("Cannot build the Regex to validate INTERVAL: {:?}", e);
+                error!("Cannot build the Regex to validate INTERVAL: {}", e);
                 std::process::exit(1);
             }
         }

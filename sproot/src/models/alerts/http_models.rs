@@ -82,7 +82,7 @@ impl AlertsConfig {
         for entry in WalkDir::new(&path).min_depth(1).max_depth(2) {
             // Detect if the WalkDir failed to read the folder (permissions/...)
             if entry.is_err() {
-                error!("Cannot read the entry due to: {:?}", entry.err());
+                error!("Cannot read the entry due to: {}", entry.unwrap_err());
                 return Err(());
             }
             let entry = entry.unwrap();
@@ -123,9 +123,9 @@ impl AlertsConfig {
             let content = std::fs::read_to_string(entry.path());
             if content.is_err() {
                 error!(
-                    "Cannot read {:?}: {:?}",
+                    "Cannot read {:?}: {}",
                     entry.path().file_name(),
-                    content.err()
+                    content.unwrap_err()
                 );
                 return Err(());
             }
@@ -134,9 +134,9 @@ impl AlertsConfig {
             let alert_config = simd_json::from_str::<AlertsConfig>(&mut content.unwrap());
             if alert_config.is_err() {
                 error!(
-                    "Cannot convert {:?} to AlertsConfig: {:?}",
+                    "Cannot convert {:?} to AlertsConfig: {}",
                     entry.path().file_name(),
-                    alert_config.err()
+                    alert_config.unwrap_err()
                 );
                 return Err(());
             }

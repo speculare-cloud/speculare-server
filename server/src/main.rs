@@ -29,11 +29,11 @@ struct Args {
 
 // Lazy static of the Token from Config to use in validator
 lazy_static::lazy_static! {
-    // Lazy static of the Config which is loaded from Alerts.toml
+    // Lazy static of the Config which is loaded from the config file
     static ref CONFIG: Config = match Config::new() {
         Ok(config) => config,
         Err(e) => {
-            error!("Cannot build the Config: {:?}", e);
+            error!("Cannot build the Config: {}", e);
             std::process::exit(1);
         }
     };
@@ -49,7 +49,7 @@ async fn main() -> std::io::Result<()> {
     // Init logger
     env_logger::Builder::new()
         .filter_module(
-            &prog().unwrap_or_else(|| "alerts".to_owned()),
+            &prog().unwrap_or_else(|| "speculare-server".to_owned()),
             args.verbose.log_level_filter(),
         )
         .init();

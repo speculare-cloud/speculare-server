@@ -9,7 +9,7 @@ pub async fn flow_run_start(pool: Pool) -> std::io::Result<()> {
         Ok(pooled) => pooled,
         Err(e) => {
             error!(
-                "Cannot get a connection from the pool to apply migrations: {:?}",
+                "Cannot get a connection from the pool to apply migrations: {}",
                 e
             );
             std::process::exit(1);
@@ -17,7 +17,7 @@ pub async fn flow_run_start(pool: Pool) -> std::io::Result<()> {
     };
     // Apply the migrations to the database
     if let Err(e) = embedded_migrations::run(&pooled_conn) {
-        error!("Cannot apply the migrations: {:?}", e);
+        error!("Cannot apply the migrations: {}", e);
         std::process::exit(1);
     }
     // Launch the monitoring of each alarms

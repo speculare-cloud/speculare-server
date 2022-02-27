@@ -20,7 +20,7 @@ pub fn start_alert_task(alert: Alerts, pool: Pool) {
             Ok((query, qtype)) => (query, qtype),
             Err(e) => {
                 error!(
-                    "Alert {} for host_uuid {:.6} cannot build the query: {:?}",
+                    "Alert {} for host_uuid {:.6} cannot build the query: {}",
                     alert.name, alert.host_uuid, e
                 );
                 std::process::exit(1);

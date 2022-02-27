@@ -78,7 +78,7 @@ fn send_mail(incident: &Incidents, template: String) {
             "Email for alert {} with host {:.6} sent successfully!",
             incident.alerts_name, incident.host_uuid
         ),
-        Err(e) => error!("Could not send email: {:?}", e),
+        Err(e) => error!("Could not send email: {}", e),
     }
 }
 

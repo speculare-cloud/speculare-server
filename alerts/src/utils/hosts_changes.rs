@@ -43,7 +43,7 @@ pub fn listen_hosts_changes(pool: Pool) {
         // While we have some message, read them and wait for the next one
         while let Some(msg) = ws_stream.next().await {
             match msg {
-                Err(err) => error!("WebSocket: message is an error: {:?}", err),
+                Err(err) => error!("WebSocket: message is an error: {}", err),
                 Ok(msg) if msg.is_text() => {
                     // Convert msg into String
                     let mut msg = msg.into_text().expect("Cannot convert message to text");

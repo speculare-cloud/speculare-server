@@ -49,7 +49,7 @@ async fn main() -> std::io::Result<()> {
     // Init logger
     env_logger::Builder::new()
         .filter_module(
-            &prog().unwrap_or_else(|| "speculare-server".to_owned()),
+            &prog().map_or_else(|| "speculare_server".to_owned(), |f| f.replace('-', "_")),
             args.verbose.log_level_filter(),
         )
         .init();

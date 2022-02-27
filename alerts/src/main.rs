@@ -72,7 +72,7 @@ async fn main() -> std::io::Result<()> {
     // Init logger
     env_logger::Builder::new()
         .filter_module(
-            &prog().unwrap_or_else(|| "speculare-alerts".to_owned()),
+            &prog().map_or_else(|| "speculare_alerts".to_owned(), |f| f.replace('-', "_")),
             args.verbose.log_level_filter(),
         )
         .init();

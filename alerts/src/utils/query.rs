@@ -176,7 +176,7 @@ pub fn execute_query(
             trace!("result abs is {:?}", &results);
             if results.is_empty() {
                 Err(AppError {
-                    message: None,
+                    message: Some("The result of the query (abs) is empty".into()),
                     cause: None,
                     error_type: AppErrorType::NotFound,
                 })

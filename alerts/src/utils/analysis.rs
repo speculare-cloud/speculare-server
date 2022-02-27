@@ -3,6 +3,7 @@ use super::{query::execute_query, IncidentStatus, QueryType, Severity};
 use chrono::prelude::Utc;
 use evalexpr::*;
 use sproot::{
+    errors::AppErrorType,
     models::{Alerts, Incidents, IncidentsDTO, IncidentsDTOUpdate},
     ConnType,
 };
@@ -20,11 +21,15 @@ pub fn execute_analysis(query: &str, alert: &Alerts, qtype: &QueryType, conn: &C
     let result = match execute_query(query, &alert.host_uuid, qtype, conn) {
         Ok(result) => result,
         Err(e) => {
-            error!(
-                "Analysis: alert {} for host_uuid {:.6} execute_query failed: {}",
-                alert.name, alert.host_uuid, e
-            );
-            std::process::exit(1);
+            if e.error_type == AppErrorType::NotFound {
+                return;
+            } else {
+                error!(
+                    "Analysis: alert {} for host_uuid {:.6} execute_query failed: {}",
+                    alert.name, alert.host_uuid, e
+                );
+                std::process::exit(1);
+            }
         }
     };
     trace!("> Result of the query is {}", &result);

@@ -11,23 +11,36 @@ use sproot::{
 /// - Execute the query and get the result
 /// - Evaluate if we need to trigger an incidents or not
 pub fn execute_analysis(query: &str, alert: &Alerts, qtype: &QueryType, conn: &ConnType) {
-    trace!("Executing {} analysis for {}", alert.name, alert.host_uuid);
+    trace!(
+        "Executing {} analysis for {:.6}",
+        alert.name,
+        alert.host_uuid
+    );
     // Execute the query passed as arguement (this query was build previously)
-    let result = execute_query(query, &alert.host_uuid, qtype, conn);
+    let result = match execute_query(query, &alert.host_uuid, qtype, conn) {
+        Ok(result) => result,
+        Err(e) => {
+            error!(
+                "Analysis: alert {} for host_uuid {:.6} execute_query failed: {}",
+                alert.name, alert.host_uuid, e
+            );
+            std::process::exit(1);
+        }
+    };
     trace!("> Result of the query is {}", &result);
 
     // Determine if we are in a Warn or Crit level of incidents
     let should_warn = eval_boolean(&alert.warn.replace("$this", &result)).unwrap_or_else(|e| {
         error!(
-            "Failed to parse the String to an expression (warn: {}): {}",
-            alert.warn, e
+            "alert {} for host_uuid {:.6} failed to parse the String to an expression (warn: {}): {}",
+            alert.name, alert.host_uuid, alert.warn, e
         );
         std::process::exit(1);
     });
     let should_crit = eval_boolean(&alert.crit.replace("$this", &result)).unwrap_or_else(|e| {
         error!(
-            "Failed to parse the String to an expression (crit: {}): {}",
-            alert.warn, e
+            "alert {} for host_uuid {:.6} failed to parse the String to an expression (crit: {}): {}",
+            alert.name, alert.host_uuid, alert.warn, e
         );
         std::process::exit(1);
     });
@@ -37,11 +50,11 @@ pub fn execute_analysis(query: &str, alert: &Alerts, qtype: &QueryType, conn: &C
     let prev_incident: Option<Incidents> =
         match Incidents::exist_name(conn, &alert.host_uuid, &alert.name) {
             Ok(res) => Some(res),
-            Err(err) => {
-                // If the error if not NofFound, this mean we have something else to care about
-                if err != diesel::result::Error::NotFound {
-                    panic!("prev_incident returned an error that is not NotFound");
-                }
+            Err(e) => {
+                error!(
+                    "alert {} for host_uuid {:.6} checking previous exists failed: {:?}",
+                    alert.name, alert.host_uuid, e
+                );
                 None
             }
         };

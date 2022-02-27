@@ -1,51 +1,99 @@
 use super::{pct, AbsDTORaw, PctDTORaw, QueryType};
 
 use diesel::{sql_types::Text, *};
-use sproot::{models::Alerts, ConnType};
+use regex::Regex;
+use sproot::{
+    errors::{AppError, AppErrorType},
+    models::Alerts,
+    ConnType,
+};
 
-// TODO - Transform this function to non failable (remove .unwrap())
-/// Create the query for the Alert and get the QueryType
-pub fn construct_query(alert: &Alerts) -> (String, QueryType) {
-    // Split the lookup String from the alert for analysis
-    let mut lookup_parts = alert.lookup.split(' ');
-
-    // The type of the query
-    // this is pretty much the aggregation function Postgres is going to use
-    let req_type = if let Some(aggr) = lookup_parts.next() {
-        aggr
-    } else {
-        panic!("Not aggregation function defined");
-    };
-
-    // Determine the mode of the query
-    // The mode is for now, either Pct or Abs
-    let req_mode = if let Some(mode) = lookup_parts.next() {
-        match mode {
-            "pct" => QueryType::Pct,
-            "abs" => QueryType::Abs,
-            _ => panic!("Cannot determine the query mode"),
+lazy_static::lazy_static! {
+    static ref INTERVAL_RGX: Regex = {
+        match Regex::new(r"(\d+)([a-zA-Z' '])|([m,h,d,minutes,hours,days,minute,hour,day])") {
+            Ok(reg) => reg,
+            Err(e) => {
+                error!("Cannot build the Regex to validate INTERVAL: {:?}", e);
+                std::process::exit(1);
+            }
         }
-    } else {
-        panic!("No mode defined in the query")
     };
+}
+
+/// Create the query for the Alert and get the QueryType
+pub fn construct_query(alert: &Alerts) -> Result<(String, QueryType), AppError> {
+    // Split the lookup String from the alert for analysis
+    let lookup_parts: Vec<&str> = alert.lookup.split(' ').collect();
+
+    // Assert that we have enough parameters
+    if lookup_parts.len() < 5 {
+        return Err(AppError {
+            message: Some("query: the lookup query is invalid, define as follow: [aggr] [mode] [timeframe] of [table] {over} {table}".into()),
+            cause: None,
+            error_type: AppErrorType::ServerError
+        });
+    }
+
+    // Determine the mode of the query it's for now, either Pct or Abs
+    let req_mode = match lookup_parts[1] {
+        "pct" => QueryType::Pct,
+        "abs" => QueryType::Abs,
+        _ => {
+            return Err(AppError {
+                message: Some(format!(
+                    "query: mode {} is invalid. Valid are: pct, abs.",
+                    lookup_parts[1]
+                )),
+                cause: None,
+                error_type: AppErrorType::ServerError,
+            });
+        }
+    };
+
+    // If we're in mode Pct, we need more than 5 parts
+    if req_mode == QueryType::Pct && lookup_parts.len() != 7 {
+        return Err(AppError {
+            message: Some(
+                "query: lookup defined as mode pct but missing values, check usage.".into(),
+            ),
+            cause: None,
+            error_type: AppErrorType::ServerError,
+        });
+    }
+
+    // The type of the query this is pretty much the aggregation function Postgres is going to use
+    let req_aggr = lookup_parts[0];
+    // Assert that req_type is correct (avg, sum, min, max, count)
+    if !["avg", "sum", "min", "max", "count"].contains(&req_aggr) {
+        return Err(AppError {
+            message: Some("query: aggr is invalid. Valid are: avg, sum, min, max, count.".into()),
+            cause: None,
+            error_type: AppErrorType::ServerError,
+        });
+    }
 
     // Get the timing of the query, that is the interval range
-    // -> meaning we'll get req_time past datas and get the req_type.
-    let req_time = if let Some(time) = lookup_parts.next() {
-        time
-    } else {
-        panic!("Can't determine the time range");
-    };
+    let req_time = lookup_parts[2];
+    // Assert that req_time is correctly formatted (Regex?)
+    if !INTERVAL_RGX.is_match(req_time) {
+        return Err(AppError {
+            message: Some(
+                "query: req_time is not correctly formatted (doesn't pass regex).".into(),
+            ),
+            cause: None,
+            error_type: AppErrorType::ServerError,
+        });
+    }
 
     // This is the columns we ask for in the first place, this value is mandatory
-    let req_one = lookup_parts.nth(1);
+    let req_one = lookup_parts[4];
 
     // Construct the SELECT part of the query
     let mut pg_select = String::new();
-    let select_cols = req_one.unwrap().split(',');
+    let select_cols = req_one.split(',');
     for col in select_cols {
         // We're casting everything to float8 to handle pretty much any type we need
-        pg_select.push_str(&format!("{}({})::float8 + ", req_type, col));
+        pg_select.push_str(&format!("{}({})::float8 + ", req_aggr, col));
     }
     // Remove the last " + "
     pg_select.drain(pg_select.len() - 3..pg_select.len());
@@ -54,12 +102,12 @@ pub fn construct_query(alert: &Alerts) -> (String, QueryType) {
         // For pct we need to define numerator and divisor.
         QueryType::Pct => {
             // req_two only exists if req_mode == Pct
-            let req_two = lookup_parts.nth(1);
+            let req_two = lookup_parts[6];
 
             pg_select.push_str(" as numerator, ");
-            let select_cols = req_two.unwrap().split(',');
+            let select_cols = req_two.split(',');
             for col in select_cols {
-                pg_select.push_str(&format!("{}({})::float8 + ", req_type, col));
+                pg_select.push_str(&format!("{}({})::float8 + ", req_aggr, col));
             }
             pg_select.drain(pg_select.len() - 3..pg_select.len());
             pg_select.push_str(" as divisor");
@@ -82,31 +130,40 @@ pub fn construct_query(alert: &Alerts) -> (String, QueryType) {
     let query = format!("SELECT time_bucket('{0}', created_at) as time, {1} FROM {2} WHERE host_uuid=$1 AND created_at > now() at time zone 'utc' - INTERVAL '{0}' {3} GROUP BY time ORDER BY time DESC", req_time, pg_select, alert.table, pg_where);
 
     trace!("Query[{:?}] is {}", req_mode, &query);
-    (query, req_mode)
+    Ok((query, req_mode))
 }
 
 /// This function execute the query based on the QueryType,
 /// because all type does not wait for the same result.
-pub fn execute_query(query: &str, host_uuid: &str, qtype: &QueryType, conn: &ConnType) -> String {
+pub fn execute_query(
+    query: &str,
+    host_uuid: &str,
+    qtype: &QueryType,
+    conn: &ConnType,
+) -> Result<String, AppError> {
     // Based on the type we decide which way to go
-    // Each type has their own return structure and convertion method (from struct to String).
+    // Each type has their own return structure and conversion method (from struct to String).
     match qtype {
         QueryType::Pct => {
             let results = sql_query(query)
                 .bind::<Text, _>(host_uuid)
-                .load::<PctDTORaw>(conn);
-            trace!("result pct is {:?}", &results);
-            let results = results.unwrap();
-            pct::compute_pct(&results).to_string()
+                .load::<PctDTORaw>(conn)?;
+            Ok(pct::compute_pct(&results).to_string())
         }
         QueryType::Abs => {
             let results = sql_query(query)
                 .bind::<Text, _>(host_uuid)
-                .load::<AbsDTORaw>(conn);
+                .load::<AbsDTORaw>(conn)?;
             trace!("result abs is {:?}", &results);
-            let results = results.unwrap();
-            assert!(!results.is_empty());
-            results[0].value.to_string()
+            if results.is_empty() {
+                Err(AppError {
+                    message: None,
+                    cause: None,
+                    error_type: AppErrorType::NotFound,
+                })
+            } else {
+                Ok(results[0].value.to_string())
+            }
         }
     }
 }

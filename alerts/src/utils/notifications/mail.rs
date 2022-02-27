@@ -75,7 +75,7 @@ fn send_mail(incident: &Incidents, template: String) {
     // Send the email
     match MAILER.send(&email) {
         Ok(_) => info!(
-            "Email for alert {} with host {} sent successfully!",
+            "Email for alert {} with host {:.6} sent successfully!",
             incident.alerts_name, incident.host_uuid
         ),
         Err(e) => error!("Could not send email: {:?}", e),

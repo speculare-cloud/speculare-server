@@ -15,17 +15,26 @@ pub fn start_alert_task(alert: Alerts, pool: Pool) {
         // Construct the interval corresponding to this alert
         let mut interval = tokio::time::interval(Duration::from_secs(alert.timing as u64));
         // Construct the query and get the type of query we have
-        let (query, qtype) = construct_query(&alert);
+        let (query, qtype) = match construct_query(&alert) {
+            Ok((query, qtype)) => (query, qtype),
+            Err(e) => {
+                error!(
+                    "Alert {} for host_uuid {:.6} cannot build the query: {:?}",
+                    alert.name, alert.host_uuid, e
+                );
+                std::process::exit(1);
+            }
+        };
         // Assert that we don't have any malicious statement in the query
         // by changing it to uppercase and checking against our list of banned statement.
         let tmp_query = query.to_uppercase();
         for statement in super::DISALLOWED_STATEMENT {
             if tmp_query.contains(statement) {
                 error!(
-                    "Alerts[{}] contains disallowed statement \"{}\"",
-                    alert_id, statement
+                    "Alert {} for host_uuid {:.6} contains disallowed statement \"{}\"",
+                    alert.name, alert.host_uuid, statement
                 );
-                return;
+                std::process::exit(1);
             }
         }
 
@@ -34,8 +43,9 @@ pub fn start_alert_task(alert: Alerts, pool: Pool) {
             // Wait for the next tick of our interval
             interval.tick().await;
             trace!(
-                "Alert[{}] running every {:?}",
+                "Alert {} for host_uuid {:.6} running every {:?}",
                 alert.name,
+                alert.host_uuid,
                 interval.period()
             );
             // Execute the query and the analysis

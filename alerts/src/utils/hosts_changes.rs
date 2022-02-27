@@ -66,7 +66,7 @@ pub fn listen_hosts_changes(pool: Pool) {
 
                     match data.kind {
                         CdcKind::Delete => {
-                            info!("Websocket: running CdcKind::Delete for {}", host_uuid);
+                            info!("Websocket: running CdcKind::Delete for {:.6}", host_uuid);
                             // Get the alerts IDs for this hosts (if any)
                             // The READ lock will be held for the whole scope
                             let alerts_list = &*ALERTS_LIST.read().unwrap();
@@ -88,7 +88,7 @@ pub fn listen_hosts_changes(pool: Pool) {
                             // TODO - Might want to delete the matched from ALERTS_LIST
                         }
                         CdcKind::Insert => {
-                            info!("Websocket: running CdcKind::Insert for {}", host_uuid);
+                            info!("Websocket: running CdcKind::Insert for {:.6}", host_uuid);
                             // Get the ALERTS_CONFIG (read) and filter those with ALL or SPECIFIC(host_uuid);
                             // The READ lock will be held for the whole scope
                             let alerts_config = &*ALERTS_CONFIG.read().unwrap();

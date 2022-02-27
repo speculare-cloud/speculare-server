@@ -9,6 +9,7 @@ use serde::{de, Deserialize, Deserializer};
 
 pub struct Config {
     // WHERE ARE THE ALERTSCONFIG
+    #[serde(default = "default_alert_path")]
     pub alerts_path: String,
 
     // POSTGRESQL DB CONFIGS
@@ -50,6 +51,10 @@ impl Config {
 
         config_builder.build()?.try_deserialize()
     }
+}
+
+fn default_alert_path() -> String {
+    String::from("/etc/speculare/alerts-configs")
 }
 
 fn default_https() -> bool {

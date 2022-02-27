@@ -2,47 +2,40 @@
 extern crate diesel_migrations;
 #[macro_use]
 extern crate log;
+#[macro_use]
+extern crate sproot;
 
-use std::process::exit;
+use clap::Parser;
+use clap_verbosity_flag::InfoLevel;
+use sproot::prog;
 
-use config::{Config, ConfigError};
-use diesel::{prelude::PgConnection, r2d2::ConnectionManager};
+use crate::utils::config::Config;
 
 mod api;
+mod flow_run;
 mod routes;
 mod server;
+mod utils;
 
-lazy_static::lazy_static! {
-    static ref CONFIG: Config = {
-        // Get arguments
-        let args: Vec<String> = std::env::args().collect();
+#[derive(Parser, Debug)]
+#[clap(author, version, about)]
+struct Args {
+    #[clap(short = 'c', long = "config")]
+    config_path: Option<String>,
 
-        // Verify if we have the correct number of arguments
-        if args.len() != 2 {
-            println!(
-                "speculare-server: too {} arguments: missing a \"path/to/Config.toml\"",
-                if args.len() > 2 { "many" } else { "few" }
-            );
-            exit(1);
-        }
-
-        let config_builder = Config::builder()
-            .add_source(config::File::with_name(&args[1]));
-
-        match config_builder.build() {
-            Ok(conf) => conf,
-            Err(e) => {
-                error!("Cannot build the config: {}", e);
-                exit(1);
-            }
-        }
-    };
+    #[clap(flatten)]
+    verbose: clap_verbosity_flag::Verbosity<InfoLevel>,
 }
 
 // Lazy static of the Token from Config to use in validator
 lazy_static::lazy_static! {
-    static ref TOKEN: Result<String, ConfigError> = {
-        CONFIG.get_string("API_TOKEN")
+    // Lazy static of the Config which is loaded from Alerts.toml
+    static ref CONFIG: Config = match Config::new() {
+        Ok(config) => config,
+        Err(e) => {
+            error!("Cannot build the Config: {:?}", e);
+            std::process::exit(1);
+        }
     };
 }
 
@@ -51,36 +44,15 @@ embed_migrations!();
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    // Init the logger and set the debug level correctly
-    sproot::configure_logger(
-        CONFIG
-            .get_string("RUST_LOG")
-            .unwrap_or_else(|_| "error,actix_server=info,actix_web=error".into()),
-    );
-    // Init the connection to the postgresql
-    let database_url = CONFIG
-        .get_string("DATABASE_URL")
-        .expect("DATABASE_URL must be set");
-    let manager = ConnectionManager::<PgConnection>::new(database_url);
-    // Get the max number of connection to open
-    // No fear to parse it to u32 and unwrap, if not a correct value crash is ok
-    let max_db_connection = CONFIG.get::<u32>("DATABASE_MAX_CONNECTION").unwrap_or(10);
-    // Create a pool of connection
-    // This step might spam for error max_db_connection of times, this is normal.
-    let pool = r2d2::Pool::builder()
-        .max_size(max_db_connection)
-        .min_idle(Some((10 * max_db_connection) / 100))
-        .build(manager)
-        .expect("Failed to create pool");
-    // Apply the migrations to the database
-    // It's safe to unwrap as if there is an error at this step, we don't continue running the app
-    embedded_migrations::run(
-        &pool
-            .get()
-            .expect("Cannot get a connection from the pool for the migrations."),
-    )
-    .unwrap();
-    // Continue the initialization of the actix web server
-    // And wait indefinietly for it <3
-    server::server(pool).await
+    let args = Args::parse();
+
+    // Init logger
+    env_logger::Builder::new()
+        .filter_module(
+            &prog().unwrap_or_else(|| "alerts".to_owned()),
+            args.verbose.log_level_filter(),
+        )
+        .init();
+
+    flow_run::flow_run_start().await
 }

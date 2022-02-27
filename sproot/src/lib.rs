@@ -13,21 +13,37 @@ use diesel::{prelude::PgConnection, r2d2::ConnectionManager};
 use rustls::{Certificate, PrivateKey, ServerConfig};
 use std::fs::File;
 use std::io::BufReader;
+use std::{ffi::OsStr, path::Path};
 
 // Helper types for less boilerplate code
 pub type Pool = r2d2::Pool<ConnectionManager<PgConnection>>;
 pub type ConnType = r2d2::PooledConnection<ConnectionManager<PgConnection>>;
 
-/// Configure the logger level for any binary calling it
-pub fn configure_logger(level: String) {
-    // Check if the RUST_LOG already exist in the sys
-    if std::env::var_os("RUST_LOG").is_none() {
-        // if it doesn't, assign a default value to RUST_LOG
-        // Define RUST_LOG as trace for debug and error for prod
-        std::env::set_var("RUST_LOG", level);
-    }
-    // Init the logger
-    env_logger::init();
+/// Evaluate an Enum into the value it hold
+#[macro_export]
+macro_rules! field_isset {
+    ($value:expr, $name:literal) => {
+        match $value {
+            Some(x) => x,
+            None => {
+                error!(
+                    "Config: optional field {} is not defined but is needed.",
+                    $name
+                );
+                std::process::exit(1);
+            }
+        }
+    };
+}
+
+pub fn prog() -> Option<String> {
+    std::env::args()
+        .next()
+        .as_ref()
+        .map(Path::new)
+        .and_then(Path::file_name)
+        .and_then(OsStr::to_str)
+        .map(String::from)
 }
 
 /// Return the ServerConfig needed for Actix to be binded on HTTPS

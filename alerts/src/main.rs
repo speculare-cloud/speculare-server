@@ -2,13 +2,16 @@
 extern crate diesel_migrations;
 #[macro_use]
 extern crate log;
+#[macro_use]
+extern crate sproot;
 
 use ahash::AHashMap;
 use clap::{Parser, Subcommand};
 use clap_verbosity_flag::InfoLevel;
 use sproot::models::{Alerts, AlertsConfig};
+use sproot::prog;
+use std::sync::RwLock;
 use std::sync::{atomic::AtomicUsize, Arc};
-use std::{process::exit, sync::RwLock};
 
 use crate::utils::config::Config;
 
@@ -37,30 +40,13 @@ enum Commands {
     Check,
 }
 
-/// Evaluate an Enum into the value it hold
-#[macro_export]
-macro_rules! field_isset {
-    ($value:expr, $name:literal) => {
-        match $value {
-            Some(x) => x,
-            None => {
-                error!(
-                    "Config: optional field {} is not defined but is needed.",
-                    $name
-                );
-                std::process::exit(1);
-            }
-        }
-    };
-}
-
 lazy_static::lazy_static! {
     // Lazy static of the Config which is loaded from Alerts.toml
     static ref CONFIG: Config = match Config::new() {
         Ok(config) => config,
         Err(e) => {
             error!("Cannot build the Config: {:?}", e);
-            exit(1);
+            std::process::exit(1);
         }
     };
 
@@ -84,14 +70,18 @@ async fn main() -> std::io::Result<()> {
 
     // Init logger
     env_logger::Builder::new()
-        .filter_module("alerts", args.verbose.log_level_filter())
+        .filter_module(
+            &prog().unwrap_or_else(|| "alerts".to_owned()),
+            args.verbose.log_level_filter(),
+        )
         .init();
 
     // Dispatch subcommands
     if let Some(Commands::Check) = &args.command {
         flow_check::flow_check_start();
-        exit(0);
+        std::process::exit(0);
     }
+
     // Run the normal flow (start alerts, ...)
     flow_run::flow_run_start().await
 }

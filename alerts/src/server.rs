@@ -1,5 +1,3 @@
-use crate::field_isset;
-
 use super::routes;
 use super::CONFIG;
 
@@ -24,7 +22,7 @@ pub async fn server(pool: Pool) -> std::io::Result<()> {
     // Bind the server (https or no)
     if !CONFIG.https {
         if !cfg!(debug_assertions) {
-            warn!("You're starting speculare-server as HTTP on a production build, are you sure about what you're doing ?")
+            warn!("You're starting speculare-alerts as HTTP on a production build, are you sure about what you're doing ?")
         } else {
             info!("Server started as HTTP on {}", &CONFIG.binding);
         }

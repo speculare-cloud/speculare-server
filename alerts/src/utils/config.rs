@@ -22,6 +22,7 @@ pub struct Config {
     pub https: bool,
     pub key_priv: Option<String>,
     pub key_cert: Option<String>,
+    #[serde(default = "default_binding")]
     pub binding: String,
     pub api_token: String,
 
@@ -59,6 +60,10 @@ fn default_alert_path() -> String {
 
 fn default_https() -> bool {
     false
+}
+
+fn default_binding() -> String {
+    String::from("0.0.0.0:8080")
 }
 
 fn default_maxconn() -> u32 {

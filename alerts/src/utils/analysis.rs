@@ -12,10 +12,9 @@ use sproot::{
 /// - Execute the query and get the result
 /// - Evaluate if we need to trigger an incidents or not
 pub fn execute_analysis(query: &str, alert: &Alerts, qtype: &QueryType, conn: &ConnType) {
-    trace!(
+    info!(
         "Executing {} analysis for {:.6}",
-        alert.name,
-        alert.host_uuid
+        alert.name, alert.host_uuid
     );
     // Execute the query passed as arguement (this query was build previously)
     let result = match execute_query(query, &alert.host_uuid, qtype, conn) {

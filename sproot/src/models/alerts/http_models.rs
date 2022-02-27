@@ -75,14 +75,15 @@ pub struct AlertsConfig {
 
 impl AlertsConfig {
     /// Construct AlertsConfig Vec from the path of configs's folder & sub
-    pub fn from_configs_path(path: &str) -> Vec<AlertsConfig> {
+    #[allow(clippy::result_unit_err)]
+    pub fn from_configs_path(path: &str) -> Result<Vec<AlertsConfig>, ()> {
         let mut alerts: Vec<AlertsConfig> = Vec::new();
 
         for entry in WalkDir::new(&path).min_depth(1).max_depth(2) {
             // Detect if the WalkDir failed to read the folder (permissions/...)
             if entry.is_err() {
                 error!("Cannot read the entry due to: {:?}", entry.err());
-                continue;
+                return Err(());
             }
             let entry = entry.unwrap();
 
@@ -101,15 +102,15 @@ impl AlertsConfig {
                         HostTargeted::SPECIFIC(targeted_str.to_owned())
                     } else {
                         error!("Cannot get the targeted_str, OsStr to Str is None");
-                        continue;
+                        return Err(());
                     }
                 } else {
                     error!("Cannot get the parent_name, parent_entry filename is None");
-                    continue;
+                    return Err(());
                 }
             } else {
                 error!("Cannot get the parent_entry directory name, returned None");
-                continue;
+                return Err(());
             };
 
             trace!(
@@ -126,7 +127,7 @@ impl AlertsConfig {
                     entry.path().file_name(),
                     content.err()
                 );
-                continue;
+                return Err(());
             }
 
             // Deserialize the string's config into the struct of AlertsConfig
@@ -137,7 +138,7 @@ impl AlertsConfig {
                     entry.path().file_name(),
                     alert_config.err()
                 );
-                continue;
+                return Err(());
             }
             let mut alert_config = alert_config.unwrap();
             alert_config.host_targeted = Some(host_targeted);
@@ -146,6 +147,6 @@ impl AlertsConfig {
             alerts.push(alert_config);
         }
 
-        alerts
+        Ok(alerts)
     }
 }

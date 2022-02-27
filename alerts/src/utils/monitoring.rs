@@ -75,7 +75,7 @@ fn launch_alert_task(alert: Alerts, pool: Pool) {
 }
 
 /// Construct the AlertsConfig that will be launched
-fn get_alerts_config() -> Vec<AlertsConfig> {
+fn get_alerts_config() -> Result<Vec<AlertsConfig>, ()> {
     let path = CONFIG
         .get_string("ALERTS_PATH")
         .expect("No ALERTS_PATH defined.");
@@ -183,7 +183,10 @@ fn launch_websocket(pool: Pool) {
 /// Start the monitoring tasks for each alarms
 pub fn launch_monitoring(pool: Pool) -> Result<(), AppError> {
     // Get the AlertsConfig from the ALERTS_PATH folder
-    let alerts_config: Vec<AlertsConfig> = get_alerts_config();
+    let alerts_config: Vec<AlertsConfig> = match get_alerts_config() {
+        Ok(alerts) => alerts,
+        Err(_) => std::process::exit(1),
+    };
     // New scope: Drop the lock as soon as it's not needed anymore
     {
         // Move the local alerts_config Vec to the global ALERTS_CONFIG

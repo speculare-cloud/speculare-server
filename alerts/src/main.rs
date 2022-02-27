@@ -14,7 +14,7 @@ use sproot::models::{Alerts, AlertsConfig};
 use std::sync::{atomic::AtomicUsize, Arc};
 use std::{process::exit, sync::RwLock};
 
-use utils::monitoring::launch_monitoring;
+use utils::{check::check_alerts_syntax, monitoring::launch_monitoring};
 
 mod api;
 mod routes;
@@ -39,11 +39,8 @@ lazy_static::lazy_static! {
         let args: Vec<String> = std::env::args().collect();
 
         // Verify if we have the correct number of arguments
-        if args.len() != 2 {
-            println!(
-                "speculare-alerts: too {} arguments: missing a \"path/to/Config.toml\"",
-                if args.len() > 2 { "many" } else { "few" }
-            );
+        if args.len() < 2 {
+            println!("speculare-alerts: too few arguments: missing a \"path/to/Config.toml\"");
             exit(1);
         }
 
@@ -100,12 +97,22 @@ embed_migrations!();
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    // Get arguments
+    let args: Vec<String> = std::env::args().collect();
+    // Verify if we have the correct number of arguments
+    if args.len() == 3 && args[2] == "check" {
+        sproot::configure_logger("trace".to_owned());
+        check_alerts_syntax();
+        exit(0);
+    }
+
     // Init the logger and set the debug level correctly
     sproot::configure_logger(
         CONFIG
             .get_string("RUST_LOG")
             .unwrap_or_else(|_| "error,actix_server=info,actix_web=error".into()),
     );
+
     // Init the connection to the postgresql
     let database_url = CONFIG
         .get_string("DATABASE_URL")

@@ -11,6 +11,7 @@ mod notifications;
 pub use notifications::*;
 
 pub mod analysis;
+pub mod check;
 pub mod monitoring;
 pub mod query;
 

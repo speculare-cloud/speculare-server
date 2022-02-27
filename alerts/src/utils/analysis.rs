@@ -51,10 +51,12 @@ pub fn execute_analysis(query: &str, alert: &Alerts, qtype: &QueryType, conn: &C
         match Incidents::exist_name(conn, &alert.host_uuid, &alert.name) {
             Ok(res) => Some(res),
             Err(e) => {
-                error!(
-                    "alert {} for host_uuid {:.6} checking previous exists failed: {:?}",
-                    alert.name, alert.host_uuid, e
-                );
+                if e != diesel::result::Error::NotFound {
+                    error!(
+                        "alert {} for host_uuid {:.6} checking previous exists failed: {:?}",
+                        alert.name, alert.host_uuid, e
+                    );
+                }
                 None
             }
         };

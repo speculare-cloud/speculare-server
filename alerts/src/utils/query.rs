@@ -3,6 +3,7 @@ use super::{pct, AbsDTORaw, PctDTORaw, QueryType};
 use diesel::{sql_types::Text, *};
 use sproot::{models::Alerts, ConnType};
 
+// TODO - Transform this function to non failable (remove .unwrap())
 /// Create the query for the Alert and get the QueryType
 pub fn construct_query(alert: &Alerts) -> (String, QueryType) {
     // Split the lookup String from the alert for analysis
@@ -72,10 +73,10 @@ pub fn construct_query(alert: &Alerts) -> (String, QueryType) {
     // Optional where clause
     // Allow us to add a WHERE condition to the query if needed
     let mut pg_where = String::new();
-    if alert.where_clause.is_some() {
+    if let Some(where_clause) = alert.where_clause.as_ref() {
         pg_where.push_str(" AND ");
-        pg_where.push_str(alert.where_clause.as_ref().unwrap());
-    };
+        pg_where.push_str(where_clause);
+    }
 
     // Base of the query, we plug every pieces together here
     let query = format!("SELECT time_bucket('{0}', created_at) as time, {1} FROM {2} WHERE host_uuid=$1 AND created_at > now() at time zone 'utc' - INTERVAL '{0}' {3} GROUP BY time ORDER BY time DESC", req_time, pg_select, alert.table, pg_where);

@@ -1,3 +1,5 @@
+use crate::CONFIG;
+
 use super::api;
 
 use actix_web::{guard, web};
@@ -13,7 +15,7 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
                 // Guarded route by API token
                 .service(
                     web::scope("/guard")
-                        .guard(guard::Header("SPTK", super::TOKEN.as_ref().unwrap()))
+                        .guard(guard::Header("SPTK", &CONFIG.api_token))
                         .route(
                             "/incidents/{id}",
                             web::patch().to(api::incidents::incidents_update),

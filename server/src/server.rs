@@ -36,8 +36,8 @@ pub async fn server(pool: Pool) -> std::io::Result<()> {
         serv.bind_rustls(
             binding,
             sproot::get_ssl_builder(
-                CONFIG.get_string("KEY_PRIV").unwrap(),
-                CONFIG.get_string("KEY_CERT").unwrap(),
+                &CONFIG.get_string("KEY_PRIV").unwrap(),
+                &CONFIG.get_string("KEY_CERT").unwrap(),
             ),
         )?
         .run()

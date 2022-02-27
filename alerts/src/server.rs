@@ -1,3 +1,5 @@
+use crate::field_isset;
+
 use super::routes;
 use super::CONFIG;
 
@@ -19,28 +21,20 @@ pub async fn server(pool: Pool) -> std::io::Result<()> {
             .app_data(actix_web::web::Data::new(pool.clone()))
             .configure(routes::routes)
     });
-    // Bind and run the server on HTTP or HTTPS depending on the mode of compilation.
-    let binding = CONFIG.get_string("BINDING").expect("Missing binding");
-    // Check if we should enable https
-    let https = CONFIG.get_bool("HTTPS");
     // Bind the server (https or no)
-    if https.is_err() || !https.unwrap() {
+    if !CONFIG.https {
         if !cfg!(debug_assertions) {
             warn!("You're starting speculare-server as HTTP on a production build, are you sure about what you're doing ?")
         } else {
-            info!("Server started as HTTP");
+            info!("Server started as HTTP on {}", &CONFIG.binding);
         }
-        serv.bind(binding)?.run().await
+        serv.bind(&CONFIG.binding)?.run().await
     } else {
-        info!("Server started as HTTPS");
-        serv.bind_rustls(
-            binding,
-            sproot::get_ssl_builder(
-                CONFIG.get_string("KEY_PRIV").unwrap(),
-                CONFIG.get_string("KEY_CERT").unwrap(),
-            ),
-        )?
-        .run()
-        .await
+        info!("Server started as HTTPS on {}", &CONFIG.binding);
+        let key_priv = field_isset!(CONFIG.key_priv.as_ref(), "key_priv");
+        let key_cert = field_isset!(CONFIG.key_cert.as_ref(), "key_cert");
+        serv.bind_rustls(&CONFIG.binding, sproot::get_ssl_builder(key_priv, key_cert))?
+            .run()
+            .await
     }
 }

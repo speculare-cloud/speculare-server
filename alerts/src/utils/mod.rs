@@ -10,8 +10,10 @@ pub use qtype::*;
 mod notifications;
 pub use notifications::*;
 
+pub mod alerts;
 pub mod analysis;
-pub mod check;
+pub mod config;
+pub mod hosts_changes;
 pub mod monitoring;
 pub mod query;
 

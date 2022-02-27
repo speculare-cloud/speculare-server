@@ -18,16 +18,18 @@ pub fn execute_analysis(query: &str, alert: &Alerts, qtype: &QueryType, conn: &C
 
     // Determine if we are in a Warn or Crit level of incidents
     let should_warn = eval_boolean(&alert.warn.replace("$this", &result)).unwrap_or_else(|e| {
-        panic!(
+        error!(
             "Failed to parse the String to an expression (warn: {}): {}",
             alert.warn, e
-        )
+        );
+        std::process::exit(1);
     });
     let should_crit = eval_boolean(&alert.crit.replace("$this", &result)).unwrap_or_else(|e| {
-        panic!(
+        error!(
             "Failed to parse the String to an expression (crit: {}): {}",
-            alert.crit, e
-        )
+            alert.warn, e
+        );
+        std::process::exit(1);
     });
     trace!("> Should warn/crit {:?}, {:?}", should_warn, should_crit);
 
@@ -50,7 +52,7 @@ pub fn execute_analysis(query: &str, alert: &Alerts, qtype: &QueryType, conn: &C
         trace!("> We don't need to create an incident");
         // Check if an incident was active
         if let Some(prev_incident) = prev_incident {
-            trace!("> We need to resolve the previous incident however");
+            info!("> We need to resolve the previous incident however");
             let incident_id = prev_incident.id;
             let incident_dto = IncidentsDTOUpdate {
                 status: Some(IncidentStatus::Resolved as i32),
@@ -74,7 +76,7 @@ pub fn execute_analysis(query: &str, alert: &Alerts, qtype: &QueryType, conn: &C
             panic!("should_warn && should_crit are both false, this should never happens.")
         }
     };
-    trace!("> The severity of this one is: {}", severity.to_string());
+    info!("> The severity of this one is: {}", severity.to_string());
 
     // If it exist we create an update in the cases where:
     // - We need to update the severity of the incidents
@@ -92,7 +94,7 @@ pub fn execute_analysis(query: &str, alert: &Alerts, qtype: &QueryType, conn: &C
             let mut should_alert = false;
             let mut incident_severity = None;
             if prev_incident.severity < curr_severity {
-                trace!("> This incident have to be escalated");
+                info!("> This incident have to be escalated");
                 should_alert = true;
                 incident_severity = Some(curr_severity);
             };
@@ -110,7 +112,7 @@ pub fn execute_analysis(query: &str, alert: &Alerts, qtype: &QueryType, conn: &C
             }
         }
         None => {
-            trace!("> Create a new incident based on the current values");
+            info!("> Create a new incident based on the current values");
             // Clone the alert to allow us to own it in the IncidentsDTO
             let calert: Alerts = alert.clone();
             let incident = IncidentsDTO {

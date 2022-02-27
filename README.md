@@ -29,8 +29,6 @@ $ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 $ sudo apt-get install cmake libssl-dev libpq-dev pkg-config build-essential
 ```
 
-- Create both Alerts.toml and Server.toml files based on *.example.toml
-
 > **⚠ WARNING: The TimescaleDB instance you're going to use need to be configured for logical replication, check the [docs](https://docs.speculare.cloud).**
 
 - (Solution A - recommended) Setup the database without doing anything
@@ -50,6 +48,13 @@ If you've installed the diesel_cli you can also use it's migration commands
 ```bash
 $ diesel migration run/add/revert/redo --database-url="postgres://xxx"
 ```
+
+Documentation
+--------------------------
+
+See the specifics folder's README for the information on how to configure and
+use both [server](server) and [alerts](alerts).
+
 
 Contributing
 --------------------------

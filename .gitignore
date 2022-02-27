@@ -1,6 +1,6 @@
 /target
-Alerts.toml
-Server.toml
+alerts.config
+server.config
 *.pem
 /src
 diesel.toml

@@ -1,12 +1,30 @@
 use crate::utils::{IncidentStatus, Severity};
-use crate::{CONFIG, MAILER};
+use crate::CONFIG;
 
 use askama::Template;
+use lettre::transport::smtp::authentication::Credentials;
+use lettre::transport::smtp::PoolConfig;
+use lettre::SmtpTransport;
 use lettre::{
     message::{header, MultiPart, SinglePart},
     Message, Transport,
 };
 use sproot::models::Incidents;
+
+lazy_static::lazy_static! {
+    // Lazy static for SmtpTransport used to send mails
+    // Build it using rustls and a pool of 16 items.
+    static ref MAILER: SmtpTransport = {
+        let creds = Credentials::new(CONFIG.smtp_user.to_owned(), CONFIG.smtp_password.to_owned());
+
+        // Open a remote connection to gmail
+        SmtpTransport::starttls_relay(&CONFIG.smtp_host)
+        .unwrap_or_else(|e| panic!("Cannot instanciate SmtpTransport due to: {}", e))
+        .credentials(creds)
+        .pool_config(PoolConfig::new().max_size(16))
+        .build()
+    };
+}
 
 /// Structure representing the incident template html sent by mail
 #[derive(Template)]
@@ -26,21 +44,13 @@ struct IncidentTemplate<'a> {
 }
 
 fn send_mail(incident: &Incidents, template: String) {
-    // Retreive the sender and receiver from the config.
-    let sender = CONFIG
-        .get_string("SMTP_EMAIL_SENDER")
-        .expect("Missing SMTP_EMAIL_SENDER in the config.");
-    let receiver = CONFIG
-        .get_string("SMTP_EMAIL_RECEIVER")
-        .expect("Missing SMTP_EMAIL_RECEIVER in the config.");
-
     // Build the email with all params
     let email = Message::builder()
         // Sender is the email of the sender, which is used by the SMTP
         // if the sender is not equals to the smtp server account, the mail will ends in the spam.
-        .from(sender.parse().unwrap())
+        .from(CONFIG.smtp_email_sender.to_owned())
         // Receiver is the person who should get the email
-        .to(receiver.parse().unwrap())
+        .to(CONFIG.smtp_email_receiver.to_owned())
         // Subject will looks like: "Hostname [alert_name] - 23 Jul 2021 at 17:51"
         .subject(format!("{} [{}] - {}", incident.hostname, incident.alerts_name, incident.started_at.format("%d %b %Y at %H:%M")))
         .multipart(
@@ -64,7 +74,10 @@ fn send_mail(incident: &Incidents, template: String) {
 
     // Send the email
     match MAILER.send(&email) {
-        Ok(_) => debug!("Email sent successfully!"),
+        Ok(_) => info!(
+            "Email for alert {} with host {} sent successfully!",
+            incident.alerts_name, incident.host_uuid
+        ),
         Err(e) => error!("Could not send email: {:?}", e),
     }
 }

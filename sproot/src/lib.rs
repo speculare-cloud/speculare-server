@@ -33,13 +33,13 @@ pub fn configure_logger(level: String) {
 /// Return the ServerConfig needed for Actix to be binded on HTTPS
 ///
 /// Use key and cert for the path to find the files.
-pub fn get_ssl_builder(key: String, cert: String) -> ServerConfig {
+pub fn get_ssl_builder(key: &str, cert: &str) -> ServerConfig {
     // Open BufReader on the key and cert files to read their content
     let cert_file = &mut BufReader::new(
-        File::open(&cert).unwrap_or_else(|_| panic!("Certificate file not found at {}", cert)),
+        File::open(cert).unwrap_or_else(|_| panic!("Certificate file not found at {}", cert)),
     );
     let key_file = &mut BufReader::new(
-        File::open(&key).unwrap_or_else(|_| panic!("Key file not found at {}", key)),
+        File::open(key).unwrap_or_else(|_| panic!("Key file not found at {}", key)),
     );
     // Create a Vec of certificate by extracting all cert from cert_file
     let cert_chain = rustls_pemfile::certs(cert_file)

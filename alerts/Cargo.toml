@@ -8,8 +8,8 @@ edition = "2018"
 [dependencies]
 sproot = { path = "../sproot" }
 ahash = "0.7"
-actix-cors = { version = "0.6.0-beta.10" }
-actix-web = { version = "4.0.0-rc.3", features = ["rustls"] }
+actix-cors = { version = "0.6" }
+actix-web = { version = "4.0", features = ["rustls"] }
 askama = "0.11"
 clap = { version = "3.1", features = ["derive"] }
 clap-verbosity-flag = "1.0"
@@ -28,5 +28,5 @@ regex = "1.5"
 r2d2 = "0.8"
 serde = { version = "1.0", features = ["derive"] }
 simd-json = "0.4"
-tokio = { version = "1", features = ["macros"] }
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 tokio-tungstenite = { version = "0.17", features = ["rustls-tls-native-roots"] }

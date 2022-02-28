@@ -65,7 +65,7 @@ lazy_static::lazy_static! {
 // Embed migrations into the binary
 embed_migrations!();
 
-#[actix_web::main]
+#[tokio::main]
 async fn main() -> std::io::Result<()> {
     let args = Args::parse();
 

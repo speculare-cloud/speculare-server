@@ -12,6 +12,10 @@ use lettre::{
 };
 use sproot::models::Incidents;
 
+pub fn get_tls_parameters() -> Result<TlsParameters, lettre::transport::smtp::Error> {
+    TlsParameters::new((&CONFIG.smtp_host).to_owned())
+}
+
 lazy_static::lazy_static! {
     // Lazy static for SmtpTransport used to send mails
     // Build it using rustls and a pool of 16 items.
@@ -19,12 +23,10 @@ lazy_static::lazy_static! {
         let creds = Credentials::new(CONFIG.smtp_user.to_owned(), CONFIG.smtp_password.to_owned());
 
         let transport = if CONFIG.smtp_tls {
-            let tls_parameters = match TlsParameters::new((&CONFIG.smtp_host).to_owned()) {
+            let tls_parameters = match get_tls_parameters() {
                 Ok(params) => params,
                 Err(e) => {
                     error!("MAILER: cannot build tls_parameters: {}", e);
-                    // TODO - Add a check for the smtp_host at startup
-                    // to avoid crash only here.
                     std::process::exit(1);
                 }
             };

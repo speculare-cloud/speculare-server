@@ -30,6 +30,10 @@ pub struct Config {
     pub wss_domain: String,
 
     // SMTP CREDENTIALS
+    #[serde(default = "default_smtp_port")]
+    pub smtp_port: u16,
+    #[serde(default = "default_smtp_tls")]
+    pub smtp_tls: bool,
     pub smtp_host: String,
     pub smtp_user: String,
     pub smtp_password: String,
@@ -60,6 +64,14 @@ fn default_alert_path() -> String {
 
 fn default_https() -> bool {
     false
+}
+
+fn default_smtp_port() -> u16 {
+    587
+}
+
+fn default_smtp_tls() -> bool {
+    true
 }
 
 fn default_binding() -> String {

@@ -3,6 +3,7 @@ use crate::CONFIG;
 
 use askama::Template;
 use lettre::transport::smtp::authentication::Credentials;
+use lettre::transport::smtp::client::{Tls, TlsParameters};
 use lettre::transport::smtp::PoolConfig;
 use lettre::SmtpTransport;
 use lettre::{
@@ -17,9 +18,24 @@ lazy_static::lazy_static! {
     static ref MAILER: SmtpTransport = {
         let creds = Credentials::new(CONFIG.smtp_user.to_owned(), CONFIG.smtp_password.to_owned());
 
+        let transport = if CONFIG.smtp_tls {
+            let tls_parameters = match TlsParameters::new((&CONFIG.smtp_host).to_owned()) {
+                Ok(params) => params,
+                Err(e) => {
+                    error!("MAILER: cannot build tls_parameters: {}", e);
+                    // TODO - Add a check for the smtp_host at startup
+                    // to avoid crash only here.
+                    std::process::exit(1);
+                }
+            };
+            SmtpTransport::builder_dangerous(&CONFIG.smtp_host)
+            .tls(Tls::Required(tls_parameters))
+        } else {
+            SmtpTransport::builder_dangerous(&CONFIG.smtp_host)
+        };
+
         // Open a remote connection to gmail
-        SmtpTransport::starttls_relay(&CONFIG.smtp_host)
-        .unwrap_or_else(|e| panic!("Cannot instanciate SmtpTransport due to: {}", e))
+        transport.port(CONFIG.smtp_port)
         .credentials(creds)
         .pool_config(PoolConfig::new().max_size(16))
         .build()

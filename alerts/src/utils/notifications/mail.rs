@@ -12,35 +12,49 @@ use lettre::{
 };
 use sproot::models::Incidents;
 
-pub fn get_tls_parameters() -> Result<TlsParameters, lettre::transport::smtp::Error> {
-    TlsParameters::new((&CONFIG.smtp_host).to_owned())
+pub fn test_smtp_transport() {
+    // Check if the SMTP server host is "ok"
+    match MAILER.test_connection() {
+        Ok(result) => {
+            info!("MAILER: No fatal error, connect is: {}", result);
+        }
+        Err(e) => {
+            error!("MAILER: test of the smtp_transport failed: {}", e);
+            std::process::exit(1);
+        }
+    }
+}
+
+fn get_smtp_transport() -> Result<SmtpTransport, lettre::transport::smtp::Error> {
+    let creds = Credentials::new(CONFIG.smtp_user.to_owned(), CONFIG.smtp_password.to_owned());
+
+    let transport = if CONFIG.smtp_tls {
+        SmtpTransport::builder_dangerous(&CONFIG.smtp_host).tls(Tls::Required(TlsParameters::new(
+            (&CONFIG.smtp_host).to_owned(),
+        )?))
+    } else {
+        SmtpTransport::builder_dangerous(&CONFIG.smtp_host)
+    };
+
+    // Open a remote connection to gmail
+    Ok(transport
+        .port(CONFIG.smtp_port)
+        .credentials(creds)
+        .pool_config(PoolConfig::new().max_size(16))
+        .build())
 }
 
 lazy_static::lazy_static! {
     // Lazy static for SmtpTransport used to send mails
     // Build it using rustls and a pool of 16 items.
     static ref MAILER: SmtpTransport = {
-        let creds = Credentials::new(CONFIG.smtp_user.to_owned(), CONFIG.smtp_password.to_owned());
-
-        let transport = if CONFIG.smtp_tls {
-            let tls_parameters = match get_tls_parameters() {
-                Ok(params) => params,
-                Err(e) => {
-                    error!("MAILER: cannot build tls_parameters: {}", e);
-                    std::process::exit(1);
-                }
-            };
-            SmtpTransport::builder_dangerous(&CONFIG.smtp_host)
-            .tls(Tls::Required(tls_parameters))
-        } else {
-            SmtpTransport::builder_dangerous(&CONFIG.smtp_host)
-        };
-
-        // Open a remote connection to gmail
-        transport.port(CONFIG.smtp_port)
-        .credentials(creds)
-        .pool_config(PoolConfig::new().max_size(16))
-        .build()
+        match get_smtp_transport() {
+            Ok(smtp) => smtp,
+            Err(e) => {
+                error!("MAILER: cannot get the smtp_transport: {}", e);
+                std::process::exit(1);
+            }
+        }
     };
 }
 

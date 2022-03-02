@@ -1,6 +1,6 @@
 use crate::{
     utils::{
-        analysis::execute_analysis, mail::get_tls_parameters, monitoring::alerts_from_config,
+        analysis::execute_analysis, mail::test_smtp_transport, monitoring::alerts_from_config,
         query::construct_query,
     },
     ALERTS_CONFIG, CONFIG,
@@ -13,18 +13,9 @@ use sproot::{
 
 /// Will check the AlertsConfig & SMTP syntax for potential errors
 pub fn flow_check_start(pool: Pool) {
-    // Check if the SMTP server host is "ok" for TLS
-    if CONFIG.smtp_tls {
-        match get_tls_parameters() {
-            Ok(_) => {}
-            Err(e) => {
-                error!("MAILER: cannot build tls_parameters: {}", e);
-                // TODO - Add a check for the smtp_host at startup
-                // to avoid crash only here.
-                std::process::exit(1);
-            }
-        }
-    }
+    // Check if the SMTP server host is "ok"
+    test_smtp_transport();
+
     // Need to get the Alerts
     let alerts_config = match AlertsConfig::from_configs_path(&CONFIG.alerts_path) {
         Ok(alerts_config) => alerts_config,
@@ -62,7 +53,6 @@ pub fn flow_check_start(pool: Pool) {
                 std::process::exit(1);
             }
         };
-
         execute_analysis(&query, &alert, &qtype, &pool.get().unwrap());
     }
 

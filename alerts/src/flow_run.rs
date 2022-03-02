@@ -1,25 +1,15 @@
 use crate::{
     embedded_migrations, server,
-    utils::{mail::get_tls_parameters, monitoring::launch_monitoring},
-    CONFIG,
+    utils::{mail::test_smtp_transport, monitoring::launch_monitoring},
 };
 
 use sproot::Pool;
 
 /// Will start the program normally (launch alerts, ...)
 pub async fn flow_run_start(pool: Pool) -> std::io::Result<()> {
-    // Check if the SMTP server host is "ok" for TLS
-    if CONFIG.smtp_tls {
-        match get_tls_parameters() {
-            Ok(_) => {}
-            Err(e) => {
-                error!("MAILER: cannot build tls_parameters: {}", e);
-                // TODO - Add a check for the smtp_host at startup
-                // to avoid crash only here.
-                std::process::exit(1);
-            }
-        }
-    }
+    // Check if the SMTP server host is "ok"
+    test_smtp_transport();
+
     // Get a connection from the R2D2 pool
     let pooled_conn = match pool.get() {
         Ok(pooled) => pooled,

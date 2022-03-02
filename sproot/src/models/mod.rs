@@ -1,9 +1,9 @@
-mod alerts;
+mod balerts;
+mod bserver;
 pub mod schema;
-mod server;
 
-pub use alerts::*;
-pub use server::*;
+pub use balerts::*;
+pub use bserver::*;
 
 /// granularity == the range in which we'll group the data
 /// We'll compute the granularity from this equation:

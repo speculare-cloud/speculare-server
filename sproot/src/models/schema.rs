@@ -121,22 +121,6 @@ table! {
 }
 
 table! {
-    alerts (id) {
-        id -> Int4,
-        _name -> Varchar,
-        _table -> Varchar,
-        lookup -> Text,
-        timing -> Int4,
-        warn -> Text,
-        crit -> Text,
-        info -> Nullable<Text>,
-        host_uuid -> Varchar,
-        hostname -> Varchar,
-        where_clause -> Nullable<Text>,
-    }
-}
-
-table! {
     incidents (id) {
         id -> Int4,
         result -> Text,

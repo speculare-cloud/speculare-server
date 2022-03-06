@@ -2,7 +2,7 @@ use super::PagedInfo;
 
 use actix_web::{web, HttpResponse};
 use sproot::errors::{AppError, AppErrorType};
-use sproot::models::{Incidents, IncidentsDTOUpdate};
+use sproot::models::Incidents;
 use sproot::Pool;
 
 /// GET /api/incidents
@@ -43,32 +43,3 @@ pub async fn incidents_one(
     let data = web::block(move || Incidents::get(&db.get()?, id.into())).await??;
     Ok(HttpResponse::Ok().json(data))
 }
-
-/// PATCH /api/guard/incidents/{id}
-/// Save data of an incidents into the db
-pub async fn incidents_update(
-    db: web::Data<Pool>,
-    path: web::Path<u16>,
-    item: web::Json<IncidentsDTOUpdate>,
-) -> Result<HttpResponse, AppError> {
-    let id = path.into_inner();
-    info!("Route PATCH /api/guard/incidents/{} : {:?}", id, item);
-    // use web::block to offload blocking Diesel code without blocking server thread
-    web::block(move || Incidents::update(&db.get()?, &item, id.into())).await??;
-    // Return a 200 status code as everything went well
-    Ok(HttpResponse::Ok().finish())
-}
-
-// /// DELETE /api/guard/incidents/{id}
-// /// Delete an alert previously created from the database
-// pub async fn incidents_delete(
-//     db: web::Data<Pool>,
-//     path: web::Path<u16>,
-// ) -> Result<HttpResponse, AppError> {
-//     let id = path.into_inner();
-//     info!("Route DELETE /api/guard/incidents/{}", id);
-//     // use web::block to offload blocking Diesel code without blocking server thread
-//     web::block(move || Incidents::delete(&db.get()?, id.into())).await??;
-//     // Return a 200 status code as everything went well
-//     Ok(HttpResponse::Ok().finish())
-// }

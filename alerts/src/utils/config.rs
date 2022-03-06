@@ -24,7 +24,6 @@ pub struct Config {
     pub key_cert: Option<String>,
     #[serde(default = "default_binding")]
     pub binding: String,
-    pub api_token: String,
 
     // PGCDC INSTANCE'S URL
     pub wss_domain: String,

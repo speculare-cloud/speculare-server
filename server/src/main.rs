@@ -12,6 +12,8 @@ use sproot::prog;
 use crate::utils::config::Config;
 
 mod api;
+#[cfg(feature = "auth")]
+mod auth;
 mod flow_run;
 mod routes;
 mod server;

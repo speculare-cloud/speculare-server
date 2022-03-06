@@ -1,15 +1,15 @@
 use crate::{embedded_migrations, server, CONFIG};
 
 use diesel::{prelude::PgConnection, r2d2::ConnectionManager};
+use sproot::Pool;
 
-/// Will start the program normally
-pub async fn flow_run_start() -> std::io::Result<()> {
+fn build_pool(db_url: &str, max_conn: u32) -> Pool {
     // Init the connection to the postgresql
-    let manager = ConnectionManager::<PgConnection>::new(&CONFIG.database_url);
+    let manager = ConnectionManager::<PgConnection>::new(db_url);
     // This step might spam for error CONFIG.database_max_connection of times, this is normal.
-    let pool = match r2d2::Pool::builder()
-        .max_size(CONFIG.database_max_connection)
-        .min_idle(Some((10 * CONFIG.database_max_connection) / 100))
+    match r2d2::Pool::builder()
+        .max_size(max_conn)
+        .min_idle(Some((10 * max_conn) / 100))
         .build(manager)
     {
         Ok(pool) => pool,
@@ -17,7 +17,10 @@ pub async fn flow_run_start() -> std::io::Result<()> {
             error!("Failed to create db pool: {}", e);
             std::process::exit(1);
         }
-    };
+    }
+}
+
+fn apply_migration(pool: &Pool) {
     // Get a connection from the R2D2 pool
     let pooled_conn = match pool.get() {
         Ok(pooled) => pooled,
@@ -29,11 +32,32 @@ pub async fn flow_run_start() -> std::io::Result<()> {
             std::process::exit(1);
         }
     };
+
     // Apply the migrations to the database
     if let Err(e) = embedded_migrations::run(&pooled_conn) {
         error!("Cannot apply the migrations: {}", e);
         std::process::exit(1);
     }
+}
+
+/// Will start the program normally
+pub async fn flow_run_start() -> std::io::Result<()> {
+    // Init the connection to the postgresql
+    let metrics_db = build_pool(&CONFIG.database_url, CONFIG.database_max_connection);
+    #[cfg(feature = "auth")]
+    let auth_db = build_pool(
+        &CONFIG.auth_database_url,
+        CONFIG.auth_database_max_connection,
+    );
+
+    // Apply the migrations to the database
+    apply_migration(&metrics_db);
+
+    #[cfg(feature = "auth")]
+    let auth_pool = Some(auth_db);
+    #[cfg(not(feature = "auth"))]
+    let auth_pool = None;
+
     // Continue the initialization of the actix web server
-    server::server(pool).await
+    server::server(metrics_db, auth_pool).await
 }

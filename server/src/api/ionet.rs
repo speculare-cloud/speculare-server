@@ -1,15 +1,15 @@
-use sproot::errors::{AppError, AppErrorType};
-use sproot::models::IoNet;
-use sproot::Pool;
+use crate::server::AppData;
 
 use super::PagedInfoSpecific;
 
 use actix_web::{http, web, HttpResponse};
+use sproot::errors::{AppError, AppErrorType};
+use sproot::models::IoNet;
 
 /// GET /api/ionets
 /// Return ionets for a particular host
 pub async fn ionets(
-    db: web::Data<Pool>,
+    app_data: web::Data<AppData>,
     info: web::Query<PagedInfoSpecific>,
 ) -> Result<HttpResponse, AppError> {
     trace!("Route GET /api/ionets : {:?}", info);
@@ -20,7 +20,7 @@ pub async fn ionets(
     if info.min_date.is_some() && info.max_date.is_some() {
         let data = web::block(move || {
             IoNet::get_data_dated(
-                &db.get()?,
+                &app_data.metrics_db.get()?,
                 &uuid,
                 info.min_date.unwrap(),
                 info.max_date.unwrap(),
@@ -40,7 +40,9 @@ pub async fn ionets(
                 error_type: AppErrorType::InvalidRequest,
             })
         } else {
-            let data = web::block(move || IoNet::get_data(&db.get()?, &uuid, size, page)).await??;
+            let data =
+                web::block(move || IoNet::get_data(&app_data.metrics_db.get()?, &uuid, size, page))
+                    .await??;
             // Return the data as form of JSON
             Ok(HttpResponse::Ok().json(data))
         }
@@ -50,7 +52,7 @@ pub async fn ionets(
 /// GET /api/ionets_count
 /// Return ionets_count for a particular host
 pub async fn ionets_count(
-    db: web::Data<Pool>,
+    app_data: web::Data<AppData>,
     info: web::Query<PagedInfoSpecific>,
 ) -> Result<HttpResponse, AppError> {
     trace!("Route GET /api/ionets_count : {:?}", info);
@@ -66,7 +68,8 @@ pub async fn ionets_count(
         })
     } else {
         // use web::block to offload blocking Diesel code without blocking server thread
-        let data = web::block(move || IoNet::count(&db.get()?, &uuid, size)).await??;
+        let data =
+            web::block(move || IoNet::count(&app_data.metrics_db.get()?, &uuid, size)).await??;
         // Return the data as form of JSON
         Ok(HttpResponse::Ok()
             .append_header((http::header::CONTENT_TYPE, "text/plain"))

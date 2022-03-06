@@ -1,15 +1,15 @@
-use sproot::errors::{AppError, AppErrorType};
-use sproot::models::IoBlock;
-use sproot::Pool;
+use crate::server::AppData;
 
 use super::PagedInfoSpecific;
 
 use actix_web::{http, web, HttpResponse};
+use sproot::errors::{AppError, AppErrorType};
+use sproot::models::IoBlock;
 
 /// GET /api/ioblocks
 /// Return ioblock for a particular host
 pub async fn ioblocks(
-    db: web::Data<Pool>,
+    app_data: web::Data<AppData>,
     info: web::Query<PagedInfoSpecific>,
 ) -> Result<HttpResponse, AppError> {
     trace!("Route GET /api/ioblocks : {:?}", info);
@@ -20,7 +20,7 @@ pub async fn ioblocks(
     if info.min_date.is_some() && info.max_date.is_some() {
         let data = web::block(move || {
             IoBlock::get_data_dated(
-                &db.get()?,
+                &app_data.metrics_db.get()?,
                 &uuid,
                 info.min_date.unwrap(),
                 info.max_date.unwrap(),
@@ -40,8 +40,10 @@ pub async fn ioblocks(
                 error_type: AppErrorType::InvalidRequest,
             })
         } else {
-            let data =
-                web::block(move || IoBlock::get_data(&db.get()?, &uuid, size, page)).await??;
+            let data = web::block(move || {
+                IoBlock::get_data(&app_data.metrics_db.get()?, &uuid, size, page)
+            })
+            .await??;
             // Return the data as form of JSON
             Ok(HttpResponse::Ok().json(data))
         }
@@ -51,7 +53,7 @@ pub async fn ioblocks(
 /// GET /api/ioblocks_count
 /// Return ioblocks_count for a particular host
 pub async fn ioblocks_count(
-    db: web::Data<Pool>,
+    app_data: web::Data<AppData>,
     info: web::Query<PagedInfoSpecific>,
 ) -> Result<HttpResponse, AppError> {
     trace!("Route GET /api/ioblocks_count : {:?}", info);
@@ -67,7 +69,8 @@ pub async fn ioblocks_count(
         })
     } else {
         // use web::block to offload blocking Diesel code without blocking server thread
-        let data = web::block(move || IoBlock::count(&db.get()?, &uuid, size)).await??;
+        let data =
+            web::block(move || IoBlock::count(&app_data.metrics_db.get()?, &uuid, size)).await??;
         // Return the data as form of JSON
         Ok(HttpResponse::Ok()
             .append_header((http::header::CONTENT_TYPE, "text/plain"))

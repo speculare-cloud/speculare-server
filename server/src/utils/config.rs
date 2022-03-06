@@ -7,12 +7,19 @@ use serde::Deserialize;
 #[derive(Debug, Deserialize, Clone)]
 
 pub struct Config {
-    // POSTGRESQL DB CONFIGS
+    // POSTGRESQL CONNECTION
     pub database_url: String,
     #[serde(default = "default_maxconn")]
     pub database_max_connection: u32,
 
-    // HTTP API CONFIGS
+    // AUTH POSTGRESQL CONNECTION
+    #[cfg(feature = "auth")]
+    pub auth_database_url: String,
+    #[cfg(feature = "auth")]
+    #[serde(default = "default_maxconn")]
+    pub auth_database_max_connection: u32,
+
+    // API SETTINGS
     #[serde(default = "default_https")]
     pub https: bool,
     pub key_priv: Option<String>,

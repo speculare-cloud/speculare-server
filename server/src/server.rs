@@ -5,10 +5,16 @@ use actix_cors::Cors;
 use actix_web::{middleware, App, HttpServer};
 use sproot::Pool;
 
+pub struct AppData {
+    pub metrics_db: Pool,
+    #[cfg(feature = "auth")]
+    pub auth_db: Pool,
+}
+
 /// Construct and run the actix server instance
 ///
 /// Start by initializating a link to the database. And finish by binding and running the actix serv
-pub async fn server(pool: Pool) -> std::io::Result<()> {
+pub async fn server(pool: Pool, _auth_pool: Option<Pool>) -> std::io::Result<()> {
     // Construct the HttpServer instance.
     // Passing the pool of PgConnection and defining the logger / compress middleware.
     let serv = HttpServer::new(move || {
@@ -16,7 +22,13 @@ pub async fn server(pool: Pool) -> std::io::Result<()> {
             .wrap(Cors::permissive())
             .wrap(middleware::Compress::default())
             .wrap(middleware::Logger::default())
-            .app_data(actix_web::web::Data::new(pool.clone()))
+            .app_data(actix_web::web::Data::new(AppData {
+                metrics_db: pool.clone(),
+                #[cfg(feature = "auth")]
+                auth_db: _auth_pool.as_ref().unwrap().clone(),
+            }))
+            // .app_data(actix_web::web::Data::new(pool.clone()))
+            // .app_data(actix_web::web::Data::new(auth_pool.clone()))
             .configure(routes::routes)
     });
     // Bind the server (https or no)

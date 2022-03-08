@@ -1,18 +1,11 @@
-use crate::api;
-#[cfg(feature = "auth")]
-use crate::auth::validator;
-#[cfg(not(feature = "auth"))]
-use crate::CONFIG;
+use crate::{api, CONFIG};
 
-#[cfg(not(feature = "auth"))]
-use actix_web::guard;
 use actix_web::web;
-#[cfg(feature = "auth")]
-use actix_web_httpauth::middleware::HttpAuthentication;
 
 // Populate the ServiceConfig with all the route needed for the server
 #[cfg(not(feature = "auth"))]
 pub fn routes(cfg: &mut web::ServiceConfig) {
+    use actix_web::guard;
     // The /ping is used only to get a status over the server
     cfg.route("/ping", web::get().to(|| async { "zpour" }))
         .route("/ping", web::head().to(|| async { "zpour" }))
@@ -45,6 +38,10 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
 
 #[cfg(feature = "auth")]
 pub fn routes(cfg: &mut web::ServiceConfig) {
+    use crate::auth::validator;
+    use actix_session::CookieSession;
+    use actix_web_httpauth::middleware::HttpAuthentication;
+
     let auth = HttpAuthentication::bearer(validator::validator);
     cfg.route("/ping", web::get().to(|| async { "zpour" }))
         .route("/ping", web::head().to(|| async { "zpour" }))
@@ -56,6 +53,14 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
                     web::scope("/guard")
                         .wrap(auth)
                         .route("/hosts", web::post().to(api::hosts::host_ingest)),
+                )
+                // Secure the following calls with a CookieSession
+                // The cookie_secret will be shared with the Dashboard
+                .wrap(
+                    CookieSession::signed(CONFIG.cookie_secret.as_bytes())
+                        .name("SP-CKS")
+                        .secure(CONFIG.https)
+                        .domain(&CONFIG.cookie_domain),
                 )
                 .route("/hosts", web::get().to(api::hosts::host_all))
                 .route("/cpustats", web::get().to(api::cpustats::cpustats))

@@ -20,12 +20,21 @@ pub struct Config {
     pub auth_database_max_connection: u32,
 
     // API SETTINGS
+    pub binding: String,
+
+    // API SECURITY SETTINGS
     #[serde(default = "default_https")]
     pub https: bool,
     pub key_priv: Option<String>,
     pub key_cert: Option<String>,
-    pub binding: String,
+
+    #[cfg(not(feature = "auth"))]
     pub api_token: String,
+
+    #[cfg(feature = "auth")]
+    pub cookie_secret: String,
+    #[cfg(feature = "auth")]
+    pub cookie_domain: String,
 }
 
 impl Config {

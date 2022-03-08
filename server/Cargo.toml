@@ -8,6 +8,7 @@ edition = "2018"
 [dependencies]
 sproot = { path = "../sproot" }
 actix-cors = { version = "0.6" }
+actix-session = { version = "0.5", optional = true }
 actix-web = { version = "4.0", features = ["rustls"] }
 actix-web-httpauth = { version = "0.6", optional = true }
 clap = { version = "3.1", features = ["derive"] }
@@ -24,4 +25,4 @@ serde = { version = "1.0", features = ["derive"] }
 
 [features]
 default = []
-auth = ["actix-web-httpauth"]
+auth = ["actix-web-httpauth", "actix-session"]

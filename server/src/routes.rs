@@ -6,6 +6,7 @@ use actix_web::web;
 #[cfg(not(feature = "auth"))]
 pub fn routes(cfg: &mut web::ServiceConfig) {
     use actix_web::guard;
+
     // The /ping is used only to get a status over the server
     cfg.route("/ping", web::get().to(|| async { "zpour" }))
         .route("/ping", web::head().to(|| async { "zpour" }))
@@ -43,6 +44,7 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
     use actix_web_httpauth::middleware::HttpAuthentication;
 
     let auth = HttpAuthentication::bearer(validator::validator);
+    // The /ping is used only to get a status over the server
     cfg.route("/ping", web::get().to(|| async { "zpour" }))
         .route("/ping", web::head().to(|| async { "zpour" }))
         // Bind the /api/* route

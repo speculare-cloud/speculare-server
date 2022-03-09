@@ -1,8 +1,10 @@
 mod balerts;
+mod bauth;
 mod bserver;
 pub mod schema;
 
 pub use balerts::*;
+pub use bauth::*;
 pub use bserver::*;
 
 /// granularity == the range in which we'll group the data

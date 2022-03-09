@@ -5,11 +5,11 @@ extern crate log;
 #[macro_use]
 extern crate sproot;
 
+use crate::utils::config::Config;
+
 use clap::Parser;
 use clap_verbosity_flag::InfoLevel;
 use sproot::prog;
-
-use crate::utils::config::Config;
 
 mod api;
 #[cfg(feature = "auth")]

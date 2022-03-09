@@ -142,6 +142,15 @@ table! {
     }
 }
 
+table! {
+    apikeys (id) {
+        id -> Int4,
+        key -> Text,
+        host_uuid -> Varchar,
+        berta -> Varchar,
+    }
+}
+
 allow_tables_to_appear_in_same_query!(
     cpustats, cputimes, disks, hosts, ionets, ioblocks, loadavg, memory, swap,
 );

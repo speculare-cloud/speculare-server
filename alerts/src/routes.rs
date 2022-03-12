@@ -8,13 +8,5 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
     cfg.route("/ping", web::get().to(|| async { "zpour" }))
         .route("/ping", web::head().to(|| async { "zpour" }))
         // Bind the /api/* route
-        .service(
-            web::scope("/api")
-                .route("/alerts", web::get().to(api::alerts::alerts_list))
-                .route("/incidents", web::get().to(api::incidents::incidents_list))
-                .route(
-                    "/incidents/{id}",
-                    web::get().to(api::incidents::incidents_one),
-                ),
-        );
+        .service(web::scope("/api").route("/alerts", web::get().to(api::alerts::alerts_list)));
 }

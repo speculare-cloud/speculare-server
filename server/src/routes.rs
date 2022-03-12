@@ -33,7 +33,15 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
                 .route("/ionets", web::get().to(api::ionet::ionets))
                 .route("/ionets_count", web::get().to(api::ionet::ionets_count))
                 .route("/memory", web::get().to(api::memory::memory))
-                .route("/swap", web::get().to(api::swap::swap)),
+                .route("/swap", web::get().to(api::swap::swap))
+                .route(
+                    "/incidents",
+                    web::get().to(api::alerts::incidents::incidents_list),
+                )
+                .route(
+                    "/incidents/{id}",
+                    web::get().to(api::alerts::incidents::incidents_one),
+                ),
         );
 }
 
@@ -78,6 +86,14 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
                 .route("/ionets", web::get().to(api::ionet::ionets))
                 .route("/ionets_count", web::get().to(api::ionet::ionets_count))
                 .route("/memory", web::get().to(api::memory::memory))
-                .route("/swap", web::get().to(api::swap::swap)),
+                .route("/swap", web::get().to(api::swap::swap))
+                .route(
+                    "/incidents",
+                    web::get().to(api::alerts::incidents::incidents_list),
+                )
+                .route(
+                    "/incidents/{id}",
+                    web::get().to(api::alerts::incidents::incidents_one),
+                ),
         );
 }

@@ -1,4 +1,4 @@
-use super::PagedInfo;
+use crate::api::PagedInfo;
 
 use actix_web::{web, HttpResponse};
 use sproot::errors::{AppError, AppErrorType};

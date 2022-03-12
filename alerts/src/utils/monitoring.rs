@@ -30,7 +30,8 @@ pub fn alerts_from_config(conn: &ConnType) -> Result<Vec<Alerts>, AppError> {
                         error_type: sproot::errors::AppErrorType::NotFound,
                     });
                 }
-                let id = format!("{}_{}", &thosts[0].uuid, &thosts[0].hostname);
+                let id = Alerts::generate_id_from(&thosts[0].uuid, &aconfig.name);
+
                 info!(
                     "Created the alert {} for {:.6} with id {}",
                     &aconfig.name, thosts[0].uuid, id
@@ -45,7 +46,8 @@ pub fn alerts_from_config(conn: &ConnType) -> Result<Vec<Alerts>, AppError> {
             }
             HostTargeted::ALL => {
                 for host in hosts {
-                    let id = format!("{}_{}", &host.uuid, &host.hostname);
+                    let id = Alerts::generate_id_from(&host.uuid, &aconfig.name);
+
                     info!(
                         "Created the alert {} for {:.6} with id {}",
                         &aconfig.name, host.uuid, id

@@ -44,6 +44,10 @@ pub struct Alerts {
 }
 
 impl Alerts {
+    pub fn generate_id_from(host_uuid: &str, name: &str) -> String {
+        sha1_smol::Sha1::from([host_uuid.as_bytes(), name.as_bytes()].concat()).hexdigest()
+    }
+
     /// Build from a AlertsConfig, host_uuid, hostname and an id.
     pub fn build_from_config(
         config: AlertsConfig,

@@ -67,7 +67,7 @@ pub async fn listen_hosts_changes(pool: Pool) -> std::io::Result<()> {
                                 config.to_owned(),
                                 host_uuid.to_owned(),
                                 hostname.to_owned(),
-                                format!("{}_{}", &host_uuid, &hostname),
+                                Alerts::generate_id_from(host_uuid, &config.name),
                             );
                             // Start the analysis
                             start_alert_task(alert, pool.clone())

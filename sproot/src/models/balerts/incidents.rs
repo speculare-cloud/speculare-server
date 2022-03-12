@@ -1,7 +1,7 @@
-use crate::errors::{AppError, AppErrorType};
+use crate::errors::AppError;
 use crate::models::schema::incidents;
 use crate::models::schema::incidents::dsl::{
-    alerts_id, alerts_name, host_uuid, id, incidents as dsl_incidents, status, updated_at,
+    alerts_id, host_uuid, id, incidents as dsl_incidents, status, updated_at,
 };
 use crate::ConnType;
 
@@ -35,83 +35,44 @@ pub struct Incidents {
 }
 
 impl Incidents {
-    /// Return a Vector of Incidents
+    /// Return a Vector of Incidents for a specific host
     /// # Params
     /// * `conn` - The r2d2 connection needed to fetch the data from the db
     /// * `uuid` - The host's uuid we want to get incidents of, this field is optional
     /// * `size` - The number of elements to fetch
     /// * `page` - How many items you want to skip (page * size)
-    pub fn get_list(
+    pub fn get_list_host(
         conn: &ConnType,
-        uuid: Option<&String>,
+        uuid: &str,
         size: i64,
         page: i64,
     ) -> Result<Vec<Self>, AppError> {
         // Depending on if the uuid is present or not
-        let data: Vec<Self> = match uuid {
-            Some(val) => dsl_incidents
-                .filter(host_uuid.eq(val))
-                .limit(size)
-                .offset(page * size)
-                .order_by(updated_at.desc())
-                .load(conn)?,
-            None => dsl_incidents
-                .limit(size)
-                .offset(page * size)
-                .order_by(updated_at.desc())
-                .load(conn)?,
-        };
-
-        Ok(data)
+        Ok(dsl_incidents
+            .filter(host_uuid.eq(uuid))
+            .limit(size)
+            .offset(page * size)
+            .order_by(updated_at.desc())
+            .load(conn)?)
     }
 
-    /// Determine if the incidents for that specific alert exist and is currently active.
+    /// Determine if an incident for that specific alert exists and is currently active.
     /// If one is found, return it, otherwise return a Err(NotFound).
     /// # Params
     /// * `conn` - The r2d2 connection needed to fetch the data from the db
-    /// * `alert_id` - The id of the alert related to the incident
-    pub fn exist(conn: &ConnType, alert_id: String) -> Result<Self, diesel::result::Error> {
-        dsl_incidents
-            .filter(alerts_id.eq(alert_id).and(status.eq(0)))
-            .first(conn)
-    }
-
-    /// Determine if the incidents for that specific alert exist and is currently active.
-    /// If one is found, return it, otherwise return a Err(NotFound).
-    /// # Params
-    /// * `conn` - The r2d2 connection needed to fetch the data from the db
-    /// * `aname` - The name of the alert related to the incident
-    /// * `huuid` - The uuid of the host targeted by the alert related to the incident
-    pub fn exist_name(
-        conn: &ConnType,
-        huuid: &str,
-        aname: &str,
-    ) -> Result<Self, diesel::result::Error> {
-        dsl_incidents
-            .filter(
-                alerts_name
-                    .eq(aname)
-                    .and(host_uuid.eq(huuid))
-                    .and(status.eq(0)),
-            )
-            .first(conn)
-    }
-
-    /// Return a single Incidents
-    /// # Params
-    /// * `conn` - The r2d2 connection needed to fetch the data from the db
-    /// * `target_id` - The id of the incident to get
-    pub fn get(conn: &ConnType, target_id: i32) -> Result<Self, AppError> {
-        Ok(dsl_incidents.find(target_id).first(conn)?)
+    /// * `target_id` - The id of the alert related to the incident
+    pub fn find_active(conn: &ConnType, target_id: &str) -> Result<Self, AppError> {
+        Ok(dsl_incidents
+            .filter(alerts_id.eq(target_id).and(status.eq(0)))
+            .first(conn)?)
     }
 
     /// Insert a new Incidents inside the database
     /// # Params
     /// * `conn` - The r2d2 connection needed to fetch the data from the db
     /// * `incidents` - The Incidents struct containing the new incident information
-    pub fn insert(conn: &ConnType, incidents: &[IncidentsDTO]) -> Result<(), AppError> {
-        insert_into(dsl_incidents).values(incidents).execute(conn)?;
-        Ok(())
+    pub fn insert(conn: &ConnType, incidents: &[IncidentsDTO]) -> Result<usize, AppError> {
+        Ok(insert_into(dsl_incidents).values(incidents).execute(conn)?)
     }
 
     /// Insert a new Incidents inside the database and return the inserted row
@@ -128,17 +89,8 @@ impl Incidents {
     /// # Params
     /// * `conn` - The r2d2 connection needed to fetch the data from the db
     /// * `target_id` - The id of the incident to delete
-    pub fn delete(conn: &ConnType, target_id: i32) -> Result<(), AppError> {
-        let res = delete(dsl_incidents.filter(id.eq(target_id))).execute(conn)?;
-        if res == 1 {
-            Ok(())
-        } else {
-            Err(AppError {
-                message: None,
-                cause: None,
-                error_type: AppErrorType::NotFound,
-            })
-        }
+    pub fn delete(conn: &ConnType, target_id: i32) -> Result<usize, AppError> {
+        Ok(delete(dsl_incidents.filter(id.eq(target_id))).execute(conn)?)
     }
 
     /// Update an Incidents inside the database
@@ -150,20 +102,10 @@ impl Incidents {
         conn: &ConnType,
         incidents: &IncidentsDTOUpdate,
         target_id: i32,
-    ) -> Result<(), AppError> {
-        let res = update(dsl_incidents.filter(id.eq(target_id)))
+    ) -> Result<usize, AppError> {
+        Ok(update(dsl_incidents.filter(id.eq(target_id)))
             .set(incidents)
-            .execute(conn)?;
-
-        if res == 1 {
-            Ok(())
-        } else {
-            Err(AppError {
-                message: None,
-                cause: None,
-                error_type: AppErrorType::NotFound,
-            })
-        }
+            .execute(conn)?)
     }
 
     /// Update an Incidents inside the database and return the updated Struct

@@ -1,14 +1,14 @@
 use crate::api::PagedInfo;
+use crate::server::AppData;
 
 use actix_web::{web, HttpResponse};
 use sproot::errors::{AppError, AppErrorType};
 use sproot::models::Incidents;
-use sproot::Pool;
 
 /// GET /api/incidents
 /// Return all incidents
 pub async fn incidents_list(
-    db: web::Data<Pool>,
+    app_data: web::Data<AppData>,
     info: web::Query<PagedInfo>,
 ) -> Result<HttpResponse, AppError> {
     info!("Route GET /api/incidents");
@@ -23,23 +23,11 @@ pub async fn incidents_list(
         })
     } else {
         // use web::block to offload blocking Diesel code without blocking server thread
-        let data =
-            web::block(move || Incidents::get_list(&db.get()?, info.uuid.as_ref(), size, page))
-                .await??;
+        let data = web::block(move || {
+            Incidents::get_list_host(&app_data.metrics_db.get()?, &info.uuid, size, page)
+        })
+        .await??;
         // Return the data as form of JSON
         Ok(HttpResponse::Ok().json(data))
     }
-}
-
-/// GET /api/incidents/{id}
-/// Return a specific incident
-pub async fn incidents_one(
-    db: web::Data<Pool>,
-    path: web::Path<u16>,
-) -> Result<HttpResponse, AppError> {
-    let id = path.into_inner();
-    info!("Route GET /api/incidents/{}", id);
-    // use web::block to offload blocking Diesel code without blocking server thread
-    let data = web::block(move || Incidents::get(&db.get()?, id.into())).await??;
-    Ok(HttpResponse::Ok().json(data))
 }

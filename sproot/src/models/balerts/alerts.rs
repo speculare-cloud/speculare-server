@@ -1,8 +1,6 @@
-use crate::errors::{AppError, AppErrorType};
+use crate::errors::AppError;
 use crate::models::schema::alerts;
-use crate::models::schema::alerts::dsl::{
-    _name, alerts as dsl_alerts, host_uuid as thost_uuid, id as tid,
-};
+use crate::models::schema::alerts::dsl::{_name, alerts as dsl_alerts, host_uuid, id};
 use crate::ConnType;
 
 use diesel::*;
@@ -44,19 +42,19 @@ pub struct Alerts {
 }
 
 impl Alerts {
-    pub fn generate_id_from(host_uuid: &str, name: &str) -> String {
-        sha1_smol::Sha1::from([host_uuid.as_bytes(), name.as_bytes()].concat()).hexdigest()
+    pub fn generate_id_from(uuid: &str, name: &str) -> String {
+        sha1_smol::Sha1::from([uuid.as_bytes(), name.as_bytes()].concat()).hexdigest()
     }
 
     /// Build from a AlertsConfig, host_uuid, hostname and an id.
     pub fn build_from_config(
         config: AlertsConfig,
-        host_uuid: String,
+        uuid: String,
         hostname: String,
-        id: String,
+        alert_id: String,
     ) -> Alerts {
         Alerts {
-            id,
+            id: alert_id,
             name: config.name,
             table: config.table,
             lookup: config.lookup,
@@ -64,7 +62,7 @@ impl Alerts {
             warn: config.warn,
             crit: config.crit,
             info: config.info,
-            host_uuid,
+            host_uuid: uuid,
             hostname,
             where_clause: config.where_clause,
         }
@@ -72,31 +70,32 @@ impl Alerts {
 
     ///
     pub fn get_list(conn: &ConnType) -> Result<Vec<Self>, AppError> {
-        Ok(dsl_alerts.load(conn)?)
+        Ok(dsl_alerts.order_by(_name.asc()).load(conn)?)
     }
 
     ///
-    pub fn get_list_host(conn: &ConnType, host_uuid: &str) -> Result<Vec<Self>, AppError> {
+    pub fn get_list_host(
+        conn: &ConnType,
+        uuid: &str,
+        size: i64,
+        page: i64,
+    ) -> Result<Vec<Self>, AppError> {
         Ok(dsl_alerts
-            .filter(thost_uuid.eq(host_uuid))
+            .filter(host_uuid.eq(uuid))
+            .limit(size)
+            .offset(page * size)
             .order_by(_name.asc())
             .load(conn)?)
     }
 
     ///
-    pub fn exist(conn: &ConnType, alert_id: &str) -> Result<Self, diesel::result::Error> {
-        dsl_alerts.find(alert_id).first(conn)
+    pub fn get(conn: &ConnType, target_id: &str) -> Result<Self, AppError> {
+        Ok(dsl_alerts.find(target_id).first(conn)?)
     }
 
     ///
-    pub fn get(conn: &ConnType, alert_id: &str) -> Result<Self, AppError> {
-        Ok(dsl_alerts.find(alert_id).first(conn)?)
-    }
-
-    ///
-    pub fn insert(conn: &ConnType, alerts: &[Alerts]) -> Result<(), AppError> {
-        insert_into(dsl_alerts).values(alerts).execute(conn)?;
-        Ok(())
+    pub fn insert(conn: &ConnType, alerts: &[Alerts]) -> Result<usize, AppError> {
+        Ok(insert_into(dsl_alerts).values(alerts).execute(conn)?)
     }
 
     ///
@@ -105,25 +104,14 @@ impl Alerts {
     }
 
     ///
-    pub fn delete(conn: &ConnType, alert_id: &str) -> Result<(), AppError> {
-        let res = delete(dsl_alerts.filter(tid.eq(alert_id))).execute(conn)?;
-        if res == 1 {
-            Ok(())
-        } else {
-            Err(AppError {
-                message: None,
-                cause: None,
-                error_type: AppErrorType::NotFound,
-            })
-        }
+    pub fn delete(conn: &ConnType, target_id: &str) -> Result<usize, AppError> {
+        Ok(delete(dsl_alerts.filter(id.eq(target_id))).execute(conn)?)
     }
 
     ///
     pub fn delete_all(conn: &ConnType) -> Result<usize, AppError> {
         Ok(delete(dsl_alerts).execute(conn)?)
     }
-
-    // TODO - Update function
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

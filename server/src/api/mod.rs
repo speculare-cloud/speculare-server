@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-pub mod alerts;
+pub mod balerts;
 pub mod cpustats;
 pub mod cputimes;
 pub mod disks;
@@ -13,7 +13,7 @@ pub mod swap;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PagedInfo {
-    pub uuid: Option<String>,
+    pub uuid: String,
     pub size: Option<i64>,
     pub page: Option<i64>,
 }

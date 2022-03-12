@@ -7,6 +7,7 @@ use actix_web::web;
 pub fn routes(cfg: &mut web::ServiceConfig) {
     use actix_web::guard;
 
+    info!("Server configured with SPTK security");
     // The /ping is used only to get a status over the server
     cfg.route("/ping", web::get().to(|| async { "zpour" }))
         .route("/ping", web::head().to(|| async { "zpour" }))
@@ -36,12 +37,9 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
                 .route("/swap", web::get().to(api::swap::swap))
                 .route(
                     "/incidents",
-                    web::get().to(api::alerts::incidents::incidents_list),
+                    web::get().to(api::balerts::incidents::incidents_list),
                 )
-                .route(
-                    "/incidents/{id}",
-                    web::get().to(api::alerts::incidents::incidents_one),
-                ),
+                .route("/alerts", web::get().to(api::balerts::alerts::alerts_list)),
         );
 }
 
@@ -51,6 +49,7 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
     use actix_session::CookieSession;
     use actix_web_httpauth::middleware::HttpAuthentication;
 
+    info!("Server configured with Bearer security");
     let auth = HttpAuthentication::bearer(validator::validator);
     // The /ping is used only to get a status over the server
     cfg.route("/ping", web::get().to(|| async { "zpour" }))
@@ -89,11 +88,8 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
                 .route("/swap", web::get().to(api::swap::swap))
                 .route(
                     "/incidents",
-                    web::get().to(api::alerts::incidents::incidents_list),
+                    web::get().to(api::balerts::incidents::incidents_list),
                 )
-                .route(
-                    "/incidents/{id}",
-                    web::get().to(api::alerts::incidents::incidents_one),
-                ),
+                .route("/alerts", web::get().to(api::balerts::alerts::alerts_list)),
         );
 }

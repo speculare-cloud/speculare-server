@@ -51,19 +51,16 @@ pub fn execute_analysis(query: &str, alert: &Alerts, qtype: &QueryType, conn: &C
     trace!("> Should warn/crit {}, {}", should_warn, should_crit);
 
     // Check if an active incident already exist for this alarm.
-    let prev_incident: Option<Incidents> =
-        match Incidents::exist_name(conn, &alert.host_uuid, &alert.name) {
-            Ok(res) => Some(res),
-            Err(e) => {
-                if e != diesel::result::Error::NotFound {
-                    error!(
-                        "alert {} for host_uuid {:.6} checking previous exists failed: {}",
-                        alert.name, alert.host_uuid, e
-                    );
-                }
-                None
-            }
-        };
+    let prev_incident: Option<Incidents> = match Incidents::find_active(conn, &alert.id) {
+        Ok(res) => Some(res),
+        Err(e) => {
+            warn!(
+                "alert {} for host_uuid {:.6} checking previous exists failed: {}",
+                alert.name, alert.host_uuid, e
+            );
+            None
+        }
+    };
     trace!("> Previous incident is some: {}", prev_incident.is_some());
 
     // Assert that we do not create an incident for nothing

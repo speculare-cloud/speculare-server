@@ -17,6 +17,7 @@ pub enum AlertSource {
 
 pub struct Config {
     // GLOBAL SETTINGS
+    #[serde(default = "default_alertssource")]
     pub alerts_source: AlertSource,
     #[serde(default = "default_alert_path")]
     pub alerts_path: String,
@@ -70,6 +71,10 @@ fn default_smtp_tls() -> bool {
 
 fn default_maxconn() -> u32 {
     10
+}
+
+fn default_alertssource() -> AlertSource {
+    AlertSource::Files
 }
 
 fn mailbox_deser<'de, D>(data: D) -> Result<Mailbox, D::Error>

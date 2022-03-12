@@ -71,6 +71,10 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
                         .secure(CONFIG.https)
                         .domain(&CONFIG.cookie_domain),
                 )
+                // TODO - Add a middleware that will validate the CookieSession
+                // using the Auth server. Will extract the customer ID from the
+                // Cookie and use it as a lookup to see if the asked host_uuid
+                // belong to the customer.
                 .route("/hosts", web::get().to(api::hosts::host_all))
                 .route("/cpustats", web::get().to(api::cpustats::cpustats))
                 .route("/cputimes", web::get().to(api::cputimes::cputimes))

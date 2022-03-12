@@ -1,6 +1,6 @@
 use crate::server::AppData;
 
-use super::PagedInfoSpecific;
+use super::PagedInfo;
 
 use actix_web::{web, HttpResponse};
 use sproot::errors::{AppError, AppErrorType};
@@ -10,7 +10,7 @@ use sproot::models::Disk;
 /// Return disks for a particular host
 pub async fn disks(
     app_data: web::Data<AppData>,
-    info: web::Query<PagedInfoSpecific>,
+    info: web::Query<PagedInfo>,
 ) -> Result<HttpResponse, AppError> {
     trace!("Route GET /api/disks : {:?}", info);
 
@@ -53,7 +53,7 @@ pub async fn disks(
 /// Return disks_count for a particular host
 pub async fn disks_count(
     app_data: web::Data<AppData>,
-    info: web::Query<PagedInfoSpecific>,
+    info: web::Query<PagedInfo>,
 ) -> Result<HttpResponse, AppError> {
     trace!("Route GET /api/disks_count : {:?}", info);
 

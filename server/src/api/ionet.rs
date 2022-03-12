@@ -1,6 +1,6 @@
 use crate::server::AppData;
 
-use super::PagedInfoSpecific;
+use super::PagedInfo;
 
 use actix_web::{http, web, HttpResponse};
 use sproot::errors::{AppError, AppErrorType};
@@ -10,7 +10,7 @@ use sproot::models::IoNet;
 /// Return ionets for a particular host
 pub async fn ionets(
     app_data: web::Data<AppData>,
-    info: web::Query<PagedInfoSpecific>,
+    info: web::Query<PagedInfo>,
 ) -> Result<HttpResponse, AppError> {
     trace!("Route GET /api/ionets : {:?}", info);
 
@@ -53,7 +53,7 @@ pub async fn ionets(
 /// Return ionets_count for a particular host
 pub async fn ionets_count(
     app_data: web::Data<AppData>,
-    info: web::Query<PagedInfoSpecific>,
+    info: web::Query<PagedInfo>,
 ) -> Result<HttpResponse, AppError> {
     trace!("Route GET /api/ionets_count : {:?}", info);
 

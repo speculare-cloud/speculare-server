@@ -1,6 +1,6 @@
 use crate::server::AppData;
 
-use super::PagedInfoSpecific;
+use super::PagedInfo;
 
 use actix_web::{http, web, HttpResponse};
 use sproot::errors::{AppError, AppErrorType};
@@ -10,7 +10,7 @@ use sproot::models::IoBlock;
 /// Return ioblock for a particular host
 pub async fn ioblocks(
     app_data: web::Data<AppData>,
-    info: web::Query<PagedInfoSpecific>,
+    info: web::Query<PagedInfo>,
 ) -> Result<HttpResponse, AppError> {
     trace!("Route GET /api/ioblocks : {:?}", info);
 
@@ -54,7 +54,7 @@ pub async fn ioblocks(
 /// Return ioblocks_count for a particular host
 pub async fn ioblocks_count(
     app_data: web::Data<AppData>,
-    info: web::Query<PagedInfoSpecific>,
+    info: web::Query<PagedInfo>,
 ) -> Result<HttpResponse, AppError> {
     trace!("Route GET /api/ioblocks_count : {:?}", info);
 

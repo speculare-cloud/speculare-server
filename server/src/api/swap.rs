@@ -1,6 +1,6 @@
 use crate::server::AppData;
 
-use super::PagedInfoSpecific;
+use super::PagedInfo;
 
 use actix_web::{web, HttpResponse};
 use sproot::errors::{AppError, AppErrorType};
@@ -10,7 +10,7 @@ use sproot::models::Swap;
 /// Return swap for a particular host
 pub async fn swap(
     app_data: web::Data<AppData>,
-    info: web::Query<PagedInfoSpecific>,
+    info: web::Query<PagedInfo>,
 ) -> Result<HttpResponse, AppError> {
     trace!("Route GET /api/swap : {:?}", info);
 

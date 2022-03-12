@@ -2,8 +2,6 @@
 extern crate diesel_migrations;
 #[macro_use]
 extern crate log;
-#[macro_use]
-extern crate sproot;
 
 use crate::utils::config::Config;
 
@@ -11,16 +9,12 @@ use ahash::AHashMap;
 use clap::{Parser, Subcommand};
 use clap_verbosity_flag::InfoLevel;
 use diesel::{prelude::PgConnection, r2d2::ConnectionManager};
-use sproot::models::{Alerts, AlertsConfig};
+use sproot::models::AlertsConfig;
 use sproot::prog;
 use std::sync::RwLock;
-use std::sync::{atomic::AtomicUsize, Arc};
 
-mod api;
 mod flow_check;
 mod flow_run;
-mod routes;
-mod server;
 mod utils;
 
 #[derive(Parser, Debug)]
@@ -53,13 +47,9 @@ lazy_static::lazy_static! {
 
     // Be warned that it is not guarantee that the task is currently running.
     // The task could have been aborted sooner due to the sanity check of the query.
-    static ref RUNNING_ALERT: RwLock<AHashMap<i32, tokio::task::JoinHandle<()>>> = RwLock::new(AHashMap::new());
-    // List of the Alerts (to be returned in the API call)
-    static ref ALERTS_LIST: RwLock<Vec<Alerts>> = RwLock::new(Vec::new());
+    static ref RUNNING_ALERT: RwLock<AHashMap<String, tokio::task::JoinHandle<()>>> = RwLock::new(AHashMap::new());
     // List of the AlertsConfig (to be used in the WSS)
     static ref ALERTS_CONFIG: RwLock<Vec<AlertsConfig>> = RwLock::new(Vec::new());
-    // Global counter for the current ID of the Alerts
-    static ref ALERTS_CURR_ID: Arc<AtomicUsize> = Arc::new(AtomicUsize::new(1));
 }
 
 // Embed migrations into the binary
@@ -91,6 +81,8 @@ async fn main() -> std::io::Result<()> {
             std::process::exit(1);
         }
     };
+
+    debug!("AlertSource is defined to {:?}", CONFIG.alerts_source);
 
     // Dispatch subcommands
     if let Some(Commands::Check) = &args.command {

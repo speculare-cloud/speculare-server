@@ -36,6 +36,16 @@ macro_rules! field_isset {
     };
 }
 
+#[macro_export]
+macro_rules! as_variant {
+    ($value:expr, $variant:path) => {
+        match $value {
+            $variant(x) => Some(x),
+            _ => None,
+        }
+    };
+}
+
 pub fn prog() -> Option<String> {
     std::env::args()
         .next()

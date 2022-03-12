@@ -13,9 +13,12 @@ pub use notifications::*;
 pub mod alerts;
 pub mod analysis;
 pub mod config;
-pub mod hosts_changes;
+pub mod impls;
 pub mod monitoring;
 pub mod query;
+pub mod websocket;
+pub mod ws_alerts;
+pub mod ws_hosts;
 
 /// Enum used to hold either i32, String or Option<String> (from CDC)
 ///

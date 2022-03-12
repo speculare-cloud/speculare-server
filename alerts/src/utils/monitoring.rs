@@ -1,17 +1,16 @@
-use crate::{ALERTS_CONFIG, ALERTS_CURR_ID, CONFIG};
+use crate::{ALERTS_CONFIG, CONFIG};
 
-use super::{alerts::start_alert_task, hosts_changes::listen_hosts_changes};
+use super::{alerts::start_alert_task, config::AlertSource};
 
 use sproot::{
     errors::AppError,
     models::{Alerts, AlertsConfig, Host, HostTargeted},
-    Pool,
+    ConnType, Pool,
 };
-use std::sync::atomic::Ordering;
 
-pub fn alerts_from_config(pool: &Pool) -> Result<Vec<Alerts>, AppError> {
+pub fn alerts_from_config(conn: &ConnType) -> Result<Vec<Alerts>, AppError> {
     // TODO - If more than 50 hosts, get them too (paging).
-    let hosts = &Host::list_hosts(&pool.get()?, 50, 0)?;
+    let hosts = &Host::list_hosts(conn, 50, 0)?;
 
     let mut alerts: Vec<Alerts> = Vec::new();
     // For each alerts config, create the Alerts corresponding
@@ -31,27 +30,32 @@ pub fn alerts_from_config(pool: &Pool) -> Result<Vec<Alerts>, AppError> {
                         error_type: sproot::errors::AppErrorType::NotFound,
                     });
                 }
+                let id = format!("{}_{}", &thosts[0].uuid, &thosts[0].hostname);
                 info!(
-                    "Created the alert {} for {:.6}",
-                    &aconfig.name, thosts[0].uuid
+                    "Created the alert {} for {:.6} with id {}",
+                    &aconfig.name, thosts[0].uuid, id
                 );
 
                 alerts.push(Alerts::build_from_config(
                     cloned_config,
                     thosts[0].uuid.to_owned(),
                     thosts[0].hostname.to_owned(),
-                    ALERTS_CURR_ID.fetch_add(1, Ordering::Relaxed) as i32,
+                    id,
                 ));
             }
             HostTargeted::ALL => {
                 for host in hosts {
-                    info!("Created the alert {} for {:.6}", &aconfig.name, host.uuid);
+                    let id = format!("{}_{}", &host.uuid, &host.hostname);
+                    info!(
+                        "Created the alert {} for {:.6} with id {}",
+                        &aconfig.name, host.uuid, id
+                    );
 
                     alerts.push(Alerts::build_from_config(
                         cloned_config.clone(),
                         host.uuid.to_owned(),
                         host.hostname.to_owned(),
-                        ALERTS_CURR_ID.fetch_add(1, Ordering::Relaxed) as i32,
+                        id,
                     ));
                 }
             }
@@ -61,8 +65,7 @@ pub fn alerts_from_config(pool: &Pool) -> Result<Vec<Alerts>, AppError> {
     Ok(alerts)
 }
 
-/// Start the monitoring tasks for each alarms
-pub fn launch_monitoring(pool: Pool) -> Result<(), AppError> {
+fn alerts_from_files(conn: &ConnType) -> Result<Vec<Alerts>, AppError> {
     // Get the AlertsConfig from the ALERTS_PATH folder
     let alerts_config: Vec<AlertsConfig> =
         match AlertsConfig::from_configs_path(&CONFIG.alerts_path) {
@@ -77,10 +80,25 @@ pub fn launch_monitoring(pool: Pool) -> Result<(), AppError> {
     }
 
     // Convert the AlertsConfig to alerts
-    let alerts: Vec<Alerts> = match alerts_from_config(&pool) {
+    alerts_from_config(conn)
+}
+
+fn alerts_from_database(conn: &ConnType) -> Result<Vec<Alerts>, AppError> {
+    // Get the alerts from the database
+    Alerts::get_list(conn)
+}
+
+/// Start the monitoring tasks for each alarms
+pub fn launch_monitoring(pool: Pool) -> Result<(), AppError> {
+    let conn = &pool.get()?;
+    let alerts = match if CONFIG.alerts_source == AlertSource::Files {
+        alerts_from_files(conn)
+    } else {
+        alerts_from_database(conn)
+    } {
         Ok(alerts) => alerts,
         Err(e) => {
-            error!("Failed to launch monitoring: {}", e);
+            error!("Cannot get the alerts: {}", e);
             std::process::exit(1);
         }
     };
@@ -89,9 +107,6 @@ pub fn launch_monitoring(pool: Pool) -> Result<(), AppError> {
     for alert in alerts {
         start_alert_task(alert, pool.clone())
     }
-
-    // Start a WebSocket listening for new/deleted hosts to set up alerts.
-    listen_hosts_changes(pool);
 
     Ok(())
 }

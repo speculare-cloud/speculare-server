@@ -121,6 +121,22 @@ table! {
 }
 
 table! {
+    alerts (id) {
+        id -> Text,
+        _name -> Varchar,
+        _table -> Varchar,
+        lookup -> Text,
+        timing -> Int4,
+        warn -> Text,
+        crit -> Text,
+        info -> Nullable<Text>,
+        host_uuid -> Varchar,
+        hostname -> Varchar,
+        where_clause -> Nullable<Text>,
+    }
+}
+
+table! {
     incidents (id) {
         id -> Int4,
         result -> Text,
@@ -131,7 +147,7 @@ table! {
         hostname -> Varchar,
         status -> Int4,
         severity -> Int4,
-        alerts_id -> Int4,
+        alerts_id -> Text,
         alerts_name -> Varchar,
         alerts_table -> Varchar,
         alerts_lookup -> Text,

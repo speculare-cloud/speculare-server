@@ -1,7 +1,7 @@
 use crate::{
     utils::{
-        analysis::execute_analysis, mail::test_smtp_transport, monitoring::alerts_from_config,
-        query::construct_query,
+        analysis::execute_analysis, config::AlertSource, mail::test_smtp_transport,
+        monitoring::alerts_from_config, query::construct_query,
     },
     ALERTS_CONFIG, CONFIG,
 };
@@ -15,6 +15,13 @@ use sproot::{
 pub fn flow_check_start(pool: Pool) {
     // Check if the SMTP server host is "ok"
     test_smtp_transport();
+
+    // If the AlertSource is database, we don't need to check the Alerts
+    // as they are created using the API and already checked at creation
+    if CONFIG.alerts_source == AlertSource::Database {
+        println!("\nEverything went well, no errors found !");
+        return;
+    }
 
     // Need to get the Alerts
     let alerts_config = match AlertsConfig::from_configs_path(&CONFIG.alerts_path) {
@@ -32,8 +39,16 @@ pub fn flow_check_start(pool: Pool) {
         let _ = std::mem::replace(&mut *x, alerts_config);
     }
 
-    // Convert the AlertsConfig to alerts
-    let alerts: Vec<Alerts> = match alerts_from_config(&pool) {
+    let conn = match pool.get() {
+        Ok(conn) => conn,
+        Err(e) => {
+            error!("Cannot get a conn for the alerts_from_config: {}", e);
+            std::process::exit(1);
+        }
+    };
+
+    // Convert the AlertsConfig to alert
+    let alerts: Vec<Alerts> = match alerts_from_config(&conn) {
         Ok(alerts) => alerts,
         Err(e) => {
             error!("Failed to launch monitoring: {}", e);

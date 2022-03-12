@@ -24,7 +24,7 @@ pub struct Incidents {
     pub hostname: String,
     pub status: i32,
     pub severity: i32,
-    pub alerts_id: i32,
+    pub alerts_id: String,
     pub alerts_name: String,
     pub alerts_table: String,
     pub alerts_lookup: String,
@@ -70,7 +70,7 @@ impl Incidents {
     /// # Params
     /// * `conn` - The r2d2 connection needed to fetch the data from the db
     /// * `alert_id` - The id of the alert related to the incident
-    pub fn exist(conn: &ConnType, alert_id: i32) -> Result<Self, diesel::result::Error> {
+    pub fn exist(conn: &ConnType, alert_id: String) -> Result<Self, diesel::result::Error> {
         dsl_incidents
             .filter(alerts_id.eq(alert_id).and(status.eq(0)))
             .first(conn)
@@ -194,7 +194,7 @@ pub struct IncidentsDTO {
     pub hostname: String,
     pub status: i32,
     pub severity: i32,
-    pub alerts_id: i32,
+    pub alerts_id: String,
     pub alerts_name: String,
     pub alerts_table: String,
     pub alerts_lookup: String,
@@ -216,7 +216,7 @@ pub struct IncidentsDTOUpdate {
     pub hostname: Option<String>,
     pub status: Option<i32>,
     pub severity: Option<i32>,
-    pub alerts_id: Option<i32>,
+    pub alerts_id: Option<String>,
     pub alerts_name: Option<String>,
     pub alerts_table: Option<String>,
     pub alerts_lookup: Option<String>,

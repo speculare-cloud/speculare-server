@@ -1,15 +1,30 @@
-use crate::{ALERTS_LIST, RUNNING_ALERT};
+use crate::{CONFIG, RUNNING_ALERT};
 
-use super::{analysis::execute_analysis, query::*};
+use super::{analysis::execute_analysis, config::AlertSource, query::*};
 
-use sproot::{models::Alerts, Pool};
-use std::time::Duration;
+use sproot::{models::Alerts, ConnType, Pool};
+use std::{mem::MaybeUninit, time::Duration};
 
-/// Create the task for a particular alert and add it to the ALERTS_LIST & RUNNING_ALERT.
+/// Create the task for a particular alert and add it to the RUNNING_ALERT.
 pub fn start_alert_task(alert: Alerts, pool: Pool) {
+    // Get a conn if we're in Files AlertSource
+    let mut conn = MaybeUninit::<ConnType>::uninit();
+    if CONFIG.alerts_source == AlertSource::Files {
+        match pool.get() {
+            Ok(pconn) => conn.write(pconn),
+            Err(e) => {
+                error!(
+                    "Cannot get a connection to the pool when start_alert_task: {}",
+                    e
+                );
+                std::process::exit(1);
+            }
+        };
+    }
+
+    // Clone the alert to be used inside the RUNNING_ALERT below
     let calert = alert.clone();
-    // Temp value because alert is borrowed inside the tokio task later
-    let alert_id = alert.id;
+
     // Spawn a new task which will do the check for that particular alerts
     // Save the JoinHandle so we can abort if needed later
     let alert_task: tokio::task::JoinHandle<()> = tokio::spawn(async move {
@@ -37,12 +52,33 @@ pub fn start_alert_task(alert: Alerts, pool: Pool) {
                 alert.host_uuid,
                 interval.period()
             );
+
+            let conn = match pool.get() {
+                Ok(conn) => conn,
+                Err(e) => {
+                    error!("Cannot get a connection to the pool: {}", e);
+                    continue;
+                }
+            };
             // Execute the query and the analysis
-            execute_analysis(&query, &alert, &qtype, &pool.get().unwrap());
+            execute_analysis(&query, &alert, &qtype, &conn);
         }
     });
     // Add the task into our AHashMap protected by RwLock (multiple readers, one write at most)
-    RUNNING_ALERT.write().unwrap().insert(alert_id, alert_task);
-    // Add the alert into the ALERTS_LIST
-    ALERTS_LIST.write().unwrap().push(calert);
+    RUNNING_ALERT
+        .write()
+        .unwrap()
+        .insert(calert.id.clone(), alert_task);
+
+    // Add the Alert to the database if we're in Files mode
+    if CONFIG.alerts_source == AlertSource::Files {
+        let alert_id = calert.id.clone();
+        match Alerts::insert(&unsafe { conn.assume_init() }, &[calert]) {
+            Ok(_) => info!("Alert {} added to the database", alert_id),
+            Err(e) => {
+                error!("Cannot add the alerts to the database: {}", e);
+                std::process::exit(1);
+            }
+        };
+    }
 }

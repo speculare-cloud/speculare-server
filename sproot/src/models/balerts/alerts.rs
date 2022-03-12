@@ -1,12 +1,25 @@
+use crate::errors::{AppError, AppErrorType};
+use crate::models::schema::alerts;
+use crate::models::schema::alerts::dsl::{
+    _name, alerts as dsl_alerts, host_uuid as thost_uuid, id as tid,
+};
+use crate::ConnType;
+
+use diesel::*;
 use log::error;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use walkdir::WalkDir;
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Identifiable, Insertable, Queryable, Debug, Serialize, Deserialize, Clone)]
+#[table_name = "alerts"]
 pub struct Alerts {
-    pub id: i32,
+    // The id is the name + host_uuid
+    pub id: String,
+    // The name can't be updated as it's used for the id
+    #[column_name = "_name"]
     pub name: String,
+    #[column_name = "_table"]
     pub table: String,
     // Represent the query used to check the alarms against the database's data
     // eg: "avg pct 10m of w,x over y,z"
@@ -36,7 +49,7 @@ impl Alerts {
         config: AlertsConfig,
         host_uuid: String,
         hostname: String,
-        id: i32,
+        id: String,
     ) -> Alerts {
         Alerts {
             id,
@@ -52,6 +65,61 @@ impl Alerts {
             where_clause: config.where_clause,
         }
     }
+
+    ///
+    pub fn get_list(conn: &ConnType) -> Result<Vec<Self>, AppError> {
+        Ok(dsl_alerts.load(conn)?)
+    }
+
+    ///
+    pub fn get_list_host(conn: &ConnType, host_uuid: &str) -> Result<Vec<Self>, AppError> {
+        Ok(dsl_alerts
+            .filter(thost_uuid.eq(host_uuid))
+            .order_by(_name.asc())
+            .load(conn)?)
+    }
+
+    ///
+    pub fn exist(conn: &ConnType, alert_id: &str) -> Result<Self, diesel::result::Error> {
+        dsl_alerts.find(alert_id).first(conn)
+    }
+
+    ///
+    pub fn get(conn: &ConnType, alert_id: &str) -> Result<Self, AppError> {
+        Ok(dsl_alerts.find(alert_id).first(conn)?)
+    }
+
+    ///
+    pub fn insert(conn: &ConnType, alerts: &[Alerts]) -> Result<(), AppError> {
+        insert_into(dsl_alerts).values(alerts).execute(conn)?;
+        Ok(())
+    }
+
+    ///
+    pub fn ginsert(conn: &ConnType, alerts: &[Alerts]) -> Result<Self, AppError> {
+        Ok(insert_into(dsl_alerts).values(alerts).get_result(conn)?)
+    }
+
+    ///
+    pub fn delete(conn: &ConnType, alert_id: &str) -> Result<(), AppError> {
+        let res = delete(dsl_alerts.filter(tid.eq(alert_id))).execute(conn)?;
+        if res == 1 {
+            Ok(())
+        } else {
+            Err(AppError {
+                message: None,
+                cause: None,
+                error_type: AppErrorType::NotFound,
+            })
+        }
+    }
+
+    ///
+    pub fn delete_all(conn: &ConnType) -> Result<usize, AppError> {
+        Ok(delete(dsl_alerts).execute(conn)?)
+    }
+
+    // TODO - Update function
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

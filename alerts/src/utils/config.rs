@@ -5,30 +5,29 @@ use config::ConfigError;
 use lettre::message::Mailbox;
 use serde::{de, Deserialize, Deserializer};
 
+#[derive(Debug, Clone, Deserialize, PartialEq)]
+pub enum AlertSource {
+    #[serde(rename = "files")]
+    Files,
+    #[serde(rename = "database")]
+    Database,
+}
+
 #[derive(Debug, Deserialize, Clone)]
 
 pub struct Config {
-    // WHERE ARE THE ALERTSCONFIG
+    // GLOBAL SETTINGS
+    pub alerts_source: AlertSource,
     #[serde(default = "default_alert_path")]
     pub alerts_path: String,
+    pub wss_domain: String,
 
-    // POSTGRESQL DB CONFIGS
+    // POSTGRESQL CONNECTION
     pub database_url: String,
     #[serde(default = "default_maxconn")]
     pub database_max_connection: u32,
 
-    // HTTP API CONFIGS
-    #[serde(default = "default_https")]
-    pub https: bool,
-    pub key_priv: Option<String>,
-    pub key_cert: Option<String>,
-    #[serde(default = "default_binding")]
-    pub binding: String,
-
-    // PGCDC INSTANCE'S URL
-    pub wss_domain: String,
-
-    // SMTP CREDENTIALS
+    // SMTP SETTINGS
     #[serde(default = "default_smtp_port")]
     pub smtp_port: u16,
     #[serde(default = "default_smtp_tls")]
@@ -61,20 +60,12 @@ fn default_alert_path() -> String {
     String::from("/etc/speculare/alerts-configs")
 }
 
-fn default_https() -> bool {
-    false
-}
-
 fn default_smtp_port() -> u16 {
     587
 }
 
 fn default_smtp_tls() -> bool {
     true
-}
-
-fn default_binding() -> String {
-    String::from("0.0.0.0:8080")
 }
 
 fn default_maxconn() -> u32 {

@@ -167,6 +167,14 @@ table! {
     }
 }
 
+table! {
+    customers_owning (id) {
+        id -> Int4,
+        customer_id -> Varchar,
+        host_uuid -> Varchar,
+    }
+}
+
 allow_tables_to_appear_in_same_query!(
     cpustats, cputimes, disks, hosts, ionets, ioblocks, loadavg, memory, swap,
 );

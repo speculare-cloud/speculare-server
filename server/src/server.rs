@@ -22,13 +22,11 @@ pub async fn server(pool: Pool, _auth_pool: Option<Pool>) -> std::io::Result<()>
             .wrap(Cors::permissive())
             .wrap(middleware::Compress::default())
             .wrap(middleware::Logger::default())
-            .app_data(actix_web::web::Data::new(AppData {
+            .app_data(AppData {
                 metrics_db: pool.clone(),
                 #[cfg(feature = "auth")]
                 auth_db: _auth_pool.as_ref().unwrap().clone(),
-            }))
-            // .app_data(actix_web::web::Data::new(pool.clone()))
-            // .app_data(actix_web::web::Data::new(auth_pool.clone()))
+            })
             .configure(routes::routes)
     });
     // Bind the server (https or no)

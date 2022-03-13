@@ -45,7 +45,7 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
 
 #[cfg(feature = "auth")]
 pub fn routes(cfg: &mut web::ServiceConfig) {
-    use crate::auth::validator;
+    use crate::auth::{cookiemiddleware::CheckCookies, validator};
     use actix_session::CookieSession;
     use actix_web_httpauth::middleware::HttpAuthentication;
 
@@ -63,18 +63,15 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
                         .wrap(auth)
                         .route("/hosts", web::post().to(api::hosts::host_ingest)),
                 )
-                // Secure the following calls with a CookieSession
-                // The cookie_secret will be shared with the Dashboard
-                .wrap(
-                    CookieSession::signed(CONFIG.cookie_secret.as_bytes())
-                        .name("SP-CKS")
-                        .secure(CONFIG.https)
-                        .domain(&CONFIG.cookie_domain),
-                )
-                // TODO - Add a middleware that will validate the CookieSession
+                // Middleware that will validate the CookieSession
                 // using the Auth server. Will extract the customer ID from the
                 // Cookie and use it as a lookup to see if the asked host_uuid
                 // belong to the customer.
+                .wrap(CheckCookies)
+                // Secure the following calls with a CookieSession
+                // The cookie_secret will be shared with the Dashboard
+                .wrap(CookieSession::signed(CONFIG.cookie_secret.as_bytes()).name("SP-CKS"))
+                .route("/ping", web::get().to(|| async { "zpour" }))
                 .route("/hosts", web::get().to(api::hosts::host_all))
                 .route("/cpustats", web::get().to(api::cpustats::cpustats))
                 .route("/cputimes", web::get().to(api::cputimes::cputimes))

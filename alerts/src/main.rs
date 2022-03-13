@@ -7,7 +7,7 @@ use crate::utils::config::Config;
 
 use ahash::AHashMap;
 use clap::{Parser, Subcommand};
-use clap_verbosity_flag::InfoLevel;
+use clap_verbosity_flag::WarnLevel;
 use diesel::{prelude::PgConnection, r2d2::ConnectionManager};
 use sproot::models::AlertsConfig;
 use sproot::prog;
@@ -27,7 +27,7 @@ struct Args {
     config_path: Option<String>,
 
     #[clap(flatten)]
-    verbose: clap_verbosity_flag::Verbosity<InfoLevel>,
+    verbose: clap_verbosity_flag::Verbosity<WarnLevel>,
 }
 
 #[derive(Subcommand, Debug)]

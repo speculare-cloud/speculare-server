@@ -8,7 +8,7 @@ extern crate sproot;
 use crate::utils::config::Config;
 
 use clap::Parser;
-use clap_verbosity_flag::InfoLevel;
+use clap_verbosity_flag::WarnLevel;
 use sproot::prog;
 
 mod api;
@@ -26,7 +26,7 @@ struct Args {
     config_path: Option<String>,
 
     #[clap(flatten)]
-    verbose: clap_verbosity_flag::Verbosity<InfoLevel>,
+    verbose: clap_verbosity_flag::Verbosity<WarnLevel>,
 }
 
 // Lazy static of the Token from Config to use in validator

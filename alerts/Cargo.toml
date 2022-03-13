@@ -6,7 +6,7 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-sproot = { path = "../sproot" }
+sproot = { git = "https://github.com/speculare-cloud/sproot" }
 ahash = "0.7"
 askama = "0.11"
 clap = { version = "3.1", features = ["derive"] }

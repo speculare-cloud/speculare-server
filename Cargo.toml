@@ -2,13 +2,11 @@
 default-members = [
     "alerts",
 	"server",
-	"sproot"
 ]
 
 members = [
 	"alerts",
 	"server",
-	"sproot"
 ]
 
 [profile.release]

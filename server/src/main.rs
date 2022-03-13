@@ -54,6 +54,7 @@ async fn main() -> std::io::Result<()> {
             &prog().map_or_else(|| "speculare_server".to_owned(), |f| f.replace('-', "_")),
             args.verbose.log_level_filter(),
         )
+        .filter_module("actix_web", args.verbose.log_level_filter())
         .init();
 
     flow_run::flow_run_start().await

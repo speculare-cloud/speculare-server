@@ -75,7 +75,10 @@ async fn main() -> std::io::Result<()> {
         .min_idle(Some((10 * CONFIG.database_max_connection) / 100))
         .build(manager)
     {
-        Ok(pool) => pool,
+        Ok(pool) => {
+            info!("R2D2 PostgreSQL pool created");
+            pool
+        }
         Err(e) => {
             error!("Failed to create db pool: {}", e);
             std::process::exit(1);

@@ -12,7 +12,10 @@ fn build_pool(db_url: &str, max_conn: u32) -> Pool {
         .min_idle(Some((10 * max_conn) / 100))
         .build(manager)
     {
-        Ok(pool) => pool,
+        Ok(pool) => {
+            info!("R2D2 PostgreSQL pool created");
+            pool
+        }
         Err(e) => {
             error!("Failed to create db pool: {}", e);
             std::process::exit(1);

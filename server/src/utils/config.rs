@@ -21,6 +21,8 @@ pub struct Config {
 
     // API SETTINGS
     pub binding: String,
+    #[serde(default = "default_workers")]
+    pub workers: usize,
 
     // API SECURITY SETTINGS
     #[serde(default = "default_https")]
@@ -58,4 +60,17 @@ fn default_https() -> bool {
 
 fn default_maxconn() -> u32 {
     10
+}
+
+fn default_workers() -> usize {
+    match sys_metrics::cpu::get_logical_count() {
+        Ok(count) => count as usize,
+        Err(e) => {
+            error!(
+                "Workers: failed to get the number of workers automatically, defaulting to 4: {}",
+                e
+            );
+            4
+        }
+    }
 }

@@ -28,7 +28,8 @@ pub async fn server(pool: Pool, _auth_pool: Option<Pool>) -> std::io::Result<()>
                 auth_db: _auth_pool.as_ref().unwrap().clone(),
             })
             .configure(routes::routes)
-    });
+    })
+    .workers(CONFIG.workers);
     // Bind the server (https or no)
     if !CONFIG.https {
         if !cfg!(debug_assertions) {

@@ -5,14 +5,17 @@ use actix_web::dev::{Service, Transform};
 use actix_web::{web, Error, HttpResponse};
 use futures_util::future::LocalBoxFuture;
 use sproot::models::CustomersOwning;
-use std::future::{ready, Ready};
+use std::{
+    future::{ready, Ready},
+    rc::Rc,
+};
 
 use crate::api::PagedInfo;
 use crate::server::AppData;
 
 pub struct CheckCookies;
 
-impl<S, B> Transform<S, ServiceRequest> for CheckCookies
+impl<S: 'static, B> Transform<S, ServiceRequest> for CheckCookies
 where
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
     S::Future: 'static,
@@ -25,16 +28,18 @@ where
     type Future = Ready<Result<Self::Transform, Self::InitError>>;
 
     fn new_transform(&self, service: S) -> Self::Future {
-        ready(Ok(CheckCookiesMiddleware { service }))
+        ready(Ok(CheckCookiesMiddleware {
+            service: Rc::new(service),
+        }))
     }
 }
 pub struct CheckCookiesMiddleware<S> {
-    service: S,
+    service: Rc<S>,
 }
 
 impl<S, B> Service<ServiceRequest> for CheckCookiesMiddleware<S>
 where
-    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
+    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
     S::Future: 'static,
     B: 'static,
 {
@@ -89,23 +94,30 @@ where
             }
         };
 
-        // Database call to check if the pair is valid
-        match CustomersOwning::entry_exists(&conn, &inner_user, &info.uuid) {
-            Ok(true) => {
-                let res = self.service.call(ServiceRequest::from_parts(request, pl));
-                Box::pin(async move { res.await.map(ServiceResponse::map_into_left_body) })
+        let svc = self.service.clone();
+        Box::pin(async move {
+            let exists = actix_web::web::block(move || {
+                CustomersOwning::entry_exists(&conn, &inner_user, &info.uuid)
+            })
+            .await?;
+
+            match exists {
+                Ok(true) => {
+                    let res = svc.call(ServiceRequest::from_parts(request, pl));
+                    res.await.map(ServiceResponse::map_into_left_body)
+                }
+                Ok(false) => {
+                    let response = HttpResponse::Unauthorized().finish().map_into_right_body();
+                    Ok(ServiceResponse::new(request, response))
+                }
+                Err(e) => {
+                    error!("middleware: entry_exists: failed due to {}", e);
+                    let response = HttpResponse::InternalServerError()
+                        .finish()
+                        .map_into_right_body();
+                    Ok(ServiceResponse::new(request, response))
+                }
             }
-            Ok(false) => {
-                let response = HttpResponse::Unauthorized().finish().map_into_right_body();
-                Box::pin(async { Ok(ServiceResponse::new(request, response)) })
-            }
-            Err(e) => {
-                error!("middleware: entry_exists: failed due to {}", e);
-                let response = HttpResponse::InternalServerError()
-                    .finish()
-                    .map_into_right_body();
-                Box::pin(async { Ok(ServiceResponse::new(request, response)) })
-            }
-        }
+        })
     }
 }

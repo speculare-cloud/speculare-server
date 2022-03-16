@@ -1,7 +1,7 @@
 <div align="center">
   <h1>Speculare Server</h1>
   <p>
-    <strong>Metrics for your servers</strong>
+    <strong>Receive metrics from your servers</strong>
   </p>
   <p>
 
@@ -12,13 +12,7 @@
   </p>
 </div>
 
-This repo is the place for both server & alerts of Speculare, doing it this way to share models and some common code.
-
-Server is intended to recieve data from speculare-client childrens.
-
-Alerts is intended to create incidents and send notifications about them.
-
-This project is meant to evolve in something more complete and more complexe in a somewhat near future.
+This project is meant to evolve in something more complete and more complex in a somewhat near future.
 
 Server setup / Dev setup
 --------------------------

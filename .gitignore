@@ -2,6 +2,6 @@
 alerts.config
 server.config
 *.pem
-diesel.toml
 *.lock
 .alerts
+xschema.rs

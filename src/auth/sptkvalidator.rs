@@ -96,12 +96,19 @@ where
                 actix_web::web::block(move || ApiKey::get_entry(&conn, sptk.to_str().unwrap()))
                     .await??;
 
-            if api_key.host_uuid == host_uuid.to_str().unwrap() {
-                let response = HttpResponse::Unauthorized().finish().map_into_right_body();
-                Ok(ServiceResponse::new(request, response))
+            if let Some(khost_uuid) = api_key.host_uuid {
+                if khost_uuid == host_uuid {
+                    let res = svc.call(ServiceRequest::from_parts(request, pl));
+                    res.await.map(ServiceResponse::map_into_left_body)
+                } else {
+                    let response = HttpResponse::Unauthorized().finish().map_into_right_body();
+                    Ok(ServiceResponse::new(request, response))
+                }
             } else {
-                let res = svc.call(ServiceRequest::from_parts(request, pl));
-                res.await.map(ServiceResponse::map_into_left_body)
+                let response = HttpResponse::PreconditionFailed()
+                    .finish()
+                    .map_into_right_body();
+                Ok(ServiceResponse::new(request, response))
             }
         })
     }

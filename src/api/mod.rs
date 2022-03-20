@@ -18,6 +18,27 @@ pub mod memory;
 pub mod swap;
 
 #[derive(Debug, Serialize, Deserialize)]
+pub struct Paged {
+    pub size: Option<i64>,
+    pub page: Option<i64>,
+}
+
+impl Paged {
+    pub fn get_size_page(&self) -> Result<(i64, i64), AppError> {
+        let size = self.size.unwrap_or(30);
+        let page = self.page.unwrap_or(0);
+        match (size, page) {
+            v if v.0 > 0 && v.0 < 5000 && v.1 >= 0 => Ok((v.0, v.1)),
+            _ => Err(AppError {
+                message: Some("The parameters are incorrect".to_owned()),
+                cause: Some("Size must be > 0 && < 5000 and Page must be >= 0".to_owned()),
+                error_type: AppErrorType::InvalidRequest,
+            }),
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct PagedInfo {
     pub uuid: String,
     pub size: Option<i64>,
@@ -32,15 +53,10 @@ impl PagedInfo {
     }
 
     pub fn get_size_page(&self) -> Result<(i64, i64), AppError> {
-        match (self.size, self.page) {
-            p if p.0.is_some()
-                && p.0.unwrap() > 0
-                && p.0.unwrap() < 5000
-                && p.1.is_some()
-                && p.1.unwrap() >= 0 =>
-            {
-                Ok((p.0.unwrap(), p.1.unwrap()))
-            }
+        let size = self.size.unwrap_or(30);
+        let page = self.page.unwrap_or(0);
+        match (size, page) {
+            v if v.0 > 0 && v.0 < 5000 && v.1 >= 0 => Ok((v.0, v.1)),
             _ => Err(AppError {
                 message: Some("The parameters are incorrect".to_owned()),
                 cause: Some("Size must be > 0 && < 5000 and Page must be >= 0".to_owned()),
@@ -50,8 +66,9 @@ impl PagedInfo {
     }
 
     pub fn get_size(&self) -> Result<i64, AppError> {
-        match self.size {
-            s if s.is_some() && s.unwrap() > 0 && s.unwrap() < 5000 => Ok(s.unwrap()),
+        let size = self.size.unwrap_or(30);
+        match size {
+            s if s > 0 && s < 5000 => Ok(s),
             _ => Err(AppError {
                 message: Some("The parameters are incorrect".to_owned()),
                 cause: Some("Size must be > 0".to_owned()),

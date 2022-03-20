@@ -1,6 +1,6 @@
 use crate::server::AppData;
 
-use super::PagedInfo;
+use super::Paged;
 
 use actix_web::{web, HttpResponse};
 use sproot::errors::AppError;
@@ -10,7 +10,7 @@ use sproot::models::{Host, HttpPostHost};
 /// Return all hosts
 pub async fn host_all(
     app_data: web::Data<AppData>,
-    info: web::Query<PagedInfo>,
+    info: web::Query<Paged>,
 ) -> Result<HttpResponse, AppError> {
     trace!("Route GET /api/hosts");
 

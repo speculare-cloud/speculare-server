@@ -34,9 +34,8 @@ pub async fn server(pool: Pool, _auth_pool: Option<Pool>) -> std::io::Result<()>
     if !CONFIG.https {
         if !cfg!(debug_assertions) {
             warn!("You're starting speculare-server as HTTP on a production build, are you sure about what you're doing ?")
-        } else {
-            info!("Server started as HTTP on {}", &CONFIG.binding);
         }
+        info!("Server started as HTTP on {}", &CONFIG.binding);
         serv.bind(&CONFIG.binding)?.run().await
     } else {
         info!("Server started as HTTPS on {}", &CONFIG.binding);

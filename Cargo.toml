@@ -23,9 +23,10 @@ log = "0.4"
 r2d2 = "0.8"
 serde = { version = "1.0", features = ["derive"] }
 sys_metrics = { git = "https://github.com/Martichou/sys_metrics" }
+uuid = { version = "0.8", features = ["v4"] }
 
 [features]
-default = []
+default = ["auth"]
 auth = ["actix-session"]
 
 

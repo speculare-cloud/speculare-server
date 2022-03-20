@@ -4,11 +4,12 @@ use actix_web::dev::{self, ServiceRequest, ServiceResponse};
 use actix_web::dev::{Service, Transform};
 use actix_web::{web, Error, HttpResponse};
 use futures_util::future::LocalBoxFuture;
-use sproot::models::CustomersOwning;
+use sproot::models::ApiKey;
 use std::{
     future::{ready, Ready},
     rc::Rc,
 };
+use uuid::Uuid;
 
 use crate::api::PagedInfo;
 use crate::server::AppData;
@@ -97,7 +98,7 @@ where
         let svc = self.service.clone();
         Box::pin(async move {
             let exists = actix_web::web::block(move || {
-                CustomersOwning::entry_exists(&conn, &inner_user, &info.uuid)
+                ApiKey::entry_exists(&conn, &Uuid::parse_str(&inner_user)?, &info.uuid)
             })
             .await??;
 

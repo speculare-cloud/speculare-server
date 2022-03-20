@@ -46,7 +46,16 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
 #[cfg(feature = "auth")]
 pub fn routes(cfg: &mut web::ServiceConfig) {
     use crate::auth::{checkcookies::CheckCookies, sptkvalidator::SptkValidator};
-    use actix_session::CookieSession;
+    use actix_session::{storage::CookieSessionStore, CookieContentSecurity, SessionMiddleware};
+
+    let cookie_session = SessionMiddleware::builder(
+        CookieSessionStore::default(),
+        actix_web::cookie::Key::from(CONFIG.cookie_secret.as_bytes()),
+    )
+    .cookie_name("SP-CKS".to_string())
+    .cookie_content_security(CookieContentSecurity::Signed)
+    .build();
+    // TODO - Secure the cookie_session
 
     info!("Server configured with Bearer security");
     // The /ping is used only to get a status over the server
@@ -68,7 +77,7 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
                 .wrap(CheckCookies)
                 // Secure the following calls with a CookieSession
                 // The cookie_secret will be shared with the Dashboard
-                .wrap(CookieSession::signed(CONFIG.cookie_secret.as_bytes()).name("SP-CKS"))
+                .wrap(cookie_session)
                 .route("/ping", web::get().to(|| async { "zpour" }))
                 .route("/hosts", web::get().to(api::hosts::host_all))
                 .route("/cpustats", web::get().to(api::cpustats::cpustats))

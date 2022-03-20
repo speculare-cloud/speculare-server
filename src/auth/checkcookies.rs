@@ -1,4 +1,4 @@
-use actix_session::UserSession;
+use actix_session::SessionExt;
 use actix_web::body::EitherBody;
 use actix_web::dev::{self, ServiceRequest, ServiceResponse};
 use actix_web::dev::{Service, Transform};

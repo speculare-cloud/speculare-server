@@ -99,22 +99,15 @@ where
             let exists = actix_web::web::block(move || {
                 CustomersOwning::entry_exists(&conn, &inner_user, &info.uuid)
             })
-            .await?;
+            .await??;
 
             match exists {
-                Ok(true) => {
+                true => {
                     let res = svc.call(ServiceRequest::from_parts(request, pl));
                     res.await.map(ServiceResponse::map_into_left_body)
                 }
-                Ok(false) => {
+                false => {
                     let response = HttpResponse::Unauthorized().finish().map_into_right_body();
-                    Ok(ServiceResponse::new(request, response))
-                }
-                Err(e) => {
-                    error!("middleware: entry_exists: failed due to {}", e);
-                    let response = HttpResponse::InternalServerError()
-                        .finish()
-                        .map_into_right_body();
                     Ok(ServiceResponse::new(request, response))
                 }
             }

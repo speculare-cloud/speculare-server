@@ -10,7 +10,6 @@ sproot = { git = "https://github.com/speculare-cloud/sproot" }
 actix-cors = { version = "0.6" }
 actix-session = { version = "0.5", optional = true }
 actix-web = { version = "4.0", features = ["rustls"] }
-actix-web-httpauth = { version = "0.6", optional = true }
 clap = { version = "3.1", features = ["derive"] }
 clap-verbosity-flag = "1.0"
 chrono = { version = "0.4", features = ["serde"] }
@@ -27,7 +26,7 @@ sys_metrics = { git = "https://github.com/Martichou/sys_metrics" }
 
 [features]
 default = []
-auth = ["actix-web-httpauth", "actix-session"]
+auth = ["actix-session"]
 
 
 [profile.release]

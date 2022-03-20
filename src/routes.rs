@@ -45,12 +45,10 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
 
 #[cfg(feature = "auth")]
 pub fn routes(cfg: &mut web::ServiceConfig) {
-    use crate::auth::{cookiemiddleware::CheckCookies, validator};
+    use crate::auth::{checkcookies::CheckCookies, sptkvalidator::SptkValidator};
     use actix_session::CookieSession;
-    use actix_web_httpauth::middleware::HttpAuthentication;
 
     info!("Server configured with Bearer security");
-    let auth = HttpAuthentication::bearer(validator::validator);
     // The /ping is used only to get a status over the server
     cfg.route("/ping", web::get().to(|| async { "zpour" }))
         .route("/ping", web::head().to(|| async { "zpour" }))
@@ -60,7 +58,7 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
                 // Guarded route by API token
                 .service(
                     web::scope("/guard")
-                        .wrap(auth)
+                        .wrap(SptkValidator)
                         .route("/hosts", web::post().to(api::hosts::host_ingest)),
                 )
                 // Middleware that will validate the CookieSession

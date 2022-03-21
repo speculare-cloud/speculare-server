@@ -26,7 +26,7 @@ sys_metrics = { git = "https://github.com/Martichou/sys_metrics" }
 uuid = { version = "0.8", features = ["v4"] }
 
 [features]
-default = ["auth"]
+default = []
 auth = ["actix-session"]
 
 

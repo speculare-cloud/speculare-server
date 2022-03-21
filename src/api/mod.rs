@@ -25,13 +25,12 @@ pub struct Paged {
 
 impl Paged {
     pub fn get_size_page(&self) -> Result<(i64, i64), AppError> {
-        let size = self.size.unwrap_or(30);
+        let size = self.size.unwrap_or(100);
         let page = self.page.unwrap_or(0);
         match (size, page) {
             v if v.0 > 0 && v.0 < 5000 && v.1 >= 0 => Ok((v.0, v.1)),
             _ => Err(AppError {
-                message: Some("The parameters are incorrect".to_owned()),
-                cause: Some("Size must be > 0 && < 5000 and Page must be >= 0".to_owned()),
+                message: "Size must be > 0 && < 5000 and Page must be >= 0".to_owned(),
                 error_type: AppErrorType::InvalidRequest,
             }),
         }
@@ -53,25 +52,23 @@ impl PagedInfo {
     }
 
     pub fn get_size_page(&self) -> Result<(i64, i64), AppError> {
-        let size = self.size.unwrap_or(30);
+        let size = self.size.unwrap_or(100);
         let page = self.page.unwrap_or(0);
         match (size, page) {
             v if v.0 > 0 && v.0 < 5000 && v.1 >= 0 => Ok((v.0, v.1)),
             _ => Err(AppError {
-                message: Some("The parameters are incorrect".to_owned()),
-                cause: Some("Size must be > 0 && < 5000 and Page must be >= 0".to_owned()),
+                message: "Size must be > 0 && < 5000 and Page must be >= 0".to_owned(),
                 error_type: AppErrorType::InvalidRequest,
             }),
         }
     }
 
     pub fn get_size(&self) -> Result<i64, AppError> {
-        let size = self.size.unwrap_or(30);
+        let size = self.size.unwrap_or(100);
         match size {
             s if s > 0 && s < 5000 => Ok(s),
             _ => Err(AppError {
-                message: Some("The parameters are incorrect".to_owned()),
-                cause: Some("Size must be > 0".to_owned()),
+                message: "Size must be > 0".to_owned(),
                 error_type: AppErrorType::InvalidRequest,
             }),
         }

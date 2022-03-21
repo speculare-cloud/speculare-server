@@ -2,7 +2,7 @@ use actix_session::SessionExt;
 use actix_web::body::EitherBody;
 use actix_web::dev::{self, ServiceRequest, ServiceResponse};
 use actix_web::dev::{Service, Transform};
-use actix_web::{web, Error, HttpResponse};
+use actix_web::{web, Error, HttpMessage, HttpResponse};
 use futures_util::future::LocalBoxFuture;
 use sproot::models::ApiKey;
 use std::{
@@ -13,6 +13,7 @@ use uuid::Uuid;
 
 use crate::api::PagedInfo;
 use crate::server::AppData;
+use crate::utils::InnerUser;
 
 pub struct CheckCookies;
 
@@ -97,13 +98,18 @@ where
 
         let svc = self.service.clone();
         Box::pin(async move {
-            let exists = actix_web::web::block(move || {
-                ApiKey::entry_exists(&conn, &Uuid::parse_str(&inner_user)?, &info.uuid)
-            })
-            .await??;
+            // Cloning the inner_user due to the move in the actix_web::block
+            let uuid = Uuid::parse_str(&inner_user).unwrap();
+            let exists =
+                actix_web::web::block(move || ApiKey::entry_exists(&conn, &uuid, &info.uuid))
+                    .await??;
 
             match exists {
                 true => {
+                    // TODO - Might be latter replaced by using Session in
+                    //        the handler directly instead of mutating everytime
+                    // Add inner_user into the extensions :shrug:
+                    request.extensions_mut().insert(InnerUser { uuid });
                     let res = svc.call(ServiceRequest::from_parts(request, pl));
                     res.await.map(ServiceResponse::map_into_left_body)
                 }

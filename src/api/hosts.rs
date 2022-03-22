@@ -23,6 +23,13 @@ pub async fn host_all(
 
     let (size, page) = info.get_size_page()?;
 
+    // If we're in the auth feature, we need to get a list of
+    // hosts belonging to the currently logged user. To do so
+    // we'll fetch the ApiKey entries owned by the inner_user.uuid
+    // (returning only the host_uuids).
+    // Then we'll simply lookup all Host which have the host_uuid
+    // from the call to the ApiKey entries.
+    // This is a bit hacky, but for now it'll do the job just fine.
     #[cfg(feature = "auth")]
     let data = web::block(move || {
         let hosts_uuid = ApiKey::get_host_by_owned(
@@ -35,6 +42,8 @@ pub async fn host_all(
     })
     .await??;
 
+    // If we're not using the auth feature, just get the hosts using
+    // the legacy method (just fetch them all, no difference for 'owner').
     #[cfg(not(feature = "auth"))]
     let data =
         web::block(move || Host::list_hosts(&app_data.metrics_db.get()?, size, page)).await??;

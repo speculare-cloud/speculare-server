@@ -63,7 +63,7 @@ where
             }
         };
 
-        // Construct the SpecificDated from the query_string
+        // Construct the Specific (get the uuid) from the query_string
         let info = match web::Query::<Specific>::from_query(request.query_string()) {
             Ok(info) => info,
             Err(_) => {
@@ -98,12 +98,18 @@ where
 
         let svc = self.service.clone();
         Box::pin(async move {
-            // Cloning the inner_user due to the move in the actix_web::block
+            // We parse the inner_user str to a UUID as it's the type in the database
             let uuid = Uuid::parse_str(&inner_user).unwrap();
+            // Check if the host (info.uuid) belong to the user (uuid)
+            // -> dsl_apikeys.filter(customer_id.eq(uuid).and(host_uuid.eq(info.uuid)))
             let exists =
                 actix_web::web::block(move || ApiKey::entry_exists(&conn, &uuid, &info.uuid))
                     .await??;
 
+            // If an entry exists, we proceed the request and add the InnerUser.
+            // InnerUser is only used when getting the hosts (GET /api/hosts),
+            // it allow us to query the AUTH-SSOT database with the right Uuid.
+            // If the entry does not exists, return Unauthorized.
             match exists {
                 true => {
                     // Add InnerUser into the extensions

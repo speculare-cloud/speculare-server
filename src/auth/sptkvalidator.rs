@@ -60,7 +60,7 @@ where
             }
         };
 
-        // Construct the SpecificDated from the query_string
+        // Construct the Specific (get the uuid) from the query_string
         let info = match web::Query::<Specific>::from_query(request.query_string()) {
             Ok(info) => info,
             Err(_) => {
@@ -95,19 +95,28 @@ where
 
         let svc = self.service.clone();
         Box::pin(async move {
+            // Get the APIKEY entry corresponding to the SPTK (token)
             let api_key =
                 actix_web::web::block(move || ApiKey::get_entry(&conn, sptk.to_str().unwrap()))
                     .await??;
 
+            // If APIKEY.host_uuid is not None, we check that it's equals to
+            // info.uuid (the ?uuid=XYZ) of the request. If it's the equals
+            // we proceed the request, otherwise return 412 or Unauthorized
+            // depending on the state of APIKEY.host_uuid.
             if let Some(khost_uuid) = api_key.host_uuid {
                 if khost_uuid == info.uuid {
+                    // Proceed to the request
                     let res = svc.call(ServiceRequest::from_parts(request, pl));
                     res.await.map(ServiceResponse::map_into_left_body)
                 } else {
+                    // Wrong pair of SPTK and HOST_UUID, return not authorized
                     let response = HttpResponse::Unauthorized().finish().map_into_right_body();
                     Ok(ServiceResponse::new(request, response))
                 }
             } else {
+                // Return 412 to signal the Client to update the field host_uuid
+                // on the APIKEY (using a call to the AUTH-SSOT server).
                 let response = HttpResponse::PreconditionFailed()
                     .finish()
                     .map_into_right_body();

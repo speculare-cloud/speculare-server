@@ -1,7 +1,7 @@
 use actix_web::body::EitherBody;
 use actix_web::dev::{self, ServiceRequest, ServiceResponse};
 use actix_web::dev::{Service, Transform};
-use actix_web::{Error, HttpResponse};
+use actix_web::{web, Error, HttpResponse};
 use futures_util::future::LocalBoxFuture;
 use sproot::models::ApiKey;
 use std::{
@@ -9,6 +9,7 @@ use std::{
     rc::Rc,
 };
 
+use crate::api::Specific;
 use crate::server::AppData;
 
 pub struct SptkValidator;
@@ -50,7 +51,7 @@ where
     fn call(&self, request: ServiceRequest) -> Self::Future {
         let (request, pl) = request.into_parts();
 
-        // Get the SPTK header and the SP-UUID, error if not found (400)
+        // Get the SPTK header, error if not found (400)
         let sptk = match request.headers().get("SPTK") {
             Some(sptk) => sptk.to_owned(),
             None => {
@@ -58,9 +59,11 @@ where
                 return Box::pin(async { Ok(ServiceResponse::new(request, response)) });
             }
         };
-        let host_uuid = match request.headers().get("SP-UUID") {
-            Some(host_uuid) => host_uuid.to_owned(),
-            None => {
+
+        // Construct the SpecificDated from the query_string
+        let info = match web::Query::<Specific>::from_query(request.query_string()) {
+            Ok(info) => info,
+            Err(_) => {
                 let response = HttpResponse::BadRequest().finish().map_into_right_body();
                 return Box::pin(async { Ok(ServiceResponse::new(request, response)) });
             }
@@ -97,7 +100,7 @@ where
                     .await??;
 
             if let Some(khost_uuid) = api_key.host_uuid {
-                if khost_uuid == host_uuid {
+                if khost_uuid == info.uuid {
                     let res = svc.call(ServiceRequest::from_parts(request, pl));
                     res.await.map(ServiceResponse::map_into_left_body)
                 } else {

@@ -63,6 +63,15 @@ where
             }
         };
 
+        // Construct the SpecificDated from the query_string
+        let info = match web::Query::<Specific>::from_query(request.query_string()) {
+            Ok(info) => info,
+            Err(_) => {
+                let response = HttpResponse::BadRequest().finish().map_into_right_body();
+                return Box::pin(async { Ok(ServiceResponse::new(request, response)) });
+            }
+        };
+
         // Get the AppData from the server
         let app_data = match request.app_data::<AppData>() {
             Some(app_data) => app_data,
@@ -83,15 +92,6 @@ where
                 let response = HttpResponse::InternalServerError()
                     .finish()
                     .map_into_right_body();
-                return Box::pin(async { Ok(ServiceResponse::new(request, response)) });
-            }
-        };
-
-        // Construct the SpecificDated from the query_string
-        let info = match web::Query::<Specific>::from_query(request.query_string()) {
-            Ok(info) => info,
-            Err(_) => {
-                let response = HttpResponse::BadRequest().finish().map_into_right_body();
                 return Box::pin(async { Ok(ServiceResponse::new(request, response)) });
             }
         };

@@ -18,6 +18,11 @@ pub mod memory;
 pub mod swap;
 
 #[derive(Debug, Serialize, Deserialize)]
+pub struct Specific {
+    pub uuid: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Paged {
     pub size: Option<i64>,
     pub page: Option<i64>,
@@ -38,7 +43,7 @@ impl Paged {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct PagedInfo {
+pub struct SpecificDated {
     pub uuid: String,
     pub min_date: chrono::NaiveDateTime,
     pub max_date: chrono::NaiveDateTime,

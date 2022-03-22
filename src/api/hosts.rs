@@ -2,7 +2,7 @@ use crate::server::AppData;
 #[cfg(feature = "auth")]
 use crate::utils::InnerUser;
 
-use super::Paged;
+use super::{Paged, Specific};
 
 #[cfg(feature = "auth")]
 use actix_web::web::ReqData;
@@ -46,10 +46,12 @@ pub async fn host_all(
 /// Save data from a host into the db under his uuid
 pub async fn host_ingest(
     app_data: web::Data<AppData>,
+    info: web::Query<Specific>,
     item: web::Json<Vec<HttpPostHost>>,
 ) -> Result<HttpResponse, AppError> {
     trace!("Route POST /api/guard/hosts");
 
-    web::block(move || Host::insert(&app_data.metrics_db.get()?, &item.into_inner())).await??;
+    web::block(move || Host::insert(&app_data.metrics_db.get()?, &item.into_inner(), &info.uuid))
+        .await??;
     Ok(HttpResponse::Ok().finish())
 }

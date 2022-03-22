@@ -11,7 +11,7 @@ use std::{
 };
 use uuid::Uuid;
 
-use crate::api::PagedInfo;
+use crate::api::Specific;
 use crate::server::AppData;
 use crate::utils::InnerUser;
 
@@ -87,8 +87,8 @@ where
             }
         };
 
-        // Construct the PagedInfo from the query_string
-        let info = match web::Query::<PagedInfo>::from_query(request.query_string()) {
+        // Construct the SpecificDated from the query_string
+        let info = match web::Query::<Specific>::from_query(request.query_string()) {
             Ok(info) => info,
             Err(_) => {
                 let response = HttpResponse::BadRequest().finish().map_into_right_body();
@@ -106,10 +106,9 @@ where
 
             match exists {
                 true => {
-                    // TODO - Might be latter replaced by using Session in
-                    //        the handler directly instead of mutating everytime
-                    // Add inner_user into the extensions :shrug:
+                    // Add InnerUser into the extensions
                     request.extensions_mut().insert(InnerUser { uuid });
+
                     let res = svc.call(ServiceRequest::from_parts(request, pl));
                     res.await.map(ServiceResponse::map_into_left_body)
                 }

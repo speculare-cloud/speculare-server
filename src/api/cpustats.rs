@@ -1,6 +1,6 @@
 use crate::server::AppData;
 
-use super::PagedInfo;
+use super::SpecificDated;
 
 use actix_web::{web, HttpResponse};
 use sproot::errors::AppError;
@@ -10,7 +10,7 @@ use sproot::models::CpuStats;
 /// Return cpustats for a particular host
 pub async fn cpustats(
     app_data: web::Data<AppData>,
-    info: web::Query<PagedInfo>,
+    info: web::Query<SpecificDated>,
 ) -> Result<HttpResponse, AppError> {
     trace!("Route GET /api/cpustats : {:?}", info);
 

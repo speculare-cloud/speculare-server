@@ -14,23 +14,15 @@ pub async fn cpustats(
 ) -> Result<HttpResponse, AppError> {
     trace!("Route GET /api/cpustats : {:?}", info);
 
-    if info.is_dated() {
-        let data = web::block(move || {
-            CpuStats::get_data_dated(
-                &app_data.metrics_db.get()?,
-                &info.uuid,
-                info.min_date.unwrap(),
-                info.max_date.unwrap(),
-            )
-        })
-        .await??;
-        Ok(HttpResponse::Ok().json(data))
-    } else {
-        let (size, page) = info.get_size_page()?;
-        let data = web::block(move || {
-            CpuStats::get_data(&app_data.metrics_db.get()?, &info.uuid, size, page)
-        })
-        .await??;
-        Ok(HttpResponse::Ok().json(data))
-    }
+    let data = web::block(move || {
+        CpuStats::get_data_dated(
+            &app_data.metrics_db.get()?,
+            &info.uuid,
+            info.min_date,
+            info.max_date,
+        )
+    })
+    .await??;
+
+    Ok(HttpResponse::Ok().json(data))
 }

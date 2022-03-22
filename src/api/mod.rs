@@ -40,17 +40,18 @@ impl Paged {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PagedInfo {
     pub uuid: String,
-    pub size: Option<i64>,
-    pub page: Option<i64>,
-    pub min_date: Option<chrono::NaiveDateTime>,
-    pub max_date: Option<chrono::NaiveDateTime>,
+    pub min_date: chrono::NaiveDateTime,
+    pub max_date: chrono::NaiveDateTime,
 }
 
-impl PagedInfo {
-    pub fn is_dated(&self) -> bool {
-        self.min_date.is_some() && self.max_date.is_some()
-    }
+#[derive(Debug, Serialize, Deserialize)]
+pub struct SpecificPaged {
+    pub uuid: String,
+    pub size: Option<i64>,
+    pub page: Option<i64>,
+}
 
+impl SpecificPaged {
     pub fn get_size_page(&self) -> Result<(i64, i64), AppError> {
         let size = self.size.unwrap_or(100);
         let page = self.page.unwrap_or(0);

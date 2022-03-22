@@ -1,6 +1,6 @@
 use crate::server::AppData;
 
-use super::PagedInfo;
+use super::{PagedInfo, SpecificPaged};
 
 use actix_web::{web, HttpResponse};
 use sproot::errors::AppError;
@@ -14,32 +14,24 @@ pub async fn ioblocks(
 ) -> Result<HttpResponse, AppError> {
     trace!("Route GET /api/ioblocks : {:?}", info);
 
-    if info.is_dated() {
-        let data = web::block(move || {
-            IoBlock::get_data_dated(
-                &app_data.metrics_db.get()?,
-                &info.uuid,
-                info.min_date.unwrap(),
-                info.max_date.unwrap(),
-            )
-        })
-        .await??;
-        Ok(HttpResponse::Ok().json(data))
-    } else {
-        let (size, page) = info.get_size_page()?;
-        let data = web::block(move || {
-            IoBlock::get_data(&app_data.metrics_db.get()?, &info.uuid, size, page)
-        })
-        .await??;
-        Ok(HttpResponse::Ok().json(data))
-    }
+    let data = web::block(move || {
+        IoBlock::get_data_dated(
+            &app_data.metrics_db.get()?,
+            &info.uuid,
+            info.min_date,
+            info.max_date,
+        )
+    })
+    .await??;
+
+    Ok(HttpResponse::Ok().json(data))
 }
 
 /// GET /api/ioblocks_count
 /// Return ioblocks_count for a particular host
 pub async fn ioblocks_count(
     app_data: web::Data<AppData>,
-    info: web::Query<PagedInfo>,
+    info: web::Query<SpecificPaged>,
 ) -> Result<HttpResponse, AppError> {
     trace!("Route GET /api/ioblocks_count : {:?}", info);
 
@@ -47,5 +39,6 @@ pub async fn ioblocks_count(
         IoBlock::count(&app_data.metrics_db.get()?, &info.uuid, info.get_size()?)
     })
     .await??;
+
     Ok(HttpResponse::Ok().body(data.to_string()))
 }

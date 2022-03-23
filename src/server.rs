@@ -3,7 +3,7 @@ use super::CONFIG;
 
 use actix_cors::Cors;
 use actix_web::{middleware, App, HttpServer};
-use sproot::Pool;
+use sproot::{errors::AppError, Pool};
 
 pub struct AppData {
     pub metrics_db: Pool,
@@ -13,10 +13,8 @@ pub struct AppData {
 
 /// Construct and run the actix server instance
 ///
-/// Start by initializating a link to the database. And finish by binding and running the actix serv
+/// Start by initializing a link to the database. And finish by binding and running the actix serv
 pub async fn server(pool: Pool, _auth_pool: Option<Pool>) -> std::io::Result<()> {
-    // Construct the HttpServer instance.
-    // Passing the pool of PgConnection and defining the logger / compress middleware.
     let serv = HttpServer::new(move || {
         App::new()
             .wrap(Cors::permissive())
@@ -30,19 +28,31 @@ pub async fn server(pool: Pool, _auth_pool: Option<Pool>) -> std::io::Result<()>
             .configure(routes::routes)
     })
     .workers(CONFIG.workers);
+
     // Bind the server (https or no)
-    if !CONFIG.https {
+    let server = if !CONFIG.https {
         if !cfg!(debug_assertions) {
             warn!("You're starting speculare-server as HTTP on a production build, are you sure about what you're doing ?")
         }
+
         info!("Server started as HTTP on {}", &CONFIG.binding);
-        serv.bind(&CONFIG.binding)?.run().await
+        serv.bind(&CONFIG.binding)?.run()
     } else {
+        let tls_config = match sproot::get_ssl_builder(
+            field_isset!(CONFIG.key_priv.as_ref(), "key_priv").unwrap(),
+            field_isset!(CONFIG.key_cert.as_ref(), "key_cert").unwrap(),
+        ) {
+            Ok(config) => config,
+            Err(e) => {
+                error!("{}", e);
+                std::process::exit(1);
+            }
+        };
+
         info!("Server started as HTTPS on {}", &CONFIG.binding);
-        let key_priv = field_isset!(CONFIG.key_priv.as_ref(), "key_priv");
-        let key_cert = field_isset!(CONFIG.key_cert.as_ref(), "key_cert");
-        serv.bind_rustls(&CONFIG.binding, sproot::get_ssl_builder(key_priv, key_cert))?
-            .run()
-            .await
-    }
+        serv.bind_rustls(&CONFIG.binding, tls_config)?.run()
+    };
+
+    // Start and wait (indefinitely)
+    server.await
 }

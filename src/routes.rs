@@ -28,22 +28,11 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
     #[cfg(feature = "auth")]
     {
         use crate::auth::{checkcookies::CheckCookies, sptkvalidator::SptkValidator};
-        use actix_session::{
-            storage::CookieSessionStore, CookieContentSecurity, SessionMiddleware,
-        };
+        use sproot::get_session_middleware;
 
         guarded = web::scope("/api/guard")
             .wrap(SptkValidator)
             .route("/hosts", web::post().to(api::hosts::host_ingest));
-
-        // TODO - Move to sproot and secure the cookie with domain, etc.
-        let cookie_session = SessionMiddleware::builder(
-            CookieSessionStore::default(),
-            actix_web::cookie::Key::from(CONFIG.cookie_secret.as_bytes()),
-        )
-        .cookie_name("SP-CKS".to_string())
-        .cookie_content_security(CookieContentSecurity::Signed)
-        .build();
 
         api = web::scope("/api") // Middleware that will validate the CookieSession
             // using the Auth server. Will extract the customer ID from the
@@ -52,7 +41,10 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
             .wrap(CheckCookies)
             // Secure the following calls with a CookieSession
             // The cookie_secret will be shared with the Dashboard
-            .wrap(cookie_session)
+            .wrap(get_session_middleware(
+                CONFIG.cookie_secret.as_bytes(),
+                "SP-CKS".to_string(),
+            ))
             .route("/ping", web::get().to(|| async { "pzpour" }));
     }
 

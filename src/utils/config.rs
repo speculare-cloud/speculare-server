@@ -50,7 +50,19 @@ impl Config {
             config::FileFormat::Toml,
         ));
 
-        config_builder.build()?.try_deserialize()
+        let config: Result<Self, ConfigError> = config_builder.build()?.try_deserialize();
+
+        // Assert that the config is correct
+        if let Ok(ref config) = config {
+            if config.key_priv.is_none() || config.key_cert.is_none() {
+                error!(
+                    "error: config: 'https' is true but no 'key_priv' and/or 'key_cert' defined"
+                );
+                std::process::exit(1);
+            }
+        }
+
+        config
     }
 }
 

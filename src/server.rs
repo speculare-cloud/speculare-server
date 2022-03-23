@@ -3,29 +3,32 @@ use super::CONFIG;
 
 use actix_cors::Cors;
 use actix_web::{middleware, App, HttpServer};
+#[cfg(feature = "auth")]
+use sproot::models::AuthPool;
+use sproot::models::MetricsPool;
 use sproot::{errors::AppError, Pool};
-
-pub struct AppData {
-    pub metrics_db: Pool,
-    #[cfg(feature = "auth")]
-    pub auth_db: Pool,
-}
 
 /// Construct and run the actix server instance
 ///
 /// Start by initializing a link to the database. And finish by binding and running the actix serv
 pub async fn server(pool: Pool, _auth_pool: Option<Pool>) -> std::io::Result<()> {
     let serv = HttpServer::new(move || {
-        App::new()
+        let metrics_pool = MetricsPool { pool: pool.clone() };
+        #[cfg(feature = "auth")]
+        let auth_pool = AuthPool {
+            pool: _auth_pool.as_ref().unwrap().clone(),
+        };
+
+        let app = App::new()
             .wrap(Cors::permissive())
             .wrap(middleware::Compress::default())
-            .wrap(middleware::Logger::default())
-            .app_data(actix_web::web::Data::new(AppData {
-                metrics_db: pool.clone(),
-                #[cfg(feature = "auth")]
-                auth_db: _auth_pool.as_ref().unwrap().clone(),
-            }))
-            .configure(routes::routes)
+            .wrap(middleware::Logger::default());
+
+        let app = app.app_data(actix_web::web::Data::new(metrics_pool));
+        #[cfg(feature = "auth")]
+        let app = app.app_data(actix_web::web::Data::new(auth_pool));
+
+        app.configure(routes::routes)
     })
     .workers(CONFIG.workers);
 

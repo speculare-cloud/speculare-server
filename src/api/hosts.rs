@@ -1,21 +1,23 @@
-use crate::server::AppData;
-#[cfg(feature = "auth")]
-use crate::utils::InnerUser;
-
-use super::{Paged, Specific};
+use super::Paged;
 
 #[cfg(feature = "auth")]
 use actix_web::web::ReqData;
 use actix_web::{web, HttpResponse};
-use sproot::errors::AppError;
 #[cfg(feature = "auth")]
 use sproot::models::ApiKey;
+#[cfg(feature = "auth")]
+use sproot::models::AuthPool;
+#[cfg(feature = "auth")]
+use sproot::models::InnerUser;
+use sproot::models::MetricsPool;
 use sproot::models::{Host, HttpPostHost};
+use sproot::{errors::AppError, models::Specific};
 
 /// GET /api/hosts
 /// Return all hosts
 pub async fn host_all(
-    app_data: web::Data<AppData>,
+    metrics: web::Data<MetricsPool>,
+    #[cfg(feature = "auth")] auth: web::Data<AuthPool>,
     info: web::Query<Paged>,
     #[cfg(feature = "auth")] inner_user: Option<ReqData<InnerUser>>,
 ) -> Result<HttpResponse, AppError> {
@@ -33,20 +35,19 @@ pub async fn host_all(
     #[cfg(feature = "auth")]
     let data = web::block(move || {
         let hosts_uuid = ApiKey::get_host_by_owned(
-            &app_data.auth_db.get()?,
+            &auth.pool.get()?,
             &inner_user.unwrap().into_inner().uuid,
             size,
             page,
         )?;
-        Host::get_from_uuid(&app_data.auth_db.get()?, hosts_uuid.as_slice())
+        Host::get_from_uuid(&metrics.pool.get()?, hosts_uuid.as_slice())
     })
     .await??;
 
     // If we're not using the auth feature, just get the hosts using
     // the legacy method (just fetch them all, no difference for 'owner').
     #[cfg(not(feature = "auth"))]
-    let data =
-        web::block(move || Host::list_hosts(&app_data.metrics_db.get()?, size, page)).await??;
+    let data = web::block(move || Host::list_hosts(&metrics.pool.get()?, size, page)).await??;
 
     Ok(HttpResponse::Ok().json(data))
 }
@@ -54,13 +55,13 @@ pub async fn host_all(
 /// POST /api/guard/hosts
 /// Save data from a host into the db under his uuid
 pub async fn host_ingest(
-    app_data: web::Data<AppData>,
+    metrics: web::Data<MetricsPool>,
     info: web::Query<Specific>,
     item: web::Json<Vec<HttpPostHost>>,
 ) -> Result<HttpResponse, AppError> {
     trace!("Route POST /api/guard/hosts");
 
-    web::block(move || Host::insert(&app_data.metrics_db.get()?, &item.into_inner(), &info.uuid))
+    web::block(move || Host::insert(&metrics.pool.get()?, &item.into_inner(), &info.uuid))
         .await??;
     Ok(HttpResponse::Ok().finish())
 }

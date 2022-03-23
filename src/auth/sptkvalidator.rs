@@ -3,14 +3,13 @@ use actix_web::dev::{self, ServiceRequest, ServiceResponse};
 use actix_web::dev::{Service, Transform};
 use actix_web::{web, Error, HttpResponse};
 use futures_util::future::LocalBoxFuture;
-use sproot::models::ApiKey;
+use sproot::models::{ApiKey, Specific};
 use std::{
     future::{ready, Ready},
     rc::Rc,
 };
 
-use crate::api::Specific;
-use crate::server::AppData;
+use sproot::models::AuthPool;
 
 pub struct SptkValidator;
 
@@ -69,9 +68,9 @@ where
             }
         };
 
-        // Get the AppData from the server
-        let app_data = match request.app_data::<AppData>() {
-            Some(app_data) => app_data,
+        // Get the MetricsPool from the server
+        let auth = match request.app_data::<AuthPool>() {
+            Some(auth) => auth,
             None => {
                 error!("middleware: app_data is not configured correctly");
                 let response = HttpResponse::InternalServerError()
@@ -82,7 +81,7 @@ where
         };
 
         // Get a conn from the auth_db's pool
-        let conn = match app_data.auth_db.get() {
+        let conn = match auth.pool.get() {
             Ok(conn) => conn,
             Err(e) => {
                 error!("middleware: cannot get a auth_db connection: {}", e);

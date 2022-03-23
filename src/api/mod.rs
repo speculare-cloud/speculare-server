@@ -18,11 +18,6 @@ pub mod memory;
 pub mod swap;
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct Specific {
-    pub uuid: String,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
 pub struct Paged {
     pub size: Option<i64>,
     pub page: Option<i64>,

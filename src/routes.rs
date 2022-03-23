@@ -27,7 +27,8 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
     // Add scope /api with one route /ping for debug and analysis but wrapped with Cookie
     #[cfg(feature = "auth")]
     {
-        use crate::auth::{checkcookies::CheckCookies, sptkvalidator::SptkValidator};
+        use crate::auth::sptkvalidator::SptkValidator;
+        use sproot::check_sessions::CheckSessions;
         use sproot::get_session_middleware;
 
         guarded = web::scope("/api/guard")
@@ -38,7 +39,7 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
             // using the Auth server. Will extract the customer ID from the
             // Cookie and use it as a lookup to see if the asked host_uuid
             // belong to the customer.
-            .wrap(CheckCookies)
+            .wrap(CheckSessions)
             // Secure the following calls with a CookieSession
             // The cookie_secret will be shared with the Dashboard
             .wrap(get_session_middleware(

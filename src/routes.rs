@@ -46,7 +46,19 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
                 CONFIG.cookie_secret.as_bytes(),
                 "SP-CKS".to_string(),
             ))
-            .route("/ping", web::get().to(|| async { "pzpour" }));
+            .route("/ping", web::get().to(|| async { "pzpour" }))
+            .route(
+                "/alerts",
+                web::post().to(api::balerts::alerts::alerts_create),
+            )
+            .route(
+                "/alerts",
+                web::patch().to(api::balerts::alerts::alerts_update),
+            )
+            .route(
+                "/alerts",
+                web::delete().to(api::balerts::alerts::alerts_delete),
+            );
     }
 
     // Define common routes for auth and non-auth

@@ -54,7 +54,7 @@ impl Config {
 
         // Assert that the config is correct
         if let Ok(ref config) = config {
-            if config.key_priv.is_none() || config.key_cert.is_none() {
+            if config.https && (config.key_priv.is_none() || config.key_cert.is_none()) {
                 error!(
                     "error: config: 'https' is true but no 'key_priv' and/or 'key_cert' defined"
                 );

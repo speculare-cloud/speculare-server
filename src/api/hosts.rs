@@ -19,7 +19,7 @@ pub async fn host_all(
     metrics: web::Data<MetricsPool>,
     #[cfg(feature = "auth")] auth: web::Data<AuthPool>,
     info: web::Query<Paged>,
-    #[cfg(feature = "auth")] inner_user: Option<ReqData<InnerUser>>,
+    #[cfg(feature = "auth")] inner_user: ReqData<InnerUser>,
 ) -> Result<HttpResponse, AppError> {
     trace!("Route GET /api/hosts");
 
@@ -36,7 +36,7 @@ pub async fn host_all(
     let data = web::block(move || {
         let hosts_uuid = ApiKey::get_host_by_owned(
             &auth.pool.get()?,
-            &inner_user.unwrap().into_inner().uuid,
+            &inner_user.into_inner().uuid,
             size,
             page,
         )?;

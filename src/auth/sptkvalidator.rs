@@ -1,6 +1,7 @@
 use actix_web::body::EitherBody;
 use actix_web::dev::{self, ServiceRequest, ServiceResponse};
 use actix_web::dev::{Service, Transform};
+use actix_web::http::header::{HeaderName, HeaderValue};
 use actix_web::{web, Error, HttpResponse};
 use futures_util::future::LocalBoxFuture;
 use sproot::models::{ApiKey, Specific};
@@ -54,6 +55,7 @@ where
         let sptk = match request.headers().get("SPTK") {
             Some(sptk) => sptk.to_owned(),
             None => {
+                debug!("SptkValidator: No SPTK header found");
                 let response = HttpResponse::BadRequest().finish().map_into_right_body();
                 return Box::pin(async { Ok(ServiceResponse::new(request, response)) });
             }
@@ -63,6 +65,7 @@ where
         let info = match web::Query::<Specific>::from_query(request.query_string()) {
             Ok(info) => info,
             Err(_) => {
+                debug!("SptkValidator: No Specific query found");
                 let response = HttpResponse::BadRequest().finish().map_into_right_body();
                 return Box::pin(async { Ok(ServiceResponse::new(request, response)) });
             }
@@ -105,8 +108,15 @@ where
             // depending on the state of APIKEY.host_uuid.
             if let Some(khost_uuid) = api_key.host_uuid {
                 if khost_uuid == info.uuid {
-                    // Proceed to the request
-                    let res = svc.call(ServiceRequest::from_parts(request, pl));
+                    // Reconstruct the ServiceRequest to pass to the rest of Actix workers
+                    let mut srv_req = ServiceRequest::from_parts(request, pl);
+                    // Add SPTK_VALID (validation header) to the request, it assert
+                    // that it has been passed by this middleware.
+                    srv_req.headers_mut().insert(
+                        HeaderName::from_static("SPTK_VALID"),
+                        HeaderValue::from_static("true"),
+                    );
+                    let res = svc.call(srv_req);
                     res.await.map(ServiceResponse::map_into_left_body)
                 } else {
                     // Wrong pair of SPTK and HOST_UUID, return not authorized

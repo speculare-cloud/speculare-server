@@ -4,7 +4,6 @@ use actix_web::{web, HttpResponse};
 use sproot::errors::AppError;
 use sproot::models::Alerts;
 use sproot::models::MetricsPool;
-#[cfg(feature = "auth")]
 use sproot::models::Specific;
 
 /// GET /api/alerts
@@ -26,7 +25,6 @@ pub async fn alerts_list(
 
 /// GET /api/alerts
 /// Create a new alert for the specific host
-#[cfg(feature = "auth")]
 pub async fn alerts_create(
     _metrics: web::Data<MetricsPool>,
     _info: web::Query<Specific>,
@@ -38,7 +36,6 @@ pub async fn alerts_create(
 
 /// GET /api/alerts
 /// Update a specific alert
-#[cfg(feature = "auth")]
 pub async fn alerts_update(
     _metrics: web::Data<MetricsPool>,
     _info: web::Query<Specific>,
@@ -50,7 +47,6 @@ pub async fn alerts_update(
 
 /// GET /api/alerts
 /// Delete a specific alert
-#[cfg(feature = "auth")]
 pub async fn alerts_delete(
     _metrics: web::Data<MetricsPool>,
     _info: web::Query<Specific>,

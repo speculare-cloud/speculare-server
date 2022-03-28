@@ -3,6 +3,7 @@ use crate::Args;
 use clap::Parser;
 use config::ConfigError;
 use serde::Deserialize;
+use sproot::models::{default_alertssource, AlertSource};
 
 #[derive(Debug, Deserialize, Clone)]
 
@@ -37,6 +38,10 @@ pub struct Config {
     pub cookie_secret: String,
     #[cfg(feature = "auth")]
     pub cookie_domain: String,
+
+    // ALERTS CONFIG
+    #[serde(default = "default_alertssource")]
+    pub alerts_source: AlertSource,
 }
 
 impl Config {

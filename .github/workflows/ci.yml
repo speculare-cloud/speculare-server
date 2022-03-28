@@ -30,7 +30,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           args: --all-features --all --tests
 
-  build:
+  build_no_auth:
     name: 'ubuntu-latest'
     needs: [style]
     runs-on: 'ubuntu-latest'
@@ -47,6 +47,29 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: build
+      - name: Test
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+  
+  build_auth:
+    name: 'ubuntu-latest'
+    needs: [style]
+    runs-on: 'ubuntu-latest'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Install rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - name: Build
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --all-features
       - name: Test
         uses: actions-rs/cargo@v1
         with:

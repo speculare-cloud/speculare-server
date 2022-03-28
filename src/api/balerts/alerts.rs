@@ -30,8 +30,7 @@ pub async fn alerts_create(
     _info: web::Query<Specific>,
 ) -> Result<HttpResponse, AppError> {
     info!("Route POST /api/alerts");
-
-    Ok(HttpResponse::Ok().finish())
+    todo!()
 }
 
 /// GET /api/alerts
@@ -41,8 +40,7 @@ pub async fn alerts_update(
     _info: web::Query<Specific>,
 ) -> Result<HttpResponse, AppError> {
     info!("Route PATCH /api/alerts");
-
-    Ok(HttpResponse::Ok().finish())
+    todo!()
 }
 
 /// GET /api/alerts
@@ -52,6 +50,5 @@ pub async fn alerts_delete(
     _info: web::Query<Specific>,
 ) -> Result<HttpResponse, AppError> {
     info!("Route DELETE /api/alerts");
-
-    Ok(HttpResponse::Ok().finish())
+    todo!()
 }

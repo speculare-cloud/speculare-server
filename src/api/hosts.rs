@@ -52,7 +52,7 @@ pub async fn host_all(
     Ok(HttpResponse::Ok().json(data))
 }
 
-/// POST /api/guard/hosts
+/// POST /api/hosts
 /// Save data from a host into the db under his uuid
 pub async fn host_ingest(
     metrics: web::Data<MetricsPool>,

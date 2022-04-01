@@ -63,29 +63,28 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
 
 #[cfg(feature = "auth")]
 pub fn routes(cfg: &mut web::ServiceConfig) {
-    // Extract the guard_scope construction outside of the cfg
-    // because we only enable /api/alerts [POST, PATCH, DELETE]
-    // if the alerts service is in the database mode (up to the user)
-    // to define.
-    let mut guard_scope = web::scope("/api")
-        .guard(
-            guard::Any(guard::Post())
-                .or(guard::Patch())
-                .or(guard::Delete()),
-        )
-        .wrap(SptkValidator)
-        .route("/hosts", web::post().to(hosts::host_ingest));
+    let mut alert_scope =
+        web::scope("/alerts").route("", web::get().to(balerts::alerts::alerts_list));
 
     if CONFIG.alerts_source == AlertSource::Database {
-        guard_scope = guard_scope
-            .route("/alerts", web::post().to(balerts::alerts::alerts_create))
-            .route("/alerts", web::patch().to(balerts::alerts::alerts_update))
-            .route("/alerts", web::delete().to(balerts::alerts::alerts_delete));
+        alert_scope = alert_scope
+            .route("", web::post().to(balerts::alerts::alerts_create))
+            .route("", web::patch().to(balerts::alerts::alerts_update))
+            .route("", web::delete().to(balerts::alerts::alerts_delete));
     }
 
     cfg.route("/ping", web::get().to(|| async { "zpour" }))
         .route("/ping", web::head().to(|| async { "zpour" }))
-        .service(guard_scope)
+        .service(
+            web::scope("/api")
+                .guard(
+                    guard::Any(guard::Post())
+                        .or(guard::Patch())
+                        .or(guard::Delete()),
+                )
+                .wrap(SptkValidator)
+                .route("/hosts", web::post().to(hosts::host_ingest)),
+        )
         .service(
             web::scope("/api")
                 // Middleware that will validate the CookieSession
@@ -115,6 +114,6 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
                     "/incidents",
                     web::get().to(balerts::incidents::incidents_list),
                 )
-                .route("/alerts", web::get().to(balerts::alerts::alerts_list)),
+                .service(alert_scope),
         );
 }

@@ -19,7 +19,14 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
     // if the alerts service is in the database mode (up to the user)
     // to define.
     let mut guard_scope = web::scope("/api")
-        .guard(guard::Header("SPTK", &CONFIG.api_token))
+        .guard(
+            guard::All(
+                guard::Any(guard::Post())
+                    .or(guard::Patch())
+                    .or(guard::Delete()),
+            )
+            .and(guard::Header("SPTK", &CONFIG.api_token)),
+        )
         .route("/hosts", web::post().to(hosts::host_ingest));
 
     if CONFIG.alerts_source == AlertSource::Database {
@@ -61,8 +68,12 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
     // if the alerts service is in the database mode (up to the user)
     // to define.
     let mut guard_scope = web::scope("/api")
+        .guard(
+            guard::Any(guard::Post())
+                .or(guard::Patch())
+                .or(guard::Delete()),
+        )
         .wrap(SptkValidator)
-        .guard(guard::Header("SPTK_VALID", "true"))
         .route("/hosts", web::post().to(hosts::host_ingest));
 
     if CONFIG.alerts_source == AlertSource::Database {

@@ -1,7 +1,7 @@
 use actix_web::body::EitherBody;
 use actix_web::dev::{self, ServiceRequest, ServiceResponse};
 use actix_web::dev::{Service, Transform};
-use actix_web::http::header::{HeaderName, HeaderValue};
+use actix_web::web::Data;
 use actix_web::{web, Error, HttpResponse};
 use futures_util::future::LocalBoxFuture;
 use sproot::models::{ApiKey, Specific};
@@ -72,7 +72,7 @@ where
         };
 
         // Get the MetricsPool from the server
-        let auth = match request.app_data::<AuthPool>() {
+        let auth = match request.app_data::<Data<AuthPool>>() {
             Some(auth) => auth,
             None => {
                 error!("middleware: app_data is not configured correctly");
@@ -108,15 +108,7 @@ where
             // depending on the state of APIKEY.host_uuid.
             if let Some(khost_uuid) = api_key.host_uuid {
                 if khost_uuid == info.uuid {
-                    // Reconstruct the ServiceRequest to pass to the rest of Actix workers
-                    let mut srv_req = ServiceRequest::from_parts(request, pl);
-                    // Add SPTK_VALID (validation header) to the request, it assert
-                    // that it has been passed by this middleware.
-                    srv_req.headers_mut().insert(
-                        HeaderName::from_static("SPTK_VALID"),
-                        HeaderValue::from_static("true"),
-                    );
-                    let res = svc.call(srv_req);
+                    let res = svc.call(ServiceRequest::from_parts(request, pl));
                     res.await.map(ServiceResponse::map_into_left_body)
                 } else {
                     // Wrong pair of SPTK and HOST_UUID, return not authorized

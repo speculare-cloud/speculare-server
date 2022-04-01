@@ -2,6 +2,7 @@ use super::routes;
 use super::CONFIG;
 
 use actix_cors::Cors;
+use actix_web::web::Data;
 use actix_web::{middleware, App, HttpServer};
 #[cfg(feature = "auth")]
 use sproot::models::AuthPool;
@@ -24,9 +25,9 @@ pub async fn server(pool: Pool, _auth_pool: Option<Pool>) -> std::io::Result<()>
             .wrap(middleware::Compress::default())
             .wrap(middleware::Logger::default());
 
-        let app = app.app_data(actix_web::web::Data::new(metrics_pool));
+        let app = app.app_data(Data::new(metrics_pool));
         #[cfg(feature = "auth")]
-        let app = app.app_data(actix_web::web::Data::new(auth_pool));
+        let app = app.app_data(Data::new(auth_pool));
 
         app.configure(routes::routes)
     })

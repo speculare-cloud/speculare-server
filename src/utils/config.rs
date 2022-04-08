@@ -37,7 +37,7 @@ pub struct Config {
     #[cfg(feature = "auth")]
     pub cookie_secret: String,
     #[cfg(feature = "auth")]
-    pub cookie_domain: String,
+    pub cookie_domain: Option<String>,
 
     // ALERTS CONFIG
     #[serde(default = "default_alertssource")]

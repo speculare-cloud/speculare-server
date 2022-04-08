@@ -2,9 +2,12 @@
 //! synchronous operation (access to Diesel's conns) allowing
 //! Actix to handle another request while the sync task is
 //! being performed.
-
+#[cfg(feature = "auth")]
+use actix_session::Session;
 use serde::{Deserialize, Serialize};
 use sproot::errors::{AppError, AppErrorType};
+#[cfg(feature = "auth")]
+use uuid::Uuid;
 
 pub mod balerts;
 pub mod cpustats;
@@ -73,5 +76,18 @@ impl SpecificPaged {
                 error_type: AppErrorType::InvalidRequest,
             }),
         }
+    }
+}
+
+/// Get the Uuid of the user from his Session or
+/// return an InvalidToken error if not found
+#[cfg(feature = "auth")]
+pub fn get_user_session(session: &Session) -> Result<Uuid, AppError> {
+    match session.get::<String>("user_id") {
+        Ok(Some(id)) => Ok(Uuid::parse_str(&id).unwrap()),
+        _ => Err(AppError {
+            message: "Missing user_id in the session".to_owned(),
+            error_type: AppErrorType::InvalidToken,
+        }),
     }
 }

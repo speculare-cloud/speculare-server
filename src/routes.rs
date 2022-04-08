@@ -73,6 +73,15 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
                 .route("/hosts", web::post().to(hosts::host_ingest)),
         )
         .service(
+            web::resource("/api/hosts")
+                .wrap(get_session_middleware(
+                    CONFIG.cookie_secret.as_bytes(),
+                    "SP-CKS".to_string(),
+                    CONFIG.cookie_domain.to_owned(),
+                ))
+                .route(web::get().to(hosts::host_all)),
+        )
+        .service(
             web::scope("/api")
                 // Middleware that will validate the CookieSession
                 // using the Auth server. Will extract the customer ID from the
@@ -86,7 +95,6 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
                     "SP-CKS".to_string(),
                     CONFIG.cookie_domain.to_owned(),
                 ))
-                .route("/hosts", web::get().to(hosts::host_all))
                 .route("/cpustats", web::get().to(cpustats::cpustats))
                 .route("/cputimes", web::get().to(cputimes::cputimes))
                 .route("/loadavg", web::get().to(loadavg::loadavg))

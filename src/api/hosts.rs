@@ -1,14 +1,15 @@
+#[cfg(feature = "auth")]
+use crate::api::get_user_session;
+
 use super::Paged;
 
 #[cfg(feature = "auth")]
-use actix_web::web::ReqData;
+use actix_session::Session;
 use actix_web::{web, HttpResponse};
 #[cfg(feature = "auth")]
 use sproot::models::ApiKey;
 #[cfg(feature = "auth")]
 use sproot::models::AuthPool;
-#[cfg(feature = "auth")]
-use sproot::models::InnerUser;
 use sproot::models::MetricsPool;
 use sproot::models::{Host, HttpPostHost};
 use sproot::{errors::AppError, models::Specific};
@@ -19,11 +20,14 @@ pub async fn host_all(
     metrics: web::Data<MetricsPool>,
     #[cfg(feature = "auth")] auth: web::Data<AuthPool>,
     info: web::Query<Paged>,
-    #[cfg(feature = "auth")] inner_user: ReqData<InnerUser>,
+    #[cfg(feature = "auth")] session: Session,
 ) -> Result<HttpResponse, AppError> {
     trace!("Route GET /api/hosts");
 
     let (size, page) = info.get_size_page()?;
+
+    #[cfg(feature = "auth")]
+    let user_uuid = get_user_session(&session)?;
 
     // If we're in the auth feature, we need to get a list of
     // hosts belonging to the currently logged user. To do so
@@ -34,12 +38,7 @@ pub async fn host_all(
     // This is a bit hacky, but for now it'll do the job just fine.
     #[cfg(feature = "auth")]
     let data = web::block(move || {
-        let hosts_uuid = ApiKey::get_host_by_owned(
-            &auth.pool.get()?,
-            &inner_user.into_inner().uuid,
-            size,
-            page,
-        )?;
+        let hosts_uuid = ApiKey::get_host_by_owned(&auth.pool.get()?, &user_uuid, size, page)?;
         Host::get_from_uuid(&metrics.pool.get()?, hosts_uuid.as_slice())
     })
     .await??;

@@ -75,11 +75,7 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
         .route("/ping", web::head().to(|| async { "zpour" }))
         .service(
             web::scope("/api")
-                .guard(
-                    guard::Any(guard::Post())
-                        .or(guard::Patch())
-                        .or(guard::Delete()),
-                )
+                .guard(guard::Post())
                 .wrap(SptkValidator)
                 .route("/hosts", web::post().to(hosts::host_ingest)),
         )

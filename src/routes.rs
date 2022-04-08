@@ -17,14 +17,7 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
     // if the alerts service is in the database mode (up to the user)
     // to define.
     let mut guard_scope = web::scope("/api")
-        .guard(
-            guard::All(
-                guard::Any(guard::Post())
-                    .or(guard::Patch())
-                    .or(guard::Delete()),
-            )
-            .and(guard::Header("SPTK", &CONFIG.api_token)),
-        )
+        .guard(guard::All(guard::Post()).and(guard::Header("SPTK", &CONFIG.api_token)))
         .route("/hosts", web::post().to(hosts::host_ingest));
 
     if CONFIG.alerts_source == AlertSource::Database {
@@ -91,6 +84,7 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
                 .wrap(get_session_middleware(
                     CONFIG.cookie_secret.as_bytes(),
                     "SP-CKS".to_string(),
+                    CONFIG.cookie_domain.to_owned(),
                 ))
                 .route("/hosts", web::get().to(hosts::host_all))
                 .route("/cpustats", web::get().to(cpustats::cpustats))

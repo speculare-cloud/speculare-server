@@ -8,7 +8,7 @@ CREATE TABLE incidents (
 	hostname VARCHAR(64) NOT NULL,
 	status INTEGER DEFAULT 0 NOT NULL,
 	severity INTEGER DEFAULT 0 NOT NULL,
-	alerts_id SERIAL NOT NULL,
+	alerts_id TEXT NOT NULL,
 	alerts_name VARCHAR(128) NOT NULL,
 	alerts_table VARCHAR(128) NOT NULL,
 	alerts_lookup TEXT NOT NULL,

@@ -11,12 +11,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Install rust
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-          components: rustfmt
+          components: rustfmt, clippy
           profile: minimal
           override: true
       - name: cargo fmt -- --check
@@ -24,51 +24,24 @@ jobs:
         with:
           command: fmt
           args: -- --check
+      - name: Check with Clippy
+        uses: actions-rs/clippy-check@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          args: --all-features --all --tests
 
-  build:
-    name: ${{ matrix.name }}
+  build_no_auth:
+    name: 'ubuntu-latest'
     needs: [style]
-    runs-on: ${{ matrix.os || 'ubuntu-latest' }}
-    strategy:
-      matrix:
-        name:
-          - linux / stable
-          - macOS / stable
-        include:
-          - name: linux / stable
-          - name: macOS / stable
-            os: macOS-latest
+    runs-on: 'ubuntu-latest'
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Install rust
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: ${{ matrix.rust || 'stable' }}
           profile: minimal
-          override: true
-      - name: Build
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: ${{ matrix.features }}
-      - name: Test
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-
-  nightly:
-    name: linux / nightly
-    needs: [style]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Install rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: nightly
-          profile: minimal
+          toolchain: stable
           override: true
       - name: Build
         uses: actions-rs/cargo@v1
@@ -78,13 +51,26 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: test
-      - name: Upload Test binary
-        uses: actions/upload-artifact@v2
+  
+  build_auth:
+    name: 'ubuntu-latest'
+    needs: [style]
+    runs-on: 'ubuntu-latest'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Install rust
+        uses: actions-rs/toolchain@v1
         with:
-          name: ${{ matrix.os || 'ubuntu-latest' }}-speculare-server
-          path: target/debug/server
-      - name: Upload Test binary
-        uses: actions/upload-artifact@v2
+          profile: minimal
+          toolchain: stable
+          override: true
+      - name: Build
+        uses: actions-rs/cargo@v1
         with:
-          name: ${{ matrix.os || 'ubuntu-latest' }}-speculare-alerts
-          path: target/debug/alerts
+          command: build
+          args: --all-features
+      - name: Test
+        uses: actions-rs/cargo@v1
+        with:
+          command: test

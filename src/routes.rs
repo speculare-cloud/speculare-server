@@ -33,6 +33,7 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
         .service(
             web::scope("/api")
                 .route("/hosts", web::get().to(hosts::host_all))
+                .route("/host", web::get().to(hosts::host_specific))
                 .route("/cpustats", web::get().to(cpustats::cpustats))
                 .route("/cputimes", web::get().to(cputimes::cputimes))
                 .route("/loadavg", web::get().to(loadavg::loadavg))
@@ -80,6 +81,15 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
                     CONFIG.cookie_domain.to_owned(),
                 ))
                 .route(web::get().to(hosts::host_all)),
+        )
+        .service(
+            web::resource("/api/host")
+                .wrap(get_session_middleware(
+                    CONFIG.cookie_secret.as_bytes(),
+                    "SP-CKS".to_string(),
+                    CONFIG.cookie_domain.to_owned(),
+                ))
+                .route(web::get().to(hosts::host_specific)),
         )
         .service(
             web::scope("/api")

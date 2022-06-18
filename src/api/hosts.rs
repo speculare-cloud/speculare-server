@@ -1,11 +1,13 @@
 #[cfg(feature = "auth")]
 use crate::api::get_user_session;
 
-use super::Paged;
+use super::{Paged, SpecificPaged};
 
 #[cfg(feature = "auth")]
 use actix_session::Session;
 use actix_web::{web, HttpResponse};
+#[cfg(feature = "auth")]
+use sproot::errors::AppErrorType;
 #[cfg(feature = "auth")]
 use sproot::models::ApiKey;
 #[cfg(feature = "auth")]
@@ -38,8 +40,8 @@ pub async fn host_all(
     // This is a bit hacky, but for now it'll do the job just fine.
     #[cfg(feature = "auth")]
     let data = web::block(move || {
-        let hosts_uuid = ApiKey::get_host_by_owned(&auth.pool.get()?, &user_uuid, size, page)?;
-        Host::get_from_uuid(&metrics.pool.get()?, hosts_uuid.as_slice())
+        let hosts_uuid = ApiKey::get_hosts_by_owned(&auth.pool.get()?, &user_uuid, size, page)?;
+        Host::get_from_uuids(&metrics.pool.get()?, hosts_uuid.as_slice())
     })
     .await??;
 
@@ -47,6 +49,43 @@ pub async fn host_all(
     // the legacy method (just fetch them all, no difference for 'owner').
     #[cfg(not(feature = "auth"))]
     let data = web::block(move || Host::list_hosts(&metrics.pool.get()?, size, page)).await??;
+
+    Ok(HttpResponse::Ok().json(data))
+}
+
+/// GET /api/host
+/// Return info for a specific host
+pub async fn host_specific(
+    metrics: web::Data<MetricsPool>,
+    #[cfg(feature = "auth")] auth: web::Data<AuthPool>,
+    info: web::Query<SpecificPaged>,
+    #[cfg(feature = "auth")] session: Session,
+) -> Result<HttpResponse, AppError> {
+    trace!("Route GET /api/host?uuid=xyz");
+
+    #[cfg(feature = "auth")]
+    let user_uuid = get_user_session(&session)?;
+
+    // If we're in the auth mode, we need to check that this host his owned by
+    // this very user before proceeding.
+    #[cfg(feature = "auth")]
+    {
+        let host_uuid = info.uuid.clone();
+        let exists =
+            web::block(move || ApiKey::entry_exists(&auth.pool.get()?, &user_uuid, &host_uuid))
+                .await??;
+
+        // If it doesn't exists, this means the host does not belong to the user
+        // or simply does not exists.
+        if !exists {
+            return Err(AppError {
+                message: "Resource not found".to_owned(),
+                error_type: AppErrorType::NotFound,
+            });
+        }
+    }
+
+    let data = web::block(move || Host::get_from_uuid(&metrics.pool.get()?, &info.uuid)).await??;
 
     Ok(HttpResponse::Ok().json(data))
 }

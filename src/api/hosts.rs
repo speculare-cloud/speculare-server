@@ -40,15 +40,15 @@ pub async fn host_all(
     // This is a bit hacky, but for now it'll do the job just fine.
     #[cfg(feature = "auth")]
     let data = web::block(move || {
-        let hosts_uuid = ApiKey::get_hosts_by_owned(&auth.pool.get()?, &user_uuid, size, page)?;
-        Host::get_from_uuids(&metrics.pool.get()?, hosts_uuid.as_slice())
+        let hosts_uuid = ApiKey::get_hosts_by_owned(&mut auth.pool.get()?, &user_uuid, size, page)?;
+        Host::get_from_uuids(&mut metrics.pool.get()?, hosts_uuid.as_slice())
     })
     .await??;
 
     // If we're not using the auth feature, just get the hosts using
     // the legacy method (just fetch them all, no difference for 'owner').
     #[cfg(not(feature = "auth"))]
-    let data = web::block(move || Host::list_hosts(&metrics.pool.get()?, size, page)).await??;
+    let data = web::block(move || Host::list_hosts(&mut metrics.pool.get()?, size, page)).await??;
 
     Ok(HttpResponse::Ok().json(data))
 }
@@ -72,7 +72,7 @@ pub async fn host_specific(
     {
         let host_uuid = info.uuid.clone();
         let exists =
-            web::block(move || ApiKey::entry_exists(&auth.pool.get()?, &user_uuid, &host_uuid))
+            web::block(move || ApiKey::entry_exists(&mut auth.pool.get()?, &user_uuid, &host_uuid))
                 .await??;
 
         // If it doesn't exists, this means the host does not belong to the user
@@ -85,7 +85,8 @@ pub async fn host_specific(
         }
     }
 
-    let data = web::block(move || Host::get_from_uuid(&metrics.pool.get()?, &info.uuid)).await??;
+    let data =
+        web::block(move || Host::get_from_uuid(&mut metrics.pool.get()?, &info.uuid)).await??;
 
     Ok(HttpResponse::Ok().json(data))
 }
@@ -99,7 +100,7 @@ pub async fn host_ingest(
 ) -> Result<HttpResponse, AppError> {
     trace!("Route POST /api/guard/hosts");
 
-    web::block(move || Host::insert(&metrics.pool.get()?, &item.into_inner(), &info.uuid))
+    web::block(move || Host::insert(&mut metrics.pool.get()?, &item.into_inner(), &info.uuid))
         .await??;
     Ok(HttpResponse::Ok().finish())
 }

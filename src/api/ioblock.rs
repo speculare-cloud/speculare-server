@@ -15,7 +15,7 @@ pub async fn ioblocks(
 
     let data = web::block(move || {
         IoBlock::get_data_dated(
-            &metrics.pool.get()?,
+            &mut metrics.pool.get()?,
             &info.uuid,
             info.min_date,
             info.max_date,
@@ -35,7 +35,7 @@ pub async fn ioblocks_count(
     trace!("Route GET /api/ioblocks_count : {:?}", info);
 
     let data =
-        web::block(move || IoBlock::count(&metrics.pool.get()?, &info.uuid, info.get_size()?))
+        web::block(move || IoBlock::count(&mut metrics.pool.get()?, &info.uuid, info.get_size()?))
             .await??;
 
     Ok(HttpResponse::Ok().body(data.to_string()))

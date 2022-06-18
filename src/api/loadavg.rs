@@ -15,7 +15,7 @@ pub async fn loadavg(
 
     let data = web::block(move || {
         LoadAvg::get_data_dated(
-            &metrics.pool.get()?,
+            &mut metrics.pool.get()?,
             &info.uuid,
             info.min_date,
             info.max_date,

@@ -84,7 +84,7 @@ where
         };
 
         // Get a conn from the auth_db's pool
-        let conn = match auth.pool.get() {
+        let mut conn = match auth.pool.get() {
             Ok(conn) => conn,
             Err(e) => {
                 error!("middleware: cannot get a auth_db connection: {}", e);
@@ -102,7 +102,7 @@ where
             // Check if the host (info.uuid) belong to the user (uuid)
             // -> dsl_apikeys.filter(customer_id.eq(uuid).and(host_uuid.eq(info.uuid)))
             let exists =
-                actix_web::web::block(move || ApiKey::entry_exists(&conn, &uuid, &info.uuid))
+                actix_web::web::block(move || ApiKey::entry_exists(&mut conn, &uuid, &info.uuid))
                     .await??;
 
             // If an entry exists, we proceed the request and add the InnerUser.

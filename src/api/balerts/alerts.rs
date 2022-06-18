@@ -17,7 +17,7 @@ pub async fn alerts_list(
     let (size, page) = info.get_size_page()?;
 
     let data =
-        web::block(move || Alerts::get_list_host(&metrics.pool.get()?, &info.uuid, size, page))
+        web::block(move || Alerts::get_list_host(&mut metrics.pool.get()?, &info.uuid, size, page))
             .await??;
 
     Ok(HttpResponse::Ok().json(data))

@@ -8,6 +8,7 @@ extern crate sproot;
 use crate::utils::config::Config;
 
 use clap::Parser;
+use diesel_migrations::EmbeddedMigrations;
 use sproot::prog;
 
 mod api;
@@ -41,7 +42,7 @@ lazy_static::lazy_static! {
 }
 
 // Embed migrations into the binary
-embed_migrations!();
+pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {

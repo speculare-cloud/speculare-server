@@ -15,7 +15,7 @@ pub async fn disks(
 
     let data = web::block(move || {
         Disk::get_data_dated(
-            &metrics.pool.get()?,
+            &mut metrics.pool.get()?,
             &info.uuid,
             info.min_date,
             info.max_date,
@@ -34,8 +34,9 @@ pub async fn disks_count(
 ) -> Result<HttpResponse, AppError> {
     trace!("Route GET /api/disks_count : {:?}", info);
 
-    let data = web::block(move || Disk::count(&metrics.pool.get()?, &info.uuid, info.get_size()?))
-        .await??;
+    let data =
+        web::block(move || Disk::count(&mut metrics.pool.get()?, &info.uuid, info.get_size()?))
+            .await??;
 
     Ok(HttpResponse::Ok().body(data.to_string()))
 }

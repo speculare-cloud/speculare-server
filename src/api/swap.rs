@@ -15,7 +15,7 @@ pub async fn swap(
 
     let data = web::block(move || {
         Swap::get_data_dated(
-            &metrics.pool.get()?,
+            &mut metrics.pool.get()?,
             &info.uuid,
             info.min_date,
             info.max_date,

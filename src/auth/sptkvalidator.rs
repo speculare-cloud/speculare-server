@@ -84,7 +84,7 @@ where
         };
 
         // Get a conn from the auth_db's pool
-        let conn = match auth.pool.get() {
+        let mut conn = match auth.pool.get() {
             Ok(conn) => conn,
             Err(e) => {
                 error!("middleware: cannot get a auth_db connection: {}", e);
@@ -99,7 +99,7 @@ where
         Box::pin(async move {
             // Get the APIKEY entry corresponding to the SPTK (token)
             let api_key =
-                actix_web::web::block(move || ApiKey::get_entry(&conn, sptk.to_str().unwrap()))
+                actix_web::web::block(move || ApiKey::get_entry(&mut conn, sptk.to_str().unwrap()))
                     .await??;
 
             // If APIKEY.host_uuid is not None, we check that it's equals to

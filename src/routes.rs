@@ -49,6 +49,10 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
                     "/incidents",
                     web::get().to(balerts::incidents::incidents_list),
                 )
+                .route(
+                    "/incidents_count",
+                    web::get().to(balerts::incidents::incidents_count),
+                )
                 .route("/alerts", web::get().to(balerts::alerts::alerts_list)),
         );
 }
@@ -119,6 +123,10 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
                 .route(
                     "/incidents",
                     web::get().to(balerts::incidents::incidents_list),
+                )
+                .route(
+                    "/incidents_count",
+                    web::get().to(balerts::incidents::incidents_count),
                 )
                 .service(alert_scope),
         );

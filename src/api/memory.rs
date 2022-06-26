@@ -1,7 +1,7 @@
 use super::SpecificDated;
 
 use actix_web::{web, HttpResponse};
-use sproot::errors::AppError;
+use sproot::apierrors::ApiError;
 use sproot::models::Memory;
 use sproot::models::MetricsPool;
 
@@ -10,7 +10,7 @@ use sproot::models::MetricsPool;
 pub async fn memory(
     metrics: web::Data<MetricsPool>,
     info: web::Query<SpecificDated>,
-) -> Result<HttpResponse, AppError> {
+) -> Result<HttpResponse, ApiError> {
     trace!("Route GET /api/memory : {:?}", info);
 
     let data = web::block(move || {

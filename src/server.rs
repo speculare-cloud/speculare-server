@@ -4,10 +4,11 @@ use super::CONFIG;
 use actix_cors::Cors;
 use actix_web::web::Data;
 use actix_web::{middleware, App, HttpServer};
+use sproot::apierrors::ApiError;
 #[cfg(feature = "auth")]
 use sproot::models::AuthPool;
 use sproot::models::MetricsPool;
-use sproot::{errors::AppError, Pool};
+use sproot::Pool;
 
 /// Construct and run the actix server instance
 ///

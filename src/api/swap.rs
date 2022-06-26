@@ -1,7 +1,7 @@
 use super::SpecificDated;
 
 use actix_web::{web, HttpResponse};
-use sproot::errors::AppError;
+use sproot::apierrors::ApiError;
 use sproot::models::MetricsPool;
 use sproot::models::Swap;
 
@@ -10,7 +10,7 @@ use sproot::models::Swap;
 pub async fn swap(
     metrics: web::Data<MetricsPool>,
     info: web::Query<SpecificDated>,
-) -> Result<HttpResponse, AppError> {
+) -> Result<HttpResponse, ApiError> {
     trace!("Route GET /api/swap : {:?}", info);
 
     let data = web::block(move || {

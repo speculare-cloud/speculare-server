@@ -5,7 +5,7 @@
 #[cfg(feature = "auth")]
 use actix_session::Session;
 use serde::{Deserialize, Serialize};
-use sproot::errors::{AppError, AppErrorType};
+use sproot::apierrors::ApiError;
 #[cfg(feature = "auth")]
 use uuid::Uuid;
 
@@ -27,15 +27,14 @@ pub struct Paged {
 }
 
 impl Paged {
-    pub fn get_size_page(&self) -> Result<(i64, i64), AppError> {
+    pub fn get_size_page(&self) -> Result<(i64, i64), ApiError> {
         let size = self.size.unwrap_or(100);
         let page = self.page.unwrap_or(0);
         match (size, page) {
             v if v.0 > 0 && v.0 < 5000 && v.1 >= 0 => Ok((v.0, v.1)),
-            _ => Err(AppError {
-                message: "Size must be > 0 && < 5000 and Page must be >= 0".to_owned(),
-                error_type: AppErrorType::InvalidRequest,
-            }),
+            _ => Err(ApiError::InvalidRequestError(String::from(
+                "size must be > 0 && < 5000 and page must be >= 0",
+            ))),
         }
     }
 }
@@ -55,26 +54,24 @@ pub struct SpecificPaged {
 }
 
 impl SpecificPaged {
-    pub fn get_size_page(&self) -> Result<(i64, i64), AppError> {
+    pub fn get_size_page(&self) -> Result<(i64, i64), ApiError> {
         let size = self.size.unwrap_or(100);
         let page = self.page.unwrap_or(0);
         match (size, page) {
             v if v.0 > 0 && v.0 < 5000 && v.1 >= 0 => Ok((v.0, v.1)),
-            _ => Err(AppError {
-                message: "Size must be > 0 && < 5000 and Page must be >= 0".to_owned(),
-                error_type: AppErrorType::InvalidRequest,
-            }),
+            _ => Err(ApiError::InvalidRequestError(String::from(
+                "size must be > 0 && < 5000 and Page must be >= 0",
+            ))),
         }
     }
 
-    pub fn get_size(&self) -> Result<i64, AppError> {
+    pub fn get_size(&self) -> Result<i64, ApiError> {
         let size = self.size.unwrap_or(100);
         match size {
             s if s > 0 && s < 5000 => Ok(s),
-            _ => Err(AppError {
-                message: "Size must be > 0".to_owned(),
-                error_type: AppErrorType::InvalidRequest,
-            }),
+            _ => Err(ApiError::InvalidRequestError(String::from(
+                "size must be > 0",
+            ))),
         }
     }
 }
@@ -82,12 +79,9 @@ impl SpecificPaged {
 /// Get the Uuid of the user from his Session or
 /// return an InvalidToken error if not found
 #[cfg(feature = "auth")]
-pub fn get_user_session(session: &Session) -> Result<Uuid, AppError> {
+pub fn get_user_session(session: &Session) -> Result<Uuid, ApiError> {
     match session.get::<String>("user_id") {
         Ok(Some(id)) => Ok(Uuid::parse_str(&id).unwrap()),
-        _ => Err(AppError {
-            message: "Missing user_id in the session".to_owned(),
-            error_type: AppErrorType::InvalidToken,
-        }),
+        _ => Err(ApiError::SessionError(String::from("user_id not found"))),
     }
 }

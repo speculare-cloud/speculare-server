@@ -7,14 +7,12 @@ use super::{Paged, SpecificPaged};
 use actix_session::Session;
 use actix_web::{web, HttpResponse};
 #[cfg(feature = "auth")]
-use sproot::errors::AppErrorType;
-#[cfg(feature = "auth")]
 use sproot::models::ApiKey;
 #[cfg(feature = "auth")]
 use sproot::models::AuthPool;
 use sproot::models::MetricsPool;
 use sproot::models::{Host, HttpPostHost};
-use sproot::{errors::AppError, models::Specific};
+use sproot::{apierrors::ApiError, models::Specific};
 
 /// GET /api/hosts
 /// Return all hosts
@@ -23,7 +21,7 @@ pub async fn host_all(
     #[cfg(feature = "auth")] auth: web::Data<AuthPool>,
     info: web::Query<Paged>,
     #[cfg(feature = "auth")] session: Session,
-) -> Result<HttpResponse, AppError> {
+) -> Result<HttpResponse, ApiError> {
     trace!("Route GET /api/hosts");
 
     let (size, page) = info.get_size_page()?;
@@ -60,7 +58,7 @@ pub async fn host_specific(
     #[cfg(feature = "auth")] auth: web::Data<AuthPool>,
     info: web::Query<SpecificPaged>,
     #[cfg(feature = "auth")] session: Session,
-) -> Result<HttpResponse, AppError> {
+) -> Result<HttpResponse, ApiError> {
     trace!("Route GET /api/host?uuid=xyz");
 
     #[cfg(feature = "auth")]
@@ -78,10 +76,9 @@ pub async fn host_specific(
         // If it doesn't exists, this means the host does not belong to the user
         // or simply does not exists.
         if !exists {
-            return Err(AppError {
-                message: "Resource not found".to_owned(),
-                error_type: AppErrorType::NotFound,
-            });
+            return Err(ApiError::NotFoundError(String::from(
+                "host and apikeys combination",
+            )));
         }
     }
 
@@ -97,7 +94,7 @@ pub async fn host_ingest(
     metrics: web::Data<MetricsPool>,
     info: web::Query<Specific>,
     item: web::Json<Vec<HttpPostHost>>,
-) -> Result<HttpResponse, AppError> {
+) -> Result<HttpResponse, ApiError> {
     trace!("Route POST /api/guard/hosts");
 
     web::block(move || Host::insert(&mut metrics.pool.get()?, &item.into_inner(), &info.uuid))

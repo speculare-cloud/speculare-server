@@ -1,7 +1,7 @@
 use crate::api::SpecificPaged;
 
 use actix_web::{web, HttpResponse};
-use sproot::errors::AppError;
+use sproot::apierrors::ApiError;
 use sproot::models::Incidents;
 use sproot::models::MetricsPool;
 
@@ -10,7 +10,7 @@ use sproot::models::MetricsPool;
 pub async fn incidents_list(
     metrics: web::Data<MetricsPool>,
     info: web::Query<SpecificPaged>,
-) -> Result<HttpResponse, AppError> {
+) -> Result<HttpResponse, ApiError> {
     info!("Route GET /api/incidents");
 
     let (size, page) = info.get_size_page()?;
@@ -28,7 +28,7 @@ pub async fn incidents_list(
 pub async fn incidents_count(
     metrics: web::Data<MetricsPool>,
     info: web::Query<SpecificPaged>,
-) -> Result<HttpResponse, AppError> {
+) -> Result<HttpResponse, ApiError> {
     info!("Route GET /api/incidents_count");
 
     let (size, _) = info.get_size_page()?;

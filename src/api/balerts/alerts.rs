@@ -1,7 +1,7 @@
 use crate::api::SpecificPaged;
 
 use actix_web::{web, HttpResponse};
-use sproot::errors::AppError;
+use sproot::apierrors::ApiError;
 use sproot::models::Alerts;
 use sproot::models::MetricsPool;
 use sproot::models::Specific;
@@ -11,7 +11,7 @@ use sproot::models::Specific;
 pub async fn alerts_list(
     metrics: web::Data<MetricsPool>,
     info: web::Query<SpecificPaged>,
-) -> Result<HttpResponse, AppError> {
+) -> Result<HttpResponse, ApiError> {
     info!("Route GET /api/alerts");
 
     let (size, page) = info.get_size_page()?;
@@ -28,7 +28,7 @@ pub async fn alerts_list(
 pub async fn alerts_create(
     _metrics: web::Data<MetricsPool>,
     _info: web::Query<Specific>,
-) -> Result<HttpResponse, AppError> {
+) -> Result<HttpResponse, ApiError> {
     info!("Route POST /api/alerts");
     todo!()
 }
@@ -38,7 +38,7 @@ pub async fn alerts_create(
 pub async fn alerts_update(
     _metrics: web::Data<MetricsPool>,
     _info: web::Query<Specific>,
-) -> Result<HttpResponse, AppError> {
+) -> Result<HttpResponse, ApiError> {
     info!("Route PATCH /api/alerts");
     todo!()
 }
@@ -48,7 +48,7 @@ pub async fn alerts_update(
 pub async fn alerts_delete(
     _metrics: web::Data<MetricsPool>,
     _info: web::Query<Specific>,
-) -> Result<HttpResponse, AppError> {
+) -> Result<HttpResponse, ApiError> {
     info!("Route DELETE /api/alerts");
     todo!()
 }

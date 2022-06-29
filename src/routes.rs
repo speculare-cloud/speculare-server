@@ -8,7 +8,6 @@ use crate::{
 use actix_web::{guard, web};
 #[cfg(feature = "auth")]
 use sproot::get_session_middleware;
-use sproot::models::AlertSource;
 
 #[cfg(not(feature = "auth"))]
 pub fn routes(cfg: &mut web::ServiceConfig) {
@@ -20,12 +19,10 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
         .guard(guard::All(guard::Post()).and(guard::Header("SPTK", &CONFIG.api_token)))
         .route("/hosts", web::post().to(hosts::host_ingest));
 
-    if CONFIG.alerts_source == AlertSource::Database {
-        guard_scope = guard_scope
-            .route("/alerts", web::post().to(balerts::alerts::alerts_create))
-            .route("/alerts", web::patch().to(balerts::alerts::alerts_update))
-            .route("/alerts", web::delete().to(balerts::alerts::alerts_delete));
-    }
+    guard_scope = guard_scope
+        .route("/alerts", web::post().to(balerts::alerts::alerts_create))
+        .route("/alerts", web::patch().to(balerts::alerts::alerts_update))
+        .route("/alerts", web::delete().to(balerts::alerts::alerts_delete));
 
     cfg.route("/ping", web::get().to(|| async { "zpour" }))
         .route("/ping", web::head().to(|| async { "zpour" }))
@@ -62,12 +59,10 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
     let mut alert_scope =
         web::scope("/alerts").route("", web::get().to(balerts::alerts::alerts_list));
 
-    if CONFIG.alerts_source == AlertSource::Database {
-        alert_scope = alert_scope
-            .route("", web::post().to(balerts::alerts::alerts_create))
-            .route("", web::patch().to(balerts::alerts::alerts_update))
-            .route("", web::delete().to(balerts::alerts::alerts_delete));
-    }
+    alert_scope = alert_scope
+        .route("", web::post().to(balerts::alerts::alerts_create))
+        .route("", web::patch().to(balerts::alerts::alerts_update))
+        .route("", web::delete().to(balerts::alerts::alerts_delete));
 
     cfg.route("/ping", web::get().to(|| async { "zpour" }))
         .route("/ping", web::head().to(|| async { "zpour" }))

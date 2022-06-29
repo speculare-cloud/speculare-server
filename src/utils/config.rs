@@ -35,6 +35,8 @@ pub struct Config {
     pub api_token: String,
 
     #[cfg(feature = "auth")]
+    pub berta_name: String,
+    #[cfg(feature = "auth")]
     pub cookie_secret: String,
     #[cfg(feature = "auth")]
     pub cookie_domain: Option<String>,

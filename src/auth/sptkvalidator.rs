@@ -12,6 +12,8 @@ use std::{
 
 use sproot::models::AuthPool;
 
+use crate::CONFIG;
+
 pub struct SptkValidator;
 
 impl<S: 'static, B> Transform<S, ServiceRequest> for SptkValidator
@@ -98,9 +100,10 @@ where
         let svc = self.service.clone();
         Box::pin(async move {
             // Get the APIKEY entry corresponding to the SPTK (token)
-            let api_key =
-                actix_web::web::block(move || ApiKey::get_entry(&mut conn, sptk.to_str().unwrap()))
-                    .await??;
+            let api_key = actix_web::web::block(move || {
+                ApiKey::get_entry_berta(&mut conn, sptk.to_str().unwrap(), &CONFIG.berta_name)
+            })
+            .await??;
 
             // If APIKEY.host_uuid is not None, we check that it's equals to
             // info.uuid (the ?uuid=XYZ) of the request. If it's the equals

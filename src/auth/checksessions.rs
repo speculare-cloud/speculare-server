@@ -1,13 +1,12 @@
-use crate::CHECKSESSIONS_CACHE;
+use crate::{AUTHPOOL, CHECKSESSIONS_CACHE};
 
 use actix_session::SessionExt;
 use actix_web::body::EitherBody;
 use actix_web::dev::{self, ServiceRequest, ServiceResponse};
 use actix_web::dev::{Service, Transform};
-use actix_web::web::Data;
 use actix_web::{web, Error, HttpMessage, HttpResponse};
 use futures_util::future::LocalBoxFuture;
-use sproot::models::{ApiKey, AuthPool, InnerUser, Specific};
+use sproot::models::{ApiKey, InnerUser, Specific};
 use std::{
     future::{ready, Ready},
     rc::Rc,
@@ -96,20 +95,8 @@ where
             });
         }
 
-        // Get the AuthPool from the server
-        let auth = match request.app_data::<Data<AuthPool>>() {
-            Some(auth) => auth,
-            None => {
-                error!("middleware: auth is not configured correctly");
-                let response = HttpResponse::InternalServerError()
-                    .finish()
-                    .map_into_right_body();
-                return Box::pin(async { Ok(ServiceResponse::new(request, response)) });
-            }
-        };
-
         // Get a conn from the auth_db's pool
-        let mut conn = match auth.pool.get() {
+        let mut conn = match AUTHPOOL.get() {
             Ok(conn) => conn,
             Err(e) => {
                 error!("middleware: cannot get a auth_db connection: {}", e);

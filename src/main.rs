@@ -13,6 +13,8 @@ use diesel_migrations::EmbeddedMigrations;
 use moka::future::Cache;
 use sproot::prog;
 #[cfg(feature = "auth")]
+use sproot::Pool;
+#[cfg(feature = "auth")]
 use std::time::Duration;
 #[cfg(feature = "auth")]
 use uuid::Uuid;
@@ -55,6 +57,7 @@ lazy_static::lazy_static! {
     //   we'll need to recheck it from the auth server.
     static ref CHECKSESSIONS_CACHE: Cache<String, Uuid> = Cache::builder().time_to_live(Duration::from_secs(60 * 60)).build();
     static ref CHECKSPTK_CACHE: Cache<String, String> = Cache::builder().time_to_live(Duration::from_secs(60 * 60)).build();
+    static ref AUTHPOOL: Pool = flow_run::build_pool(&CONFIG.auth_database_url, CONFIG.auth_database_max_connection);
 }
 
 // Embed migrations into the binary

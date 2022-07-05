@@ -1,5 +1,7 @@
 #[cfg(feature = "auth")]
 use crate::api::get_user_session;
+#[cfg(feature = "auth")]
+use crate::AUTHPOOL;
 
 use super::{Paged, SpecificPaged};
 
@@ -8,8 +10,6 @@ use actix_session::Session;
 use actix_web::{web, HttpResponse};
 #[cfg(feature = "auth")]
 use sproot::models::ApiKey;
-#[cfg(feature = "auth")]
-use sproot::models::AuthPool;
 use sproot::models::MetricsPool;
 use sproot::models::{Host, HttpPostHost};
 use sproot::{apierrors::ApiError, models::Specific};
@@ -18,7 +18,6 @@ use sproot::{apierrors::ApiError, models::Specific};
 /// Return all hosts
 pub async fn host_all(
     metrics: web::Data<MetricsPool>,
-    #[cfg(feature = "auth")] auth: web::Data<AuthPool>,
     info: web::Query<Paged>,
     #[cfg(feature = "auth")] session: Session,
 ) -> Result<HttpResponse, ApiError> {
@@ -38,7 +37,7 @@ pub async fn host_all(
     // This is a bit hacky, but for now it'll do the job just fine.
     #[cfg(feature = "auth")]
     let data = web::block(move || {
-        let hosts_uuid = ApiKey::get_hosts_by_owned(&mut auth.pool.get()?, &user_uuid, size, page)?;
+        let hosts_uuid = ApiKey::get_hosts_by_owned(&mut AUTHPOOL.get()?, &user_uuid, size, page)?;
         Host::get_from_uuids(&mut metrics.pool.get()?, hosts_uuid.as_slice())
     })
     .await??;

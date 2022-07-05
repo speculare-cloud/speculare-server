@@ -9,7 +9,13 @@ use crate::utils::config::Config;
 
 use clap::Parser;
 use diesel_migrations::EmbeddedMigrations;
+#[cfg(feature = "auth")]
+use moka::future::Cache;
 use sproot::prog;
+#[cfg(feature = "auth")]
+use std::time::Duration;
+#[cfg(feature = "auth")]
+use uuid::Uuid;
 
 mod api;
 #[cfg(feature = "auth")]
@@ -39,6 +45,16 @@ lazy_static::lazy_static! {
             std::process::exit(1);
         }
     };
+}
+
+#[cfg(feature = "auth")]
+lazy_static::lazy_static! {
+    // Both cache are used to avoid looking at the auth database too often.
+    // This speed up the process time required.
+    // > time_to_live is set to one hour, after that the key will be evicted and
+    //   we'll need to recheck it from the auth server.
+    static ref CHECKSESSIONS_CACHE: Cache<String, Uuid> = Cache::builder().time_to_live(Duration::from_secs(60 * 60)).build();
+    static ref CHECKSPTK_CACHE: Cache<String, String> = Cache::builder().time_to_live(Duration::from_secs(60 * 60)).build();
 }
 
 // Embed migrations into the binary

@@ -12,7 +12,7 @@ use std::{
 
 use sproot::models::AuthPool;
 
-use crate::CONFIG;
+use crate::{CHECKSPTK_CACHE, CONFIG};
 
 pub struct SptkValidator;
 
@@ -52,6 +52,7 @@ where
 
     fn call(&self, request: ServiceRequest) -> Self::Future {
         let (request, pl) = request.into_parts();
+        let svc = self.service.clone();
 
         // Get the SPTK header, error if not found (400)
         let sptk = match request.headers().get("SPTK") {
@@ -72,6 +73,25 @@ where
                 return Box::pin(async { Ok(ServiceResponse::new(request, response)) });
             }
         };
+
+        // Check the convertion to str and prepare to be used below
+        let sptk_owned = match sptk.to_str() {
+            Ok(val) => val.to_owned(),
+            Err(_) => {
+                debug!("SptkValidator: Couldn't change the HeaderValue to str");
+                let response = HttpResponse::BadRequest().finish().map_into_right_body();
+                return Box::pin(async { Ok(ServiceResponse::new(request, response)) });
+            }
+        };
+
+        // Check if the entry exists in the cache for HOST_UUID <> USER_UUID
+        if CHECKSPTK_CACHE.get(&info.uuid) == Some(sptk_owned.clone()) {
+            trace!("SptkValidator: cache hit for {}", &info.uuid);
+            return Box::pin(async move {
+                let res = svc.call(ServiceRequest::from_parts(request, pl));
+                res.await.map(ServiceResponse::map_into_left_body)
+            });
+        }
 
         // Get the MetricsPool from the server
         let auth = match request.app_data::<Data<AuthPool>>() {
@@ -97,8 +117,8 @@ where
             }
         };
 
-        let svc = self.service.clone();
         Box::pin(async move {
+            let host_uuid = info.uuid.to_owned();
             // Get the APIKEY entry corresponding to the SPTK (token)
             let api_key = actix_web::web::block(move || {
                 ApiKey::get_entry_berta(&mut conn, sptk.to_str().unwrap(), &CONFIG.berta_name)
@@ -111,6 +131,8 @@ where
             // depending on the state of APIKEY.host_uuid.
             if let Some(khost_uuid) = api_key.host_uuid {
                 if khost_uuid == info.uuid {
+                    CHECKSPTK_CACHE.insert(host_uuid, sptk_owned).await;
+
                     let res = svc.call(ServiceRequest::from_parts(request, pl));
                     res.await.map(ServiceResponse::map_into_left_body)
                 } else {

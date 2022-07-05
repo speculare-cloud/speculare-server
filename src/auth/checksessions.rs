@@ -1,3 +1,5 @@
+use crate::CHECKSESSIONS_CACHE;
+
 use actix_session::SessionExt;
 use actix_web::body::EitherBody;
 use actix_web::dev::{self, ServiceRequest, ServiceResponse};
@@ -50,12 +52,23 @@ where
 
     fn call(&self, request: ServiceRequest) -> Self::Future {
         let (request, pl) = request.into_parts();
+        let svc = self.service.clone();
 
         // Extract the user_id from the CookieSession
         let inner_user = match request.get_session().get::<String>("user_id") {
             Ok(Some(inner)) => inner,
             Ok(None) | Err(_) => {
                 debug!("CheckSessions: No user_id in the session");
+                let response = HttpResponse::BadRequest().finish().map_into_right_body();
+                return Box::pin(async { Ok(ServiceResponse::new(request, response)) });
+            }
+        };
+
+        // Parse the user_id into a UUID
+        let uuid = match Uuid::parse_str(&inner_user) {
+            Ok(uuid) => uuid,
+            Err(_) => {
+                debug!("CheckSessions: Invalid UUID, cannot parse");
                 let response = HttpResponse::BadRequest().finish().map_into_right_body();
                 return Box::pin(async { Ok(ServiceResponse::new(request, response)) });
             }
@@ -70,6 +83,18 @@ where
                 return Box::pin(async { Ok(ServiceResponse::new(request, response)) });
             }
         };
+
+        // Check if the entry exists in the cache for HOST_UUID <> USER_UUID
+        if CHECKSESSIONS_CACHE.get(&info.uuid) == Some(uuid) {
+            trace!("CheckSessions: cache hit for {}", &info.uuid);
+            return Box::pin(async move {
+                // Add InnerUser into the extensions
+                request.extensions_mut().insert(InnerUser { uuid });
+
+                let res = svc.call(ServiceRequest::from_parts(request, pl));
+                res.await.map(ServiceResponse::map_into_left_body)
+            });
+        }
 
         // Get the AuthPool from the server
         let auth = match request.app_data::<Data<AuthPool>>() {
@@ -95,10 +120,8 @@ where
             }
         };
 
-        let svc = self.service.clone();
         Box::pin(async move {
-            // We parse the inner_user str to a UUID as it's the type in the database
-            let uuid = Uuid::parse_str(&inner_user).unwrap();
+            let host_uuid = info.uuid.to_owned();
             // Check if the host (info.uuid) belong to the user (uuid)
             // -> dsl_apikeys.filter(customer_id.eq(uuid).and(host_uuid.eq(info.uuid)))
             let exists =
@@ -111,6 +134,8 @@ where
             // If the entry does not exists, return Unauthorized.
             match exists {
                 true => {
+                    CHECKSESSIONS_CACHE.insert(host_uuid, uuid).await;
+
                     // Add InnerUser into the extensions
                     request.extensions_mut().insert(InnerUser { uuid });
 

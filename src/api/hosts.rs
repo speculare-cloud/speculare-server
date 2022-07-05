@@ -55,32 +55,9 @@ pub async fn host_all(
 /// Return info for a specific host
 pub async fn host_specific(
     metrics: web::Data<MetricsPool>,
-    #[cfg(feature = "auth")] auth: web::Data<AuthPool>,
     info: web::Query<SpecificPaged>,
-    #[cfg(feature = "auth")] session: Session,
 ) -> Result<HttpResponse, ApiError> {
     trace!("Route GET /api/host?uuid=xyz");
-
-    #[cfg(feature = "auth")]
-    let user_uuid = get_user_session(&session)?;
-
-    // If we're in the auth mode, we need to check that this host his owned by
-    // this very user before proceeding.
-    #[cfg(feature = "auth")]
-    {
-        let host_uuid = info.uuid.clone();
-        let exists =
-            web::block(move || ApiKey::entry_exists(&mut auth.pool.get()?, &user_uuid, &host_uuid))
-                .await??;
-
-        // If it doesn't exists, this means the host does not belong to the user
-        // or simply does not exists.
-        if !exists {
-            return Err(ApiError::NotFoundError(String::from(
-                "host and apikeys combination",
-            )));
-        }
-    }
 
     let data =
         web::block(move || Host::get_from_uuid(&mut metrics.pool.get()?, &info.uuid)).await??;

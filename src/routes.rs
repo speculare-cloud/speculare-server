@@ -83,6 +83,7 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
         )
         .service(
             web::resource("/api/host")
+                .wrap(CheckSessions)
                 .wrap(get_session_middleware(
                     CONFIG.cookie_secret.as_bytes(),
                     "SP-CKS".to_string(),

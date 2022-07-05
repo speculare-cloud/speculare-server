@@ -9,8 +9,8 @@ edition = "2018"
 sproot = { git = "https://github.com/speculare-cloud/sproot" }
 actix-cors = { version = "0.6" }
 actix-session = { version = "0.6", features = ["cookie-session"], optional = true }
-actix-web = { version = "4.0", features = ["rustls"] }
-clap = { version = "3.1", features = ["derive"] }
+actix-web = { version = "4.1", features = ["rustls"] }
+clap = { version = "3.2", features = ["derive"] }
 clap-verbosity-flag = "1.0"
 chrono = { version = "0.4", features = ["serde"] }
 config = "0.13"

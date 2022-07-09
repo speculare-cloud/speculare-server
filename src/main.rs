@@ -67,15 +67,20 @@ pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
 async fn main() -> std::io::Result<()> {
     let args = Args::parse();
 
-    // Init logger
-    env_logger::Builder::new()
-        .filter_module(
-            &prog().map_or_else(|| "speculare_server".to_owned(), |f| f.replace('-', "_")),
-            args.verbose.log_level_filter(),
+    // Define log level
+    if std::env::var("RUST_LOG").is_err() {
+        std::env::set_var(
+            "RUST_LOG",
+            format!(
+                "{}={level},actix_web={level},sproot={level}",
+                &prog().map_or_else(|| "speculare_server".to_owned(), |f| f.replace('-', "_")),
+                level = args.verbose.log_level_filter()
+            ),
         )
-        .filter_module("actix_web", args.verbose.log_level_filter())
-        .filter_module("sproot", args.verbose.log_level_filter())
-        .init();
+    }
+
+    // Init logger/tracing
+    tracing_subscriber::fmt::init();
 
     flow_run::flow_run_start().await
 }

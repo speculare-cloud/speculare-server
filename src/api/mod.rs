@@ -32,7 +32,7 @@ impl Paged {
         let page = self.page.unwrap_or(0);
         match (size, page) {
             v if v.0 > 0 && v.0 < 5000 && v.1 >= 0 => Ok((v.0, v.1)),
-            _ => Err(ApiError::InvalidRequestError(String::from(
+            _ => Err(ApiError::ExplicitError(String::from(
                 "size must be > 0 && < 5000 and page must be >= 0",
             ))),
         }
@@ -59,7 +59,7 @@ impl SpecificPaged {
         let page = self.page.unwrap_or(0);
         match (size, page) {
             v if v.0 > 0 && v.0 < 5000 && v.1 >= 0 => Ok((v.0, v.1)),
-            _ => Err(ApiError::InvalidRequestError(String::from(
+            _ => Err(ApiError::ExplicitError(String::from(
                 "size must be > 0 && < 5000 and Page must be >= 0",
             ))),
         }
@@ -69,9 +69,7 @@ impl SpecificPaged {
         let size = self.size.unwrap_or(100);
         match size {
             s if s > 0 && s < 5000 => Ok(s),
-            _ => Err(ApiError::InvalidRequestError(String::from(
-                "size must be > 0",
-            ))),
+            _ => Err(ApiError::ExplicitError(String::from("size must be > 0"))),
         }
     }
 }
@@ -82,6 +80,6 @@ impl SpecificPaged {
 pub fn get_user_session(session: &Session) -> Result<Uuid, ApiError> {
     match session.get::<String>("user_id") {
         Ok(Some(id)) => Ok(Uuid::parse_str(&id).unwrap()),
-        _ => Err(ApiError::SessionError(String::from("user_id not found"))),
+        _ => Err(ApiError::SessionError(None)),
     }
 }

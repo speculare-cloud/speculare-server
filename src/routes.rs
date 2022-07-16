@@ -1,13 +1,15 @@
-#[cfg(feature = "auth")]
-use crate::auth::{checksessions::CheckSessions, sptkvalidator::SptkValidator};
 use crate::{
     api::{balerts, cpustats, cputimes, disks, hosts, ioblock, ionet, loadavg, memory, swap},
     CONFIG,
 };
 
 use actix_web::{guard, web};
+
 #[cfg(feature = "auth")]
-use sproot::get_session_middleware;
+use {
+    crate::auth::{checksessions::CheckSessions, sptkvalidator::SptkValidator},
+    sproot::get_session_middleware,
+};
 
 #[cfg(not(feature = "auth"))]
 pub fn routes(cfg: &mut web::ServiceConfig) {

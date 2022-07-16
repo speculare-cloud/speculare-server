@@ -9,15 +9,10 @@ use crate::utils::config::Config;
 
 use clap::Parser;
 use diesel_migrations::EmbeddedMigrations;
-#[cfg(feature = "auth")]
-use moka::future::Cache;
 use sproot::prog;
+
 #[cfg(feature = "auth")]
-use sproot::Pool;
-#[cfg(feature = "auth")]
-use std::time::Duration;
-#[cfg(feature = "auth")]
-use uuid::Uuid;
+use {moka::future::Cache, sproot::Pool, std::time::Duration, uuid::Uuid};
 
 mod api;
 #[cfg(feature = "auth")]

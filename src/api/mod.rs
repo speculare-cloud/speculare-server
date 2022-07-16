@@ -2,12 +2,11 @@
 //! synchronous operation (access to Diesel's conns) allowing
 //! Actix to handle another request while the sync task is
 //! being performed.
-#[cfg(feature = "auth")]
-use actix_session::Session;
 use serde::{Deserialize, Serialize};
 use sproot::apierrors::ApiError;
+
 #[cfg(feature = "auth")]
-use uuid::Uuid;
+use {actix_session::Session, uuid::Uuid};
 
 pub mod balerts;
 pub mod cpustats;

@@ -1,3 +1,5 @@
+use super::{AUTHPOOL, CHECKSPTK_CACHE, CONFIG};
+
 use actix_web::body::EitherBody;
 use actix_web::dev::{self, ServiceRequest, ServiceResponse};
 use actix_web::dev::{Service, Transform};
@@ -8,8 +10,6 @@ use std::{
     future::{ready, Ready},
     rc::Rc,
 };
-
-use crate::{AUTHPOOL, CHECKSPTK_CACHE, CONFIG};
 
 pub struct SptkValidator;
 

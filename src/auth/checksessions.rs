@@ -1,4 +1,4 @@
-use crate::{AUTHPOOL, CHECKSESSIONS_CACHE};
+use super::{AUTHPOOL, CHECKSESSIONS_CACHE};
 
 use actix_session::SessionExt;
 use actix_web::body::EitherBody;

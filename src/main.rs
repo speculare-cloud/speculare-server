@@ -9,10 +9,8 @@ use crate::utils::config::Config;
 
 use clap::Parser;
 use diesel_migrations::EmbeddedMigrations;
+use once_cell::sync::Lazy;
 use sproot::prog;
-
-#[cfg(feature = "auth")]
-use {moka::future::Cache, sproot::Pool, std::time::Duration, uuid::Uuid};
 
 mod api;
 #[cfg(feature = "auth")]
@@ -32,28 +30,14 @@ struct Args {
     verbose: clap_verbosity_flag::Verbosity,
 }
 
-// Lazy static of the Token from Config to use in validator
-lazy_static::lazy_static! {
-    // Lazy static of the Config which is loaded from the config file
-    static ref CONFIG: Config = match Config::new() {
-        Ok(config) => config,
-        Err(e) => {
-            error!("Cannot build the Config: {}", e);
-            std::process::exit(1);
-        }
-    };
-}
-
-#[cfg(feature = "auth")]
-lazy_static::lazy_static! {
-    // Both cache are used to avoid looking at the auth database too often.
-    // This speed up the process time required.
-    // > time_to_live is set to one hour, after that the key will be evicted and
-    //   we'll need to recheck it from the auth server.
-    static ref CHECKSESSIONS_CACHE: Cache<String, Uuid> = Cache::builder().time_to_live(Duration::from_secs(60 * 60)).build();
-    static ref CHECKSPTK_CACHE: Cache<String, String> = Cache::builder().time_to_live(Duration::from_secs(60 * 60)).build();
-    static ref AUTHPOOL: Pool = flow_run::build_pool(&CONFIG.auth_database_url, CONFIG.auth_database_max_connection);
-}
+// Lazy static of the Config which is loaded from the config file
+static CONFIG: Lazy<Config> = Lazy::new(|| match Config::new() {
+    Ok(config) => config,
+    Err(e) => {
+        error!("Cannot build the Config: {}", e);
+        std::process::exit(1);
+    }
+});
 
 // Embed migrations into the binary
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();

@@ -1,18 +1,15 @@
-#[cfg(feature = "auth")]
-use crate::api::get_user_session;
-#[cfg(feature = "auth")]
-use crate::AUTHPOOL;
-
 use super::{Paged, SpecificPaged};
 
-#[cfg(feature = "auth")]
-use actix_session::Session;
 use actix_web::{web, HttpResponse};
-#[cfg(feature = "auth")]
-use sproot::models::ApiKey;
 use sproot::models::MetricsPool;
 use sproot::models::{Host, HttpPostHost};
 use sproot::{apierrors::ApiError, models::Specific};
+
+#[cfg(feature = "auth")]
+use {
+    crate::api::get_user_session, crate::auth::AUTHPOOL, actix_session::Session,
+    sproot::models::ApiKey,
+};
 
 /// GET /api/hosts
 /// Return all hosts

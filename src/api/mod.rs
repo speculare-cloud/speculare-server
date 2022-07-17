@@ -62,14 +62,6 @@ impl SpecificPaged {
             ))),
         }
     }
-
-    pub fn get_size(&self) -> Result<i64, ApiError> {
-        let size = self.size.unwrap_or(100);
-        match size {
-            s if s > 0 && s < 5000 => Ok(s),
-            _ => Err(ApiError::ExplicitError(String::from("size must be > 0"))),
-        }
-    }
 }
 
 /// Get the Uuid of the user from his Session or

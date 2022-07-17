@@ -4,7 +4,7 @@ use sproot::models::IoNet;
 use sproot::models::MetricsPool;
 use sproot::models::{BaseMetrics, ExtMetrics};
 
-use super::{SpecificDated, SpecificPaged};
+use super::SpecificDated;
 
 /// GET /api/ionets
 /// Return ionets for a particular host
@@ -31,12 +31,17 @@ pub async fn ionets(
 /// Return ionets_count for a particular host
 pub async fn ionets_count(
     metrics: web::Data<MetricsPool>,
-    info: web::Query<SpecificPaged>,
+    info: web::Query<SpecificDated>,
 ) -> Result<HttpResponse, ApiError> {
     trace!("Route GET /api/ionets_count : {:?}", info);
 
     let data = web::block(move || {
-        IoNet::count_unique(&mut metrics.pool.get()?, &info.uuid, info.get_size()?)
+        IoNet::count_unique(
+            &mut metrics.pool.get()?,
+            &info.uuid,
+            info.min_date,
+            info.max_date,
+        )
     })
     .await??;
 

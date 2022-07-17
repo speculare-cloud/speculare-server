@@ -5,7 +5,7 @@ use sproot::models::Disk;
 use sproot::models::ExtMetrics;
 use sproot::models::MetricsPool;
 
-use super::{SpecificDated, SpecificPaged};
+use super::SpecificDated;
 
 /// GET /api/disks
 /// Return disks for a particular host
@@ -32,12 +32,17 @@ pub async fn disks(
 /// Return disks_count for a particular host
 pub async fn disks_count(
     metrics: web::Data<MetricsPool>,
-    info: web::Query<SpecificPaged>,
+    info: web::Query<SpecificDated>,
 ) -> Result<HttpResponse, ApiError> {
     trace!("Route GET /api/disks_count : {:?}", info);
 
     let data = web::block(move || {
-        Disk::count_unique(&mut metrics.pool.get()?, &info.uuid, info.get_size()?)
+        Disk::count_unique(
+            &mut metrics.pool.get()?,
+            &info.uuid,
+            info.min_date,
+            info.max_date,
+        )
     })
     .await??;
 

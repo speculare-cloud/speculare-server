@@ -2,6 +2,7 @@ use actix_web::{web, HttpResponse};
 use sproot::apierrors::ApiError;
 use sproot::models::IoNet;
 use sproot::models::MetricsPool;
+use sproot::models::{BaseMetrics, ExtMetrics};
 
 use super::{SpecificDated, SpecificPaged};
 
@@ -14,7 +15,7 @@ pub async fn ionets(
     trace!("Route GET /api/ionets : {:?}", info);
 
     let data = web::block(move || {
-        IoNet::get_data_dated(
+        IoNet::get_dated(
             &mut metrics.pool.get()?,
             &info.uuid,
             info.min_date,
@@ -34,9 +35,10 @@ pub async fn ionets_count(
 ) -> Result<HttpResponse, ApiError> {
     trace!("Route GET /api/ionets_count : {:?}", info);
 
-    let data =
-        web::block(move || IoNet::count(&mut metrics.pool.get()?, &info.uuid, info.get_size()?))
-            .await??;
+    let data = web::block(move || {
+        IoNet::count_unique(&mut metrics.pool.get()?, &info.uuid, info.get_size()?)
+    })
+    .await??;
 
     Ok(HttpResponse::Ok().body(data.to_string()))
 }

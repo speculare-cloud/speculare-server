@@ -4,7 +4,6 @@
 //! being performed.
 use serde::{Deserialize, Serialize};
 use sproot::apierrors::ApiError;
-
 #[cfg(feature = "auth")]
 use {actix_session::Session, uuid::Uuid};
 

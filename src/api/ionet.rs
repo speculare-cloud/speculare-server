@@ -1,9 +1,9 @@
-use super::{SpecificDated, SpecificPaged};
-
 use actix_web::{web, HttpResponse};
 use sproot::apierrors::ApiError;
 use sproot::models::IoNet;
 use sproot::models::MetricsPool;
+
+use super::{SpecificDated, SpecificPaged};
 
 /// GET /api/ionets
 /// Return ionets for a particular host

@@ -1,9 +1,10 @@
-use super::SpecificDated;
-
 use actix_web::{web, HttpResponse};
 use sproot::apierrors::ApiError;
+use sproot::models::BaseMetrics;
 use sproot::models::CpuTimes;
 use sproot::models::MetricsPool;
+
+use super::SpecificDated;
 
 /// GET /api/cputimes
 /// Return cputimes for a particular host
@@ -14,7 +15,7 @@ pub async fn cputimes(
     trace!("Route GET /api/cputimes : {:?}", info);
 
     let data = web::block(move || {
-        CpuTimes::get_data_dated(
+        CpuTimes::get_dated(
             &mut metrics.pool.get()?,
             &info.uuid,
             info.min_date,

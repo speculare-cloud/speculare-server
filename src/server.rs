@@ -1,12 +1,12 @@
-use super::routes;
-use super::CONFIG;
-
 use actix_cors::Cors;
 use actix_web::web::Data;
 use actix_web::{middleware, App, HttpServer};
 use sproot::apierrors::ApiError;
 use sproot::models::MetricsPool;
 use sproot::Pool;
+
+use super::routes;
+use super::CONFIG;
 
 /// Construct and run the actix server instance
 ///

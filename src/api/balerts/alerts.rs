@@ -1,10 +1,11 @@
-use crate::api::SpecificPaged;
-
 use actix_web::{web, HttpResponse};
 use sproot::apierrors::ApiError;
 use sproot::models::Alerts;
+use sproot::models::BaseCrud;
 use sproot::models::MetricsPool;
 use sproot::models::Specific;
+
+use crate::api::SpecificPaged;
 
 /// GET /api/alerts
 /// Return all alerts
@@ -17,8 +18,7 @@ pub async fn alerts_list(
     let (size, page) = info.get_size_page()?;
 
     let data =
-        web::block(move || Alerts::get_list_host(&mut metrics.pool.get()?, &info.uuid, size, page))
-            .await??;
+        web::block(move || Alerts::get(&mut metrics.pool.get()?, &info.uuid, size, page)).await??;
 
     Ok(HttpResponse::Ok().json(data))
 }

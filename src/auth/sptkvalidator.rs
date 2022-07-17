@@ -1,4 +1,7 @@
-use super::{AUTHPOOL, CHECKSPTK_CACHE, CONFIG};
+use std::{
+    future::{ready, Ready},
+    rc::Rc,
+};
 
 use actix_web::body::EitherBody;
 use actix_web::dev::{self, ServiceRequest, ServiceResponse};
@@ -6,10 +9,8 @@ use actix_web::dev::{Service, Transform};
 use actix_web::{web, Error, HttpResponse};
 use futures_util::future::LocalBoxFuture;
 use sproot::models::{ApiKey, Specific};
-use std::{
-    future::{ready, Ready},
-    rc::Rc,
-};
+
+use super::{AUTHPOOL, CHECKSPTK_CACHE, CONFIG};
 
 pub struct SptkValidator;
 
@@ -106,7 +107,7 @@ where
             let host_uuid = info.uuid.to_owned();
             // Get the APIKEY entry corresponding to the SPTK (token)
             let api_key = actix_web::web::block(move || {
-                ApiKey::get_entry_berta(&mut conn, sptk.to_str().unwrap(), &CONFIG.berta_name)
+                ApiKey::get_by_key_berta(&mut conn, sptk.to_str().unwrap(), &CONFIG.berta_name)
             })
             .await??;
 

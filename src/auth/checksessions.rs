@@ -1,4 +1,7 @@
-use super::{AUTHPOOL, CHECKSESSIONS_CACHE};
+use std::{
+    future::{ready, Ready},
+    rc::Rc,
+};
 
 use actix_session::SessionExt;
 use actix_web::body::EitherBody;
@@ -7,11 +10,9 @@ use actix_web::dev::{Service, Transform};
 use actix_web::{web, Error, HttpMessage, HttpResponse};
 use futures_util::future::LocalBoxFuture;
 use sproot::models::{ApiKey, InnerUser, Specific};
-use std::{
-    future::{ready, Ready},
-    rc::Rc,
-};
 use uuid::Uuid;
+
+use super::{AUTHPOOL, CHECKSESSIONS_CACHE};
 
 pub struct CheckSessions;
 
@@ -111,9 +112,10 @@ where
             let host_uuid = info.uuid.to_owned();
             // Check if the host (info.uuid) belong to the user (uuid)
             // -> dsl_apikeys.filter(customer_id.eq(uuid).and(host_uuid.eq(info.uuid)))
-            let exists =
-                actix_web::web::block(move || ApiKey::entry_exists(&mut conn, &uuid, &info.uuid))
-                    .await??;
+            let exists = actix_web::web::block(move || {
+                ApiKey::exists_by_owner_and_host(&mut conn, &uuid, &info.uuid)
+            })
+            .await??;
 
             // If an entry exists, we proceed the request and add the InnerUser.
             // InnerUser is only used when getting the hosts (GET /api/hosts),

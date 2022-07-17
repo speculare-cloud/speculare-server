@@ -1,8 +1,8 @@
-use crate::{server, CONFIG, MIGRATIONS};
-
 use diesel::{prelude::PgConnection, r2d2::ConnectionManager};
 use diesel_migrations::MigrationHarness;
 use sproot::Pool;
+
+use crate::{server, CONFIG, MIGRATIONS};
 
 pub fn build_pool(db_url: &str, max_conn: u32) -> Pool {
     // Init the connection to the postgresql

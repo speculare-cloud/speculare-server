@@ -1,9 +1,11 @@
-use super::{SpecificDated, SpecificPaged};
-
 use actix_web::{web, HttpResponse};
 use sproot::apierrors::ApiError;
+use sproot::models::BaseMetrics;
 use sproot::models::Disk;
+use sproot::models::ExtMetrics;
 use sproot::models::MetricsPool;
+
+use super::{SpecificDated, SpecificPaged};
 
 /// GET /api/disks
 /// Return disks for a particular host
@@ -14,7 +16,7 @@ pub async fn disks(
     trace!("Route GET /api/disks : {:?}", info);
 
     let data = web::block(move || {
-        Disk::get_data_dated(
+        Disk::get_dated(
             &mut metrics.pool.get()?,
             &info.uuid,
             info.min_date,
@@ -34,9 +36,10 @@ pub async fn disks_count(
 ) -> Result<HttpResponse, ApiError> {
     trace!("Route GET /api/disks_count : {:?}", info);
 
-    let data =
-        web::block(move || Disk::count(&mut metrics.pool.get()?, &info.uuid, info.get_size()?))
-            .await??;
+    let data = web::block(move || {
+        Disk::count_unique(&mut metrics.pool.get()?, &info.uuid, info.get_size()?)
+    })
+    .await??;
 
     Ok(HttpResponse::Ok().body(data.to_string()))
 }

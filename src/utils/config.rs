@@ -1,8 +1,8 @@
-use crate::Args;
-
 use clap::Parser;
 use config::ConfigError;
 use serde::Deserialize;
+
+use crate::Args;
 
 #[derive(Debug, Deserialize, Clone)]
 

@@ -1,15 +1,13 @@
-use super::{Paged, SpecificPaged};
-
 use actix_web::{web, HttpResponse};
-use sproot::models::MetricsPool;
-use sproot::models::{Host, HttpPostHost};
+use sproot::models::{BaseCrud, Host, HttpHost, MetricsPool};
 use sproot::{apierrors::ApiError, models::Specific};
-
 #[cfg(feature = "auth")]
 use {
     crate::api::get_user_session, crate::auth::AUTHPOOL, actix_session::Session,
     sproot::models::ApiKey,
 };
+
+use super::{Paged, SpecificPaged};
 
 /// GET /api/hosts
 /// Return all hosts
@@ -34,7 +32,7 @@ pub async fn host_all(
     // This is a bit hacky, but for now it'll do the job just fine.
     #[cfg(feature = "auth")]
     let data = web::block(move || {
-        let hosts_uuid = ApiKey::get_hosts_by_owned(&mut AUTHPOOL.get()?, &user_uuid, size, page)?;
+        let hosts_uuid = ApiKey::get_hosts_by_owner(&mut AUTHPOOL.get()?, &user_uuid, size, page)?;
         Host::get_from_uuids(&mut metrics.pool.get()?, hosts_uuid.as_slice())
     })
     .await??;
@@ -56,7 +54,7 @@ pub async fn host_specific(
     trace!("Route GET /api/host?uuid=xyz");
 
     let data =
-        web::block(move || Host::get_from_uuid(&mut metrics.pool.get()?, &info.uuid)).await??;
+        web::block(move || Host::get_specific(&mut metrics.pool.get()?, &info.uuid)).await??;
 
     Ok(HttpResponse::Ok().json(data))
 }
@@ -66,7 +64,7 @@ pub async fn host_specific(
 pub async fn host_ingest(
     metrics: web::Data<MetricsPool>,
     info: web::Query<Specific>,
-    item: web::Json<Vec<HttpPostHost>>,
+    item: web::Json<Vec<HttpHost>>,
 ) -> Result<HttpResponse, ApiError> {
     trace!("Route POST /api/guard/hosts");
 

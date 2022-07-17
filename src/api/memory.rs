@@ -1,9 +1,10 @@
-use super::SpecificDated;
-
 use actix_web::{web, HttpResponse};
 use sproot::apierrors::ApiError;
+use sproot::models::BaseMetrics;
 use sproot::models::Memory;
 use sproot::models::MetricsPool;
+
+use super::SpecificDated;
 
 /// GET /api/memory
 /// Return swap for a particular host
@@ -14,7 +15,7 @@ pub async fn memory(
     trace!("Route GET /api/memory : {:?}", info);
 
     let data = web::block(move || {
-        Memory::get_data_dated(
+        Memory::get_dated(
             &mut metrics.pool.get()?,
             &info.uuid,
             info.min_date,

@@ -1,14 +1,13 @@
-use crate::{
-    api::{balerts, cpustats, cputimes, disks, hosts, ioblock, ionet, loadavg, memory, swap},
-    CONFIG,
-};
-
 use actix_web::{guard, web};
-
 #[cfg(feature = "auth")]
 use {
     crate::auth::{checksessions::CheckSessions, sptkvalidator::SptkValidator},
     sproot::get_session_middleware,
+};
+
+use crate::{
+    api::{balerts, cpustats, cputimes, disks, hosts, ioblock, ionet, loadavg, memory, swap},
+    CONFIG,
 };
 
 #[cfg(not(feature = "auth"))]

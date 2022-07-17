@@ -5,12 +5,12 @@ extern crate log;
 #[macro_use]
 extern crate sproot;
 
-use crate::utils::config::Config;
-
 use clap::Parser;
 use diesel_migrations::EmbeddedMigrations;
 use once_cell::sync::Lazy;
 use sproot::prog;
+
+use crate::utils::config::Config;
 
 mod api;
 #[cfg(feature = "auth")]

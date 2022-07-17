@@ -1,9 +1,11 @@
-use super::{SpecificDated, SpecificPaged};
-
 use actix_web::{web, HttpResponse};
 use sproot::apierrors::ApiError;
+use sproot::models::BaseMetrics;
+use sproot::models::ExtMetrics;
 use sproot::models::IoBlock;
 use sproot::models::MetricsPool;
+
+use super::{SpecificDated, SpecificPaged};
 
 /// GET /api/ioblocks
 /// Return ioblock for a particular host
@@ -14,7 +16,7 @@ pub async fn ioblocks(
     trace!("Route GET /api/ioblocks : {:?}", info);
 
     let data = web::block(move || {
-        IoBlock::get_data_dated(
+        IoBlock::get_dated(
             &mut metrics.pool.get()?,
             &info.uuid,
             info.min_date,
@@ -34,9 +36,10 @@ pub async fn ioblocks_count(
 ) -> Result<HttpResponse, ApiError> {
     trace!("Route GET /api/ioblocks_count : {:?}", info);
 
-    let data =
-        web::block(move || IoBlock::count(&mut metrics.pool.get()?, &info.uuid, info.get_size()?))
-            .await??;
+    let data = web::block(move || {
+        IoBlock::count_unique(&mut metrics.pool.get()?, &info.uuid, info.get_size()?)
+    })
+    .await??;
 
     Ok(HttpResponse::Ok().body(data.to_string()))
 }

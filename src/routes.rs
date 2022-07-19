@@ -51,20 +51,16 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
                     "/incidents_count",
                     web::get().to(balerts::incidents::incidents_count),
                 )
-                .route("/alerts", web::get().to(balerts::alerts::alerts_list)),
+                .route("/alerts", web::get().to(balerts::alerts::alerts_list))
+                .route(
+                    "/alerts_count",
+                    web::get().to(balerts::alerts::alerts_count),
+                ),
         );
 }
 
 #[cfg(feature = "auth")]
 pub fn routes(cfg: &mut web::ServiceConfig) {
-    let mut alert_scope =
-        web::scope("/alerts").route("", web::get().to(balerts::alerts::alerts_list));
-
-    alert_scope = alert_scope
-        .route("", web::post().to(balerts::alerts::alerts_create))
-        .route("", web::patch().to(balerts::alerts::alerts_update))
-        .route("", web::delete().to(balerts::alerts::alerts_delete));
-
     cfg.route("/ping", web::get().to(|| async { "zpour" }))
         .route("/ping", web::head().to(|| async { "zpour" }))
         .service(
@@ -125,6 +121,16 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
                     "/incidents_count",
                     web::get().to(balerts::incidents::incidents_count),
                 )
-                .service(alert_scope),
+                .route(
+                    "/alerts_count",
+                    web::get().to(balerts::alerts::alerts_count),
+                )
+                .service(
+                    web::scope("/alerts")
+                        .route("", web::get().to(balerts::alerts::alerts_list))
+                        .route("", web::post().to(balerts::alerts::alerts_create))
+                        .route("", web::patch().to(balerts::alerts::alerts_update))
+                        .route("", web::delete().to(balerts::alerts::alerts_delete)),
+                ),
         );
 }

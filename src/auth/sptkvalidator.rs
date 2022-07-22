@@ -65,8 +65,8 @@ where
         // Construct the Specific (get the uuid) from the query_string
         let info = match web::Query::<Specific>::from_query(request.query_string()) {
             Ok(info) => info,
-            Err(_) => {
-                debug!("SptkValidator: No Specific query found");
+            Err(err) => {
+                debug!("SptkValidator: No Specific query found ({})", err);
                 let response = HttpResponse::BadRequest().finish().map_into_right_body();
                 return Box::pin(async { Ok(ServiceResponse::new(request, response)) });
             }
@@ -75,8 +75,11 @@ where
         // Check the convertion to str and prepare to be used below
         let sptk_owned = match sptk.to_str() {
             Ok(val) => val.to_owned(),
-            Err(_) => {
-                debug!("SptkValidator: Couldn't change the HeaderValue to str");
+            Err(err) => {
+                debug!(
+                    "SptkValidator: Couldn't change the HeaderValue to str ({})",
+                    err
+                );
                 let response = HttpResponse::BadRequest().finish().map_into_right_body();
                 return Box::pin(async { Ok(ServiceResponse::new(request, response)) });
             }
@@ -94,8 +97,8 @@ where
         // Get a conn from the auth_db's pool
         let mut conn = match AUTHPOOL.get() {
             Ok(conn) => conn,
-            Err(e) => {
-                error!("middleware: cannot get a auth_db connection: {}", e);
+            Err(err) => {
+                error!("middleware: cannot get a auth_db connection: {}", err);
                 let response = HttpResponse::InternalServerError()
                     .finish()
                     .map_into_right_body();

@@ -1,8 +1,8 @@
-use diesel::{prelude::PgConnection, r2d2::ConnectionManager};
+use diesel::{r2d2::ConnectionManager, PgConnection};
 use diesel_migrations::MigrationHarness;
 use sproot::Pool;
 
-use crate::{server, CONFIG, MIGRATIONS};
+use crate::MIGRATIONS;
 
 pub fn build_pool(db_url: &str, max_conn: u32) -> Pool {
     // Init the connection to the postgresql
@@ -17,41 +17,29 @@ pub fn build_pool(db_url: &str, max_conn: u32) -> Pool {
             info!("R2D2 PostgreSQL pool created");
             pool
         }
-        Err(e) => {
-            error!("Failed to create db pool: {}", e);
+        Err(err) => {
+            error!("Failed to create db pool: {}", err);
             std::process::exit(1);
         }
     }
 }
 
-fn apply_migration(pool: &Pool) {
+pub fn apply_migration(pool: &Pool) {
     // Get a connection from the R2D2 pool
     let mut pooled_conn = match pool.get() {
         Ok(pooled) => pooled,
-        Err(e) => {
+        Err(err) => {
             error!(
                 "Cannot get a connection from the pool to apply migrations: {:?}",
-                e
+                err
             );
             std::process::exit(1);
         }
     };
 
     // Apply the migrations to the database
-    if let Err(e) = pooled_conn.run_pending_migrations(MIGRATIONS) {
-        error!("Cannot apply the migrations: {}", e);
+    if let Err(err) = pooled_conn.run_pending_migrations(MIGRATIONS) {
+        error!("Cannot apply the migrations: {}", err);
         std::process::exit(1);
     }
-}
-
-/// Will start the program normally
-pub async fn flow_run_start() -> std::io::Result<()> {
-    // Init the connection to the postgresql
-    let metrics_db = build_pool(&CONFIG.database_url, CONFIG.database_max_connection);
-
-    // Apply the migrations to the database
-    apply_migration(&metrics_db);
-
-    // Continue the initialization of the actix web server
-    server::server(metrics_db).await
 }

@@ -12,7 +12,7 @@ use super::CONFIG;
 ///
 /// Start by initializing a link to the database. And finish by binding and running the actix serv
 pub async fn server(pool: Pool) -> std::io::Result<()> {
-    let serv = HttpServer::new(move || {
+    let serve = HttpServer::new(move || {
         let metrics_pool = MetricsPool { pool: pool.clone() };
 
         let app = App::new()
@@ -25,30 +25,23 @@ pub async fn server(pool: Pool) -> std::io::Result<()> {
     })
     .workers(CONFIG.workers);
 
-    // Bind the server (https or no)
-    let server = if !CONFIG.https {
+    // Bind the server (https or http)
+    let p = if !CONFIG.https {
         if !cfg!(debug_assertions) {
             warn!("You're starting speculare-server as HTTP on a production build, are you sure about what you're doing ?")
         }
 
         info!("Server started as HTTP on {}", &CONFIG.binding);
-        serv.bind(&CONFIG.binding)?.run()
+        serve.bind(&CONFIG.binding)?.run()
     } else {
-        let tls_config = match sproot::get_ssl_builder(
-            field_isset!(CONFIG.key_priv.as_ref(), "key_priv").unwrap(),
-            field_isset!(CONFIG.key_cert.as_ref(), "key_cert").unwrap(),
-        ) {
-            Ok(config) => config,
-            Err(e) => {
-                error!("{}", e);
-                std::process::exit(1);
-            }
-        };
+        let tls_config = unwrapf!(sproot::get_ssl_builder(
+            unwrapf!(field_isset!(CONFIG.key_priv.as_ref(), "key_priv")),
+            unwrapf!(field_isset!(CONFIG.key_cert.as_ref(), "key_cert")),
+        ));
 
         info!("Server started as HTTPS on {}", &CONFIG.binding);
-        serv.bind_rustls(&CONFIG.binding, tls_config)?.run()
+        serve.bind_rustls(&CONFIG.binding, tls_config)?.run()
     };
 
-    // Start and wait (indefinitely)
-    server.await
+    p.await
 }

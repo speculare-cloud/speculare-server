@@ -67,8 +67,8 @@ where
         // Parse the user_id into a UUID
         let uuid = match Uuid::parse_str(&inner_user) {
             Ok(uuid) => uuid,
-            Err(_) => {
-                debug!("CheckSessions: Invalid UUID, cannot parse");
+            Err(err) => {
+                debug!("CheckSessions: Invalid UUID, cannot parse ({})", err);
                 let response = HttpResponse::BadRequest().finish().map_into_right_body();
                 return Box::pin(async { Ok(ServiceResponse::new(request, response)) });
             }
@@ -77,8 +77,8 @@ where
         // Construct the Specific (get the uuid) from the query_string
         let info = match web::Query::<Specific>::from_query(request.query_string()) {
             Ok(info) => info,
-            Err(_) => {
-                debug!("CheckSessions: No Specific query found");
+            Err(err) => {
+                debug!("CheckSessions: No Specific query found ({})", err);
                 let response = HttpResponse::BadRequest().finish().map_into_right_body();
                 return Box::pin(async { Ok(ServiceResponse::new(request, response)) });
             }
@@ -99,8 +99,8 @@ where
         // Get a conn from the auth_db's pool
         let mut conn = match AUTHPOOL.get() {
             Ok(conn) => conn,
-            Err(e) => {
-                error!("middleware: cannot get a auth_db connection: {}", e);
+            Err(err) => {
+                error!("middleware: cannot get a auth_db connection: {}", err);
                 let response = HttpResponse::InternalServerError()
                     .finish()
                     .map_into_right_body();

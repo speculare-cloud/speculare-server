@@ -14,8 +14,8 @@ clap = { version = "3.2", features = ["derive"] }
 clap-verbosity-flag = "1.0"
 chrono = { version = "0.4", features = ["serde"] }
 config = "0.13"
-diesel = { version = "2.0.0-rc.0", features = ["postgres", "r2d2", "chrono"] }
-diesel_migrations = "2.0.0-rc.0"
+diesel = { version = "2.0.0-rc.1", features = ["postgres", "r2d2", "chrono"] }
+diesel_migrations = "2.0.0-rc.1"
 futures-util = "0.3"
 log = "0.4"
 moka = { version = "0.9", features = ["future"], optional = true }

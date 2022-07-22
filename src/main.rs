@@ -9,13 +9,13 @@ use clap::Parser;
 use diesel_migrations::EmbeddedMigrations;
 use once_cell::sync::Lazy;
 use sproot::prog;
+use utils::database::{apply_migration, build_pool};
 
 use crate::utils::config::Config;
 
 mod api;
 #[cfg(feature = "auth")]
 mod auth;
-mod flow_run;
 mod routes;
 mod server;
 mod utils;
@@ -61,5 +61,12 @@ async fn main() -> std::io::Result<()> {
     // Init logger/tracing
     tracing_subscriber::fmt::init();
 
-    flow_run::flow_run_start().await
+    // Init the connection to the postgresql
+    let metrics_db = build_pool(&CONFIG.database_url, CONFIG.database_max_connection);
+
+    // Apply the migrations to the database
+    apply_migration(&metrics_db);
+
+    // Continue the initialization of the Actix web server
+    server::server(metrics_db).await
 }

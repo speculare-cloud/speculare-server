@@ -6,7 +6,9 @@ use {
 };
 
 use crate::{
-    api::{balerts, cpustats, cputimes, disks, hosts, ioblock, ionet, loadavg, memory, swap},
+    api::{
+        alerts, cpustats, cputimes, disks, hosts, incidents, ioblock, ionet, loadavg, memory, swap,
+    },
     CONFIG,
 };
 
@@ -21,9 +23,9 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
         .route("/hosts", web::post().to(hosts::host_ingest));
 
     guard_scope = guard_scope
-        .route("/alerts", web::post().to(balerts::alerts::alerts_create))
-        .route("/alerts", web::patch().to(balerts::alerts::alerts_update))
-        .route("/alerts", web::delete().to(balerts::alerts::alerts_delete));
+        .route("/alerts", web::post().to(alerts::alerts_create))
+        .route("/alerts", web::patch().to(alerts::alerts_update))
+        .route("/alerts", web::delete().to(alerts::alerts_delete));
 
     cfg.route("/ping", web::get().to(|| async { "zpour" }))
         .route("/ping", web::head().to(|| async { "zpour" }))
@@ -43,19 +45,13 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
                 .route("/ionets_count", web::get().to(ionet::ionets_count))
                 .route("/memory", web::get().to(memory::memory))
                 .route("/swap", web::get().to(swap::swap))
-                .route(
-                    "/incidents",
-                    web::get().to(balerts::incidents::incidents_list),
-                )
+                .route("/incidents", web::get().to(incidents::incidents_list))
                 .route(
                     "/incidents_count",
-                    web::get().to(balerts::incidents::incidents_count),
+                    web::get().to(incidents::incidents_count),
                 )
-                .route("/alerts", web::get().to(balerts::alerts::alerts_list))
-                .route(
-                    "/alerts_count",
-                    web::get().to(balerts::alerts::alerts_count),
-                ),
+                .route("/alerts", web::get().to(alerts::alerts_list))
+                .route("/alerts_count", web::get().to(alerts::alerts_count)),
         );
 }
 
@@ -113,24 +109,18 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
                 .route("/ionets_count", web::get().to(ionet::ionets_count))
                 .route("/memory", web::get().to(memory::memory))
                 .route("/swap", web::get().to(swap::swap))
-                .route(
-                    "/incidents",
-                    web::get().to(balerts::incidents::incidents_list),
-                )
+                .route("/incidents", web::get().to(incidents::incidents_list))
                 .route(
                     "/incidents_count",
-                    web::get().to(balerts::incidents::incidents_count),
+                    web::get().to(incidents::incidents_count),
                 )
-                .route(
-                    "/alerts_count",
-                    web::get().to(balerts::alerts::alerts_count),
-                )
+                .route("/alerts_count", web::get().to(alerts::alerts_count))
                 .service(
                     web::scope("/alerts")
-                        .route("", web::get().to(balerts::alerts::alerts_list))
-                        .route("", web::post().to(balerts::alerts::alerts_create))
-                        .route("", web::patch().to(balerts::alerts::alerts_update))
-                        .route("", web::delete().to(balerts::alerts::alerts_delete)),
+                        .route("", web::get().to(alerts::alerts_list))
+                        .route("", web::post().to(alerts::alerts_create))
+                        .route("", web::patch().to(alerts::alerts_update))
+                        .route("", web::delete().to(alerts::alerts_delete)),
                 ),
         );
 }

@@ -8,6 +8,7 @@ CREATE TABLE alerts (
 	crit TEXT NOT NULL,
 	info TEXT,
     host_uuid VARCHAR(48) NOT NULL,
+	cid uuid NOT NULL,
 	hostname VARCHAR(64) NOT NULL,
 	where_clause TEXT
 );

@@ -15,8 +15,10 @@ CREATE TABLE incidents (
 	alerts_warn TEXT NOT NULL,
 	alerts_crit TEXT NOT NULL,
 	alerts_info TEXT,
-	alerts_where_clause TEXT
+	alerts_where_clause TEXT,
+	cid uuid NOT NULL,
 );
 
 CREATE INDEX incidents_idx_uuid ON incidents(host_uuid);
 CREATE INDEX incidents_idx_update_at ON incidents(updated_at);
+CREATE INDEX incidents_idx_cid ON incidents(cid);

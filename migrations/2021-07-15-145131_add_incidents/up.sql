@@ -16,7 +16,7 @@ CREATE TABLE incidents (
 	alerts_crit TEXT NOT NULL,
 	alerts_info TEXT,
 	alerts_where_clause TEXT,
-	cid uuid NOT NULL,
+	cid uuid NOT NULL
 );
 
 CREATE INDEX incidents_idx_uuid ON incidents(host_uuid);

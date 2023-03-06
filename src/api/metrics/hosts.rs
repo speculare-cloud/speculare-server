@@ -70,5 +70,6 @@ pub async fn host_ingest(
 
     web::block(move || Host::insert(&mut metrics.pool.get()?, &item.into_inner(), &info.uuid))
         .await??;
+
     Ok(HttpResponse::Ok().finish())
 }

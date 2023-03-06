@@ -1,19 +1,20 @@
 use actix_session::Session;
 use actix_web::{web, HttpResponse};
 use sproot::apierrors::ApiError;
+use sproot::models::ExtCrud;
 use sproot::models::Incidents;
 use sproot::models::MetricsPool;
-use sproot::models::ExtCrud;
 use uuid::Uuid;
 
-use crate::api::SpecificPaged;
+use crate::api::{Paged, SpecificPaged};
 
 /// GET /api/incidents
 /// Return all incidents
 pub async fn incidents_list(
     #[cfg(feature = "auth")] session: Session,
     metrics: web::Data<MetricsPool>,
-    info: web::Query<SpecificPaged>,
+    #[cfg(not(feature = "auth"))] info: web::Query<SpecificPaged>,
+    #[cfg(feature = "auth")] info: web::Query<Paged>,
 ) -> Result<HttpResponse, ApiError> {
     info!("Route GET /api/incidents");
 

@@ -85,6 +85,15 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
                 .route(web::get().to(hosts::host_specific)),
         )
         .service(
+            web::resource("/api/incidents")
+                .wrap(get_session_middleware(
+                    CONFIG.cookie_secret.as_bytes(),
+                    "SP-CKS".to_string(),
+                    CONFIG.cookie_domain.to_owned(),
+                ))
+                .route(web::get().to(incidents::incidents_list)),
+        )
+        .service(
             web::scope("/api")
                 // Middleware that will validate the CookieSession
                 // using the Auth server. Will extract the customer ID from the
@@ -109,7 +118,6 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
                 .route("/ionets_count", web::get().to(ionet::ionets_count))
                 .route("/memory", web::get().to(memory::memory))
                 .route("/swap", web::get().to(swap::swap))
-                .route("/incidents", web::get().to(incidents::incidents_list))
                 .route(
                     "/incidents_count",
                     web::get().to(incidents::incidents_count),

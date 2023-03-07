@@ -44,7 +44,7 @@ pub async fn incidents_list(
 
     #[cfg(feature = "auth")]
     let data =
-        web::block(move || Incidents::get_owned(&mut metrics.pool.get()?, &uuid, size, page))
+        web::block(move || Incidents::get_own_joined(&mut metrics.pool.get()?, &uuid, size, page))
             .await??;
 
     Ok(HttpResponse::Ok().json(data))

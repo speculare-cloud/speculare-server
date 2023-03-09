@@ -2,6 +2,7 @@
 use actix_session::Session;
 use actix_web::{web, HttpResponse};
 use sproot::apierrors::ApiError;
+#[cfg(not(feature = "auth"))]
 use sproot::models::BaseCrud;
 use sproot::models::ExtCrud;
 use sproot::models::Incidents;

@@ -1,12 +1,17 @@
+#[cfg(feature = "auth")]
 use actix_session::Session;
 use actix_web::{web, HttpResponse};
 use sproot::apierrors::ApiError;
+use sproot::models::BaseCrud;
 use sproot::models::ExtCrud;
 use sproot::models::Incidents;
 use sproot::models::MetricsPool;
+#[cfg(feature = "auth")]
 use uuid::Uuid;
 
-use crate::api::{Paged, SpecificPaged};
+#[cfg(feature = "auth")]
+use crate::api::Paged;
+use crate::api::SpecificPaged;
 
 /// GET /api/incidents
 /// Return all incidents

@@ -173,7 +173,6 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS loadavg_30m WITH (timescaledb.continuous)
     AS SELECT
 		host_uuid,
 		time_bucket('30m', created_at) as time,
-		interface,
 		avg(one)::float8 as one,
 		avg(five)::float8 as five,
 		avg(fifteen)::float8 as fifteen

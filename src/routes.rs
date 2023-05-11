@@ -1,7 +1,9 @@
 use actix_web::{guard, web};
 #[cfg(feature = "auth")]
 use {
-    crate::auth::{checksessions::CheckSessions, sptkvalidator::SptkValidator},
+    crate::auth::{
+        alertowned::AlertOwned, checksessions::CheckSessions, sptkvalidator::SptkValidator,
+    },
     sproot::get_session_middleware,
 };
 
@@ -94,6 +96,16 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
                 .route(web::get().to(incidents::incidents_list)),
         )
         .service(
+            web::resource("/api/alerts")
+                .wrap(AlertOwned)
+                .wrap(get_session_middleware(
+                    CONFIG.cookie_secret.as_bytes(),
+                    "SP-CKS".to_string(),
+                    CONFIG.cookie_domain.to_owned(),
+                ))
+                .route(web::patch().to(alerts::alerts_update)),
+        )
+        .service(
             web::scope("/api")
                 // Middleware that will validate the CookieSession
                 // using the Auth server. Will extract the customer ID from the
@@ -127,7 +139,6 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
                     web::scope("/alerts")
                         .route("", web::get().to(alerts::alerts_list))
                         .route("", web::post().to(alerts::alerts_create))
-                        .route("", web::patch().to(alerts::alerts_update))
                         .route("", web::delete().to(alerts::alerts_delete)),
                 ),
         );

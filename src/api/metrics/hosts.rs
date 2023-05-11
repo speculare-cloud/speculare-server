@@ -3,7 +3,7 @@ use sproot::models::{BaseCrud, Host, HttpHost, MetricsPool};
 use sproot::{apierrors::ApiError, models::Specific};
 #[cfg(feature = "auth")]
 use {
-    crate::api::get_user_session, crate::auth::AUTHPOOL, actix_session::Session,
+    crate::{api::get_user_session, AUTHPOOL}, actix_session::Session,
     sproot::models::ApiKey,
 };
 

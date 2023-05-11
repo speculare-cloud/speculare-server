@@ -7,18 +7,16 @@ use actix_session::SessionExt;
 use actix_web::body::EitherBody;
 use actix_web::dev::{self, ServiceRequest, ServiceResponse};
 use actix_web::dev::{Service, Transform};
-use actix_web::{web, Error, HttpMessage, HttpResponse};
+use actix_web::{web, Error, HttpResponse};
 use futures_util::future::LocalBoxFuture;
-use sproot::models::{ApiKey, InnerUser, Specific};
+use sproot::models::Alerts;
 use uuid::Uuid;
 
-use crate::AUTHPOOL;
+use crate::{api::SpecificAlert, METRICSPOOL};
 
-use super::CHECKSESSIONS_CACHE;
+pub struct AlertOwned;
 
-pub struct CheckSessions;
-
-impl<S: 'static, B> Transform<S, ServiceRequest> for CheckSessions
+impl<S: 'static, B> Transform<S, ServiceRequest> for AlertOwned
 where
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
     S::Future: 'static,
@@ -27,20 +25,20 @@ where
     type Response = ServiceResponse<EitherBody<B>>;
     type Error = Error;
     type InitError = ();
-    type Transform = CheckSessionsMiddleware<S>;
+    type Transform = AlertOwnedMiddleware<S>;
     type Future = Ready<Result<Self::Transform, Self::InitError>>;
 
     fn new_transform(&self, service: S) -> Self::Future {
-        ready(Ok(CheckSessionsMiddleware {
+        ready(Ok(AlertOwnedMiddleware {
             service: Rc::new(service),
         }))
     }
 }
-pub struct CheckSessionsMiddleware<S> {
+pub struct AlertOwnedMiddleware<S> {
     service: Rc<S>,
 }
 
-impl<S, B> Service<ServiceRequest> for CheckSessionsMiddleware<S>
+impl<S, B> Service<ServiceRequest> for AlertOwnedMiddleware<S>
 where
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
     S::Future: 'static,
@@ -60,7 +58,7 @@ where
         let inner_user = match request.get_session().get::<String>("user_id") {
             Ok(Some(inner)) => inner,
             Ok(None) | Err(_) => {
-                debug!("CheckSessions: No user_id in the session");
+                debug!("AlertOwned: No user_id in the session");
                 let response = HttpResponse::BadRequest().finish().map_into_right_body();
                 return Box::pin(async { Ok(ServiceResponse::new(request, response)) });
             }
@@ -70,39 +68,27 @@ where
         let uuid = match Uuid::parse_str(&inner_user) {
             Ok(uuid) => uuid,
             Err(err) => {
-                debug!("CheckSessions: Invalid UUID, cannot parse ({})", err);
+                debug!("AlertOwned: Invalid UUID, cannot parse ({})", err);
                 let response = HttpResponse::BadRequest().finish().map_into_right_body();
                 return Box::pin(async { Ok(ServiceResponse::new(request, response)) });
             }
         };
 
         // Construct the Specific (get the uuid) from the query_string
-        let info = match web::Query::<Specific>::from_query(request.query_string()) {
+        let info = match web::Query::<SpecificAlert>::from_query(request.query_string()) {
             Ok(info) => info,
             Err(err) => {
-                debug!("CheckSessions: No Specific query found ({})", err);
+                debug!("AlertOwned: No Specific query found ({})", err);
                 let response = HttpResponse::BadRequest().finish().map_into_right_body();
                 return Box::pin(async { Ok(ServiceResponse::new(request, response)) });
             }
         };
 
-        // Check if the entry exists in the cache for HOST_UUID <> USER_UUID
-        if CHECKSESSIONS_CACHE.get(&info.uuid) == Some(uuid) {
-            trace!("CheckSessions: cache hit for {}", &info.uuid);
-            return Box::pin(async move {
-                // Add InnerUser into the extensions
-                request.extensions_mut().insert(InnerUser { uuid });
-
-                let res = svc.call(ServiceRequest::from_parts(request, pl));
-                res.await.map(ServiceResponse::map_into_left_body)
-            });
-        }
-
-        // Get a conn from the auth_db's pool
-        let mut conn = match AUTHPOOL.get() {
+        // Get a conn from the metrics_db's pool
+        let mut conn = match METRICSPOOL.get() {
             Ok(conn) => conn,
             Err(err) => {
-                error!("middleware: cannot get a auth_db connection: {}", err);
+                error!("middleware: cannot get a metrics_db connection: {}", err);
                 let response = HttpResponse::InternalServerError()
                     .finish()
                     .map_into_right_body();
@@ -111,25 +97,15 @@ where
         };
 
         Box::pin(async move {
-            let host_uuid = info.uuid.to_owned();
-            // Check if the host (info.uuid) belong to the user (uuid)
-            // -> dsl_apikeys.filter(customer_id.eq(uuid).and(host_uuid.eq(info.uuid)))
+            // Check if the alert (info.id) belong to the user (uuid)
+            // -> dsl_alerts.filter(cid.eq(ccid).and(id.eq(aid)))
             let exists = actix_web::web::block(move || {
-                ApiKey::exists_by_owner_and_host(&mut conn, &uuid, &info.uuid)
+                Alerts::exists_by_owner_and_id(&mut conn, &uuid, info.id)
             })
             .await??;
 
-            // If an entry exists, we proceed the request and add the InnerUser.
-            // InnerUser is only used when getting the hosts (GET /api/hosts),
-            // it allow us to query the AUTH-SSOT database with the right Uuid.
-            // If the entry does not exists, return Unauthorized.
             match exists {
                 true => {
-                    CHECKSESSIONS_CACHE.insert(host_uuid, uuid).await;
-
-                    // Add InnerUser into the extensions
-                    request.extensions_mut().insert(InnerUser { uuid });
-
                     let res = svc.call(ServiceRequest::from_parts(request, pl));
                     res.await.map(ServiceResponse::map_into_left_body)
                 }

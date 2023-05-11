@@ -8,7 +8,7 @@ extern crate sproot;
 use clap::Parser;
 use diesel_migrations::EmbeddedMigrations;
 use once_cell::sync::Lazy;
-use sproot::prog;
+use sproot::{prog, Pool};
 use utils::database::{apply_migration, build_pool};
 
 use crate::utils::config::Config;
@@ -39,6 +39,17 @@ static CONFIG: Lazy<Config> = Lazy::new(|| match Config::new() {
     }
 });
 
+#[cfg(feature = "auth")]
+pub static AUTHPOOL: Lazy<Pool> = Lazy::new(|| {
+    build_pool(
+        &CONFIG.auth_database_url,
+        CONFIG.auth_database_max_connection,
+    )
+});
+
+pub static METRICSPOOL: Lazy<Pool> =
+    Lazy::new(|| build_pool(&CONFIG.database_url, CONFIG.database_max_connection));
+
 // Embed migrations into the binary
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
 
@@ -61,12 +72,9 @@ async fn main() -> std::io::Result<()> {
     // Init logger/tracing
     tracing_subscriber::fmt::init();
 
-    // Init the connection to the postgresql
-    let metrics_db = build_pool(&CONFIG.database_url, CONFIG.database_max_connection);
-
     // Apply the migrations to the database
-    apply_migration(&metrics_db);
+    apply_migration(&METRICSPOOL);
 
     // Continue the initialization of the Actix web server
-    server::server(metrics_db).await
+    server::server(METRICSPOOL.clone()).await
 }

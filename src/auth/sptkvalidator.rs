@@ -10,7 +10,9 @@ use actix_web::{web, Error, HttpResponse};
 use futures_util::future::LocalBoxFuture;
 use sproot::models::{ApiKey, Specific};
 
-use super::{AUTHPOOL, CHECKSPTK_CACHE, CONFIG};
+use crate::{AUTHPOOL, CONFIG};
+
+use super::CHECKSPTK_CACHE;
 
 pub struct SptkValidator;
 

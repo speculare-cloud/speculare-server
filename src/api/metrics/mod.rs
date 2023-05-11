@@ -50,6 +50,11 @@ pub struct SpecificPaged {
     pub page: Option<i64>,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct SpecificAlert {
+    pub id: i64,
+}
+
 impl SpecificPaged {
     pub fn get_size_page(&self) -> Result<(i64, i64), ApiError> {
         let size = self.size.unwrap_or(100);

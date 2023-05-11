@@ -1,11 +1,14 @@
 use actix_web::{web, HttpResponse};
 use sproot::apierrors::ApiError;
 use sproot::models::Alerts;
+use sproot::models::AlertsDTO;
 use sproot::models::BaseCrud;
+use sproot::models::DtoBase;
 use sproot::models::ExtCrud;
 use sproot::models::MetricsPool;
 use sproot::models::Specific;
 
+use crate::api::SpecificAlert;
 use crate::api::SpecificPaged;
 
 /// GET /api/alerts
@@ -37,11 +40,16 @@ pub async fn alerts_create(
 /// PATCH /api/alerts
 /// Update a specific alert
 pub async fn alerts_update(
-    _metrics: web::Data<MetricsPool>,
-    _info: web::Query<Specific>,
+    metrics: web::Data<MetricsPool>,
+    info: web::Query<SpecificAlert>,
+    item: web::Json<AlertsDTO>,
 ) -> Result<HttpResponse, ApiError> {
     info!("Route PATCH /api/alerts");
-    todo!()
+
+    let data = web::block(move || Alerts::update_and_get(&mut metrics.pool.get()?, info.id, &item))
+        .await??;
+
+    Ok(HttpResponse::Ok().json(data))
 }
 
 /// DELETE /api/alerts

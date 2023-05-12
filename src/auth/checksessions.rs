@@ -7,9 +7,9 @@ use actix_session::SessionExt;
 use actix_web::body::EitherBody;
 use actix_web::dev::{self, ServiceRequest, ServiceResponse};
 use actix_web::dev::{Service, Transform};
-use actix_web::{web, Error, HttpMessage, HttpResponse};
+use actix_web::{web, Error, HttpResponse};
 use futures_util::future::LocalBoxFuture;
-use sproot::models::{ApiKey, InnerUser, Specific};
+use sproot::models::{ApiKey, Specific};
 use uuid::Uuid;
 
 use crate::AUTHPOOL;
@@ -90,9 +90,6 @@ where
         if CHECKSESSIONS_CACHE.get(&info.uuid) == Some(uuid) {
             trace!("CheckSessions: cache hit for {}", &info.uuid);
             return Box::pin(async move {
-                // Add InnerUser into the extensions
-                request.extensions_mut().insert(InnerUser { uuid });
-
                 let res = svc.call(ServiceRequest::from_parts(request, pl));
                 res.await.map(ServiceResponse::map_into_left_body)
             });
@@ -126,10 +123,6 @@ where
             match exists {
                 true => {
                     CHECKSESSIONS_CACHE.insert(host_uuid, uuid).await;
-
-                    // Add InnerUser into the extensions
-                    request.extensions_mut().insert(InnerUser { uuid });
-
                     let res = svc.call(ServiceRequest::from_parts(request, pl));
                     res.await.map(ServiceResponse::map_into_left_body)
                 }

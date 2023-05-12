@@ -123,7 +123,6 @@ where
             if let Some(khost_uuid) = api_key.host_uuid {
                 if khost_uuid == info.uuid {
                     CHECKSPTK_CACHE.insert(host_uuid, sptk_owned).await;
-
                     let res = svc.call(ServiceRequest::from_parts(request, pl));
                     res.await.map(ServiceResponse::map_into_left_body)
                 } else {

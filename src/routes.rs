@@ -97,6 +97,7 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
         )
         .service(
             web::resource("/api/alerts")
+                .guard(guard::Patch())
                 .wrap(AlertOwned)
                 .wrap(get_session_middleware(
                     CONFIG.cookie_secret.as_bytes(),

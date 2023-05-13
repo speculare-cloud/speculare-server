@@ -40,20 +40,20 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
                 .route("/cputimes", web::get().to(cputimes::cputimes))
                 .route("/loadavg", web::get().to(loadavg::loadavg))
                 .route("/disks", web::get().to(disks::disks))
-                .route("/disks_count", web::get().to(disks::disks_count))
+                .route("/disks/count", web::get().to(disks::disks_count))
                 .route("/ioblocks", web::get().to(ioblock::ioblocks))
-                .route("/ioblocks_count", web::get().to(ioblock::ioblocks_count))
+                .route("/ioblocks/count", web::get().to(ioblock::ioblocks_count))
                 .route("/ionets", web::get().to(ionet::ionets))
-                .route("/ionets_count", web::get().to(ionet::ionets_count))
+                .route("/ionets/count", web::get().to(ionet::ionets_count))
                 .route("/memory", web::get().to(memory::memory))
                 .route("/swap", web::get().to(swap::swap))
                 .route("/incidents", web::get().to(incidents::incidents_list))
                 .route(
-                    "/incidents_count",
+                    "/incidents/count",
                     web::get().to(incidents::incidents_count),
                 )
                 .route("/alerts", web::get().to(alerts::alerts_list))
-                .route("/alerts_count", web::get().to(alerts::alerts_count)),
+                .route("/alerts/count", web::get().to(alerts::alerts_count)),
         );
 }
 
@@ -125,11 +125,11 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
                 .route("/cputimes", web::get().to(cputimes::cputimes))
                 .route("/loadavg", web::get().to(loadavg::loadavg))
                 .route("/disks", web::get().to(disks::disks))
-                .route("/disks_count", web::get().to(disks::disks_count))
+                .route("/disks/count", web::get().to(disks::disks_count))
                 .route("/ioblocks", web::get().to(ioblock::ioblocks))
-                .route("/ioblocks_count", web::get().to(ioblock::ioblocks_count))
+                .route("/ioblocks/count", web::get().to(ioblock::ioblocks_count))
                 .route("/ionets", web::get().to(ionet::ionets))
-                .route("/ionets_count", web::get().to(ionet::ionets_count))
+                .route("/ionets/count", web::get().to(ionet::ionets_count))
                 .route("/memory", web::get().to(memory::memory))
                 .route("/swap", web::get().to(swap::swap))
                 .route(

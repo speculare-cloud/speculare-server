@@ -16,22 +16,30 @@ use crate::{
 
 #[cfg(not(feature = "auth"))]
 pub fn routes(cfg: &mut web::ServiceConfig) {
-    // Extract the guard_scope construction outside of the cfg
-    // because we only enable /api/alerts [POST, PATCH, DELETE]
-    // if the alerts service is in the database mode (up to the user)
-    // to define.
-    let mut guard_scope = web::scope("/api")
-        .guard(guard::All(guard::Post()).and(guard::Header("SPTK", &CONFIG.api_token)))
-        .route("/hosts", web::post().to(hosts::host_ingest));
-
-    guard_scope = guard_scope
-        .route("/alerts", web::post().to(alerts::alerts_create))
-        .route("/alerts", web::patch().to(alerts::alerts_update))
-        .route("/alerts", web::delete().to(alerts::alerts_delete));
-
     cfg.route("/ping", web::get().to(|| async { "zpour" }))
         .route("/ping", web::head().to(|| async { "zpour" }))
-        .service(guard_scope)
+        .service(
+            web::scope("/api")
+                .guard(guard::All(guard::Post()).and(guard::Header("SPTK", &CONFIG.api_token)))
+                .route("/hosts", web::post().to(hosts::host_ingest)),
+        )
+        .service(
+            web::resource("/api/alerts")
+                .guard(
+                    guard::Any(guard::Post())
+                        .or(guard::Patch())
+                        .or(guard::Delete()),
+                )
+                .guard(guard::Header("SPTK", &CONFIG.api_token))
+                .route(web::post().to(alerts::alerts_create))
+                .route(web::patch().to(alerts::alerts_update))
+                .route(web::delete().to(alerts::alerts_delete)),
+        )
+        .service(
+            web::resource("/api/alerts/test")
+                .guard(guard::All(guard::Post()).and(guard::Header("SPTK", &CONFIG.api_token)))
+                .route(web::post().to(alerts::alerts_test)),
+        )
         .service(
             web::scope("/api")
                 .route("/hosts", web::get().to(hosts::host_all))
@@ -138,6 +146,7 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
                 )
                 .service(
                     web::scope("/alerts")
+                        .route("/test", web::post().to(alerts::alerts_test))
                         .route("/count", web::get().to(alerts::alerts_count))
                         .route("", web::get().to(alerts::alerts_list))
                         .route("", web::post().to(alerts::alerts_create)),

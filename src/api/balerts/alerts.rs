@@ -55,25 +55,28 @@ pub async fn alerts_update(
 /// DELETE /api/alerts
 /// Delete a specific alert
 pub async fn alerts_delete(
-    _metrics: web::Data<MetricsPool>,
-    _info: web::Query<Specific>,
+    metrics: web::Data<MetricsPool>,
+    info: web::Query<SpecificAlert>,
 ) -> Result<HttpResponse, ApiError> {
     info!("Route DELETE /api/alerts");
-    todo!()
+
+    let data = web::block(move || Alerts::delete(&mut metrics.pool.get()?, info.id)).await??;
+
+    Ok(HttpResponse::Ok().body(data.to_string()))
 }
 
-/// GET /api/alerts_count
+/// GET /api/alerts/count
 /// Return a count of incidents within size limit (or 100 if undefined)
 pub async fn alerts_count(
     metrics: web::Data<MetricsPool>,
     info: web::Query<SpecificPaged>,
 ) -> Result<HttpResponse, ApiError> {
-    info!("Route GET /api/alerts_count");
+    info!("Route GET /api/alerts/count");
 
     let (size, _) = info.get_size_page()?;
 
     let data =
         web::block(move || Alerts::count(&mut metrics.pool.get()?, &info.uuid, size)).await??;
 
-    Ok(HttpResponse::Ok().body(data.to_string()))
+    Ok(HttpResponse::Ok().json(data))
 }

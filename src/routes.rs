@@ -97,14 +97,15 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
         )
         .service(
             web::resource("/api/alerts")
-                .guard(guard::Patch())
+                .guard(guard::Any(guard::Patch()).or(guard::Delete()))
                 .wrap(AlertOwned)
                 .wrap(get_session_middleware(
                     CONFIG.cookie_secret.as_bytes(),
                     "SP-CKS".to_string(),
                     CONFIG.cookie_domain.to_owned(),
                 ))
-                .route(web::patch().to(alerts::alerts_update)),
+                .route(web::patch().to(alerts::alerts_update))
+                .route(web::delete().to(alerts::alerts_delete)),
         )
         .service(
             web::scope("/api")
@@ -132,15 +133,14 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
                 .route("/memory", web::get().to(memory::memory))
                 .route("/swap", web::get().to(swap::swap))
                 .route(
-                    "/incidents_count",
+                    "/incidents/count",
                     web::get().to(incidents::incidents_count),
                 )
-                .route("/alerts_count", web::get().to(alerts::alerts_count))
                 .service(
                     web::scope("/alerts")
+                        .route("/count", web::get().to(alerts::alerts_count))
                         .route("", web::get().to(alerts::alerts_list))
-                        .route("", web::post().to(alerts::alerts_create))
-                        .route("", web::delete().to(alerts::alerts_delete)),
+                        .route("", web::post().to(alerts::alerts_create)),
                 ),
         );
 }

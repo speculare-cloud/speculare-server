@@ -69,5 +69,5 @@ pub async fn incidents_count(
     let data =
         web::block(move || Incidents::count(&mut metrics.pool.get()?, &info.uuid, size)).await??;
 
-    Ok(HttpResponse::Ok().body(data.to_string()))
+    Ok(HttpResponse::Ok().json(data))
 }

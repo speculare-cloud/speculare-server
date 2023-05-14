@@ -12,5 +12,47 @@
 //! sure that the version passed, is in fact correct and does
 //! not need to be checked again
 
+use serde::{Deserialize, Serialize};
+use sproot::models::{AlertsDTO, AlertsDTOUpdate};
+
 pub mod alerts;
 pub mod incidents;
+
+#[derive(Debug, Serialize, Deserialize, Default)]
+pub struct AlertsUpdate {
+    whole: AlertsDTO,
+    update: AlertsDTOUpdate,
+}
+
+#[macro_export]
+macro_rules! field_changed_is_same_opt {
+    ($value:expr, $orig:expr, $field:literal) => {
+        match $value {
+            Some(x) => {
+                if x == &$orig {
+                    Ok(())
+                } else {
+                    Err(ApiError::InvalidRequestError(Some(format!(
+                        "the updated field {} has been changed without being tested",
+                        $field
+                    ))))
+                }
+            }
+            None => Ok(()),
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! field_changed_is_same {
+    ($value:expr, $orig:expr, $field:literal) => {
+        if $value == &$orig {
+            Ok(())
+        } else {
+            Err(ApiError::InvalidRequestError(Some(format!(
+                "the updated field {} has been changed without being tested",
+                $field
+            ))))
+        }
+    };
+}

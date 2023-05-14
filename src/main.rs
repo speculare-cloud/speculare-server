@@ -7,8 +7,10 @@ extern crate sproot;
 
 use clap::Parser;
 use diesel_migrations::EmbeddedMigrations;
+use moka::future::Cache;
 use once_cell::sync::Lazy;
 use sproot::{prog, Pool};
+use std::time::Duration;
 use utils::database::{apply_migration, build_pool};
 
 use crate::utils::config::Config;
@@ -49,6 +51,12 @@ pub static AUTHPOOL: Lazy<Pool> = Lazy::new(|| {
 
 pub static METRICSPOOL: Lazy<Pool> =
     Lazy::new(|| build_pool(&CONFIG.database_url, CONFIG.database_max_connection));
+
+pub static ALERTSHASH_CACHE: Lazy<Cache<u64, ()>> = Lazy::new(|| {
+    Cache::builder()
+        .time_to_live(Duration::from_secs(60 * 15))
+        .build()
+});
 
 // Embed migrations into the binary
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();

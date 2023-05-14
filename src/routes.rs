@@ -70,10 +70,10 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
     cfg.route("/ping", web::get().to(|| async { "zpour" }))
         .route("/ping", web::head().to(|| async { "zpour" }))
         .service(
-            web::scope("/api")
+            web::resource("/api/hosts")
                 .guard(guard::Post())
                 .wrap(SptkValidator)
-                .route("/hosts", web::post().to(hosts::host_ingest)),
+                .route(web::post().to(hosts::host_ingest)),
         )
         .service(
             web::resource("/api/hosts")
@@ -116,6 +116,16 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
                 .route(web::delete().to(alerts::alerts_delete)),
         )
         .service(
+            web::resource("/api/alerts/test")
+                .guard(guard::Post())
+                .wrap(get_session_middleware(
+                    CONFIG.cookie_secret.as_bytes(),
+                    "SP-CKS".to_string(),
+                    CONFIG.cookie_domain.to_owned(),
+                ))
+                .route(web::post().to(alerts::alerts_test)),
+        )
+        .service(
             web::scope("/api")
                 // Middleware that will validate the CookieSession
                 // using the Auth server. Will extract the customer ID from the
@@ -146,7 +156,6 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
                 )
                 .service(
                     web::scope("/alerts")
-                        .route("/test", web::post().to(alerts::alerts_test))
                         .route("/count", web::get().to(alerts::alerts_count))
                         .route("", web::get().to(alerts::alerts_list))
                         .route("", web::post().to(alerts::alerts_create)),

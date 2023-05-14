@@ -11,7 +11,7 @@ use sproot::models::MetricsPool;
 use uuid::Uuid;
 
 #[cfg(feature = "auth")]
-use crate::api::Paged;
+use crate::api::OptSpecificPaged;
 use crate::api::SpecificPaged;
 
 /// GET /api/incidents
@@ -20,7 +20,7 @@ pub async fn incidents_list(
     #[cfg(feature = "auth")] session: Session,
     metrics: web::Data<MetricsPool>,
     #[cfg(not(feature = "auth"))] info: web::Query<SpecificPaged>,
-    #[cfg(feature = "auth")] info: web::Query<Paged>,
+    #[cfg(feature = "auth")] info: web::Query<OptSpecificPaged>,
 ) -> Result<HttpResponse, ApiError> {
     info!("Route GET /api/incidents");
 
@@ -49,9 +49,21 @@ pub async fn incidents_list(
     };
 
     #[cfg(feature = "auth")]
-    let data =
-        web::block(move || Incidents::get_own_joined(&mut metrics.pool.get()?, &uuid, size, page))
-            .await??;
+    let data = match info.uuid.clone() {
+        Some(huuid) => {
+            info!("Getting own specific for {}", huuid);
+            web::block(move || {
+                Incidents::get_own_specific(&mut metrics.pool.get()?, &uuid, &huuid, size, page)
+            })
+            .await??
+        }
+        None => {
+            web::block(move || {
+                Incidents::get_own_joined(&mut metrics.pool.get()?, &uuid, size, page)
+            })
+            .await??
+        }
+    };
 
     Ok(HttpResponse::Ok().json(data))
 }

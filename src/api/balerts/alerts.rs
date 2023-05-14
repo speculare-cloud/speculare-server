@@ -5,7 +5,6 @@ use ahash::AHasher;
 use diesel::sql_types::Text;
 use diesel::{sql_query, RunQueryDsl};
 use evalexpr::eval_boolean;
-use log::debug;
 use sproot::apierrors::ApiError;
 use sproot::models::qtype::pct;
 use sproot::models::{

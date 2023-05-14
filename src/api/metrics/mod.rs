@@ -50,12 +50,33 @@ pub struct SpecificPaged {
     pub page: Option<i64>,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct OptSpecificPaged {
+    pub uuid: Option<String>,
+    pub size: Option<i64>,
+    pub page: Option<i64>,
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SpecificAlert {
     pub id: i64,
 }
 
 impl SpecificPaged {
+    pub fn get_size_page(&self) -> Result<(i64, i64), ApiError> {
+        let size = self.size.unwrap_or(100);
+        let page = self.page.unwrap_or(0);
+        match (size, page) {
+            v if v.0 > 0 && v.0 < 5000 && v.1 >= 0 => Ok((v.0, v.1)),
+            _ => Err(ApiError::ExplicitError(String::from(
+                "size must be > 0 && < 5000 and Page must be >= 0",
+            ))),
+        }
+    }
+}
+
+impl OptSpecificPaged {
+    #[cfg(feature = "auth")]
     pub fn get_size_page(&self) -> Result<(i64, i64), ApiError> {
         let size = self.size.unwrap_or(100);
         let page = self.page.unwrap_or(0);

@@ -1,0 +1,1 @@
+ALTER TABLE hosts DROP COLUMN sync_interval;

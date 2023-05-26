@@ -42,6 +42,8 @@ static CONFIG: Lazy<Config> = Lazy::new(|| match Config::new() {
 });
 
 #[cfg(feature = "auth")]
+// Auth Pool is used when the Authentication feature is enabled.
+// This "Pool" is a direct connection to the Auth database.
 pub static AUTHPOOL: Lazy<Pool> = Lazy::new(|| {
     build_pool(
         &CONFIG.auth_database_url,

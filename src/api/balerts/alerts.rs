@@ -134,6 +134,7 @@ pub async fn alerts_test(
     info!("Route POST /api/alerts/test");
 
     #[cfg(feature = "auth")]
+    // Restrict access to auth users
     match session.get::<String>("user_id") {
         Ok(None) | Err(_) => {
             debug!("alerts_test: No user_id in the session");

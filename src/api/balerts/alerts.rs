@@ -9,7 +9,7 @@ use sproot::apierrors::ApiError;
 use sproot::models::qtype::pct;
 use sproot::models::{
     AbsDTORaw, Alerts, AlertsDTO, AlertsQuery, BaseCrud, DtoBase, ExtCrud, MetricsPool, PctDTORaw,
-    QueryType, Specific,
+    QueryType,
 };
 use std::hash::{Hash, Hasher};
 
@@ -37,15 +37,26 @@ pub async fn alerts_list(
 /// POST /api/alerts
 /// Create a new alert for the specific host
 pub async fn alerts_create(
-    _metrics: web::Data<MetricsPool>,
-    _info: web::Query<Specific>,
-    _item: web::Json<AlertsDTO>,
+    metrics: web::Data<MetricsPool>,
+    item: web::Json<AlertsDTO>,
 ) -> Result<HttpResponse, ApiError> {
     info!("Route POST /api/alerts");
 
-    // TODO - We have to check that the query is valid
+    // Compute the Hash of the Alert
+    let mut hasher = AHasher::default();
+    item.hash(&mut hasher);
+    let hash = hasher.finish();
 
-    todo!()
+    // Check if the Hash already exists in the Cache
+    if ALERTSHASH_CACHE.get(&hash) != Some(()) {
+        return Err(ApiError::InvalidRequestError(Some(String::from(
+            "the alert has not been tested so it can't be trusted",
+        ))));
+    }
+
+    let data = web::block(move || Alerts::insert(&mut metrics.pool.get()?, &[item.0])).await??;
+
+    Ok(HttpResponse::Ok().json(data))
 }
 
 /// PATCH /api/alerts

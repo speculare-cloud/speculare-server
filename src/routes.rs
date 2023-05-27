@@ -2,7 +2,8 @@ use actix_web::{guard, web};
 #[cfg(feature = "auth")]
 use {
     crate::auth::{
-        alertowned::AlertOwned, checksessions::CheckSessions, sptkvalidator::SptkValidator,
+        alerthostowned::AlertHostOwned, alertowned::AlertOwned, checksessions::CheckSessions,
+        sptkvalidator::SptkValidator,
     },
     sproot::get_session_middleware,
 };
@@ -113,6 +114,17 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
                 .route(web::delete().to(alerts::alerts_delete)),
         )
         .service(
+            web::resource("/api/alerts")
+                .guard(guard::Post())
+                .wrap(AlertHostOwned)
+                .wrap(get_session_middleware(
+                    CONFIG.cookie_secret.as_bytes(),
+                    "SP-CKS".to_string(),
+                    CONFIG.cookie_domain.to_owned(),
+                ))
+                .route(web::post().to(alerts::alerts_create)),
+        )
+        .service(
             web::resource("/api/alerts/test")
                 .guard(guard::Post())
                 .wrap(get_session_middleware(
@@ -151,8 +163,7 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
                 .service(
                     web::scope("/alerts")
                         .route("/count", web::get().to(alerts::alerts_count))
-                        .route("", web::get().to(alerts::alerts_list))
-                        .route("", web::post().to(alerts::alerts_create)),
+                        .route("", web::get().to(alerts::alerts_list)),
                 ),
         );
 }

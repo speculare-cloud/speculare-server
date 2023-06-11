@@ -7,6 +7,7 @@ env:
 
 jobs:
   style:
+    if: startsWith(github.ref, 'refs/tags/v') != true
     name: Check Style
     runs-on: ubuntu-latest
     steps:
@@ -31,6 +32,7 @@ jobs:
           args: --all-features --all --tests
 
   build_no_auth:
+    if: startsWith(github.ref, 'refs/tags/v') != true
     name: 'ubuntu-latest'
     needs: [style]
     runs-on: 'ubuntu-latest'
@@ -51,8 +53,9 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: test
-  
+
   build_auth:
+    if: startsWith(github.ref, 'refs/tags/v') != true
     name: 'ubuntu-latest'
     needs: [style]
     runs-on: 'ubuntu-latest'

@@ -5,6 +5,7 @@ use sproot::Pool;
 use crate::MIGRATIONS;
 
 pub fn build_pool(db_url: &str, max_conn: u32) -> Pool {
+    trace!("POOL: R2D2 building pool of connections...");
     // Init the connection to the postgresql
     let manager = ConnectionManager::<PgConnection>::new(db_url);
     // This step might spam for error CONFIG.database_max_connection of times, this is normal.
@@ -25,6 +26,7 @@ pub fn build_pool(db_url: &str, max_conn: u32) -> Pool {
 }
 
 pub fn apply_migration(pool: &Pool) {
+    trace!("MIGRATION: getting a connection from R2D2...");
     // Get a connection from the R2D2 pool
     let mut pooled_conn = match pool.get() {
         Ok(pooled) => pooled,
@@ -37,9 +39,11 @@ pub fn apply_migration(pool: &Pool) {
         }
     };
 
+    trace!("MIGRATION: applying migrations...");
     // Apply the migrations to the database
     if let Err(err) = pooled_conn.run_pending_migrations(MIGRATIONS) {
         error!("Cannot apply the migrations: {}", err);
         std::process::exit(1);
     }
+    trace!("MIGRATION: applied");
 }

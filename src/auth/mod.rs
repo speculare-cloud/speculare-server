@@ -1,5 +1,5 @@
 use actix_web::{dev, web};
-use moka::future::Cache;
+use moka::sync::Cache;
 use once_cell::sync::Lazy;
 use std::time::Duration;
 use uuid::Uuid;

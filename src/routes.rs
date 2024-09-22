@@ -1,5 +1,4 @@
 use actix_web::{guard, web};
-#[cfg(feature = "auth")]
 use {
     crate::auth::{
         alerthostowned::AlertHostOwned, alertowned::AlertOwned, checksessions::CheckSessions,
@@ -15,55 +14,6 @@ use crate::{
     CONFIG,
 };
 
-#[cfg(not(feature = "auth"))]
-pub fn routes(cfg: &mut web::ServiceConfig) {
-    cfg.route("/ping", web::get().to(|| async { "zpour" }))
-        .route("/ping", web::head().to(|| async { "zpour" }))
-        .service(
-            web::scope("/api")
-                .guard(guard::All(guard::Post()).and(guard::Header("SPTK", &CONFIG.api_token)))
-                .route("/hosts", web::post().to(hosts::host_ingest)),
-        )
-        .service(
-            web::resource("/api/alerts")
-                .guard(
-                    guard::Any(guard::Post())
-                        .or(guard::Patch())
-                        .or(guard::Delete()),
-                )
-                .guard(guard::Header("SPTK", &CONFIG.api_token))
-                .route(web::post().to(alerts::alerts_create))
-                .route(web::patch().to(alerts::alerts_update))
-                .route(web::delete().to(alerts::alerts_delete)),
-        )
-        .service(
-            web::resource("/api/alerts/test")
-                .guard(guard::All(guard::Post()).and(guard::Header("SPTK", &CONFIG.api_token)))
-                .route(web::post().to(alerts::alerts_test)),
-        )
-        .service(
-            web::scope("/api")
-                .route("/hosts", web::get().to(hosts::host_all))
-                .route("/host", web::get().to(hosts::host_specific))
-                .route("/cpustats", web::get().to(cpustats::cpustats))
-                .route("/cputimes", web::get().to(cputimes::cputimes))
-                .route("/loadavg", web::get().to(loadavg::loadavg))
-                .route("/disks", web::get().to(disks::disks))
-                .route("/ioblocks", web::get().to(ioblock::ioblocks))
-                .route("/ionets", web::get().to(ionet::ionets))
-                .route("/memory", web::get().to(memory::memory))
-                .route("/swap", web::get().to(swap::swap))
-                .route("/incidents", web::get().to(incidents::incidents_list))
-                .route(
-                    "/incidents/count",
-                    web::get().to(incidents::incidents_count),
-                )
-                .route("/alerts", web::get().to(alerts::alerts_list))
-                .route("/alerts/count", web::get().to(alerts::alerts_count)),
-        );
-}
-
-#[cfg(feature = "auth")]
 pub fn routes(cfg: &mut web::ServiceConfig) {
     cfg.route("/ping", web::get().to(|| async { "zpour" }))
         .route("/ping", web::head().to(|| async { "zpour" }))

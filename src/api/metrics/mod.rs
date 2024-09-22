@@ -4,7 +4,6 @@
 //! being performed.
 use serde::{Deserialize, Serialize};
 use sproot::apierrors::ApiError;
-#[cfg(feature = "auth")]
 use {actix_session::Session, uuid::Uuid};
 
 pub mod cpustats;
@@ -76,7 +75,6 @@ impl SpecificPaged {
 }
 
 impl OptSpecificPaged {
-    #[cfg(feature = "auth")]
     pub fn get_size_page(&self) -> Result<(i64, i64), ApiError> {
         let size = self.size.unwrap_or(100);
         let page = self.page.unwrap_or(0);
@@ -91,7 +89,6 @@ impl OptSpecificPaged {
 
 /// Get the Uuid of the user from his Session or
 /// return an InvalidToken error if not found
-#[cfg(feature = "auth")]
 pub fn get_user_session(session: &Session) -> Result<Uuid, ApiError> {
     match session.get::<String>("user_id") {
         Ok(Some(id)) => Ok(Uuid::parse_str(&id).unwrap()),

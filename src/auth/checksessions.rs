@@ -122,7 +122,7 @@ where
             // If the entry does not exists, return Unauthorized.
             match exists {
                 true => {
-                    CHECKSESSIONS_CACHE.insert(host_uuid, uuid).await;
+                    CHECKSESSIONS_CACHE.insert(host_uuid, uuid);
                     let res = svc.call(ServiceRequest::from_parts(request, pl));
                     res.await.map(ServiceResponse::map_into_left_body)
                 }

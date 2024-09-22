@@ -7,7 +7,7 @@ extern crate sproot;
 
 use clap::Parser;
 use diesel_migrations::EmbeddedMigrations;
-use moka::future::Cache;
+use moka::sync::Cache;
 use once_cell::sync::Lazy;
 use sproot::{prog, Pool};
 use std::time::Duration;
@@ -16,7 +16,6 @@ use utils::database::{apply_migration, build_pool};
 use crate::utils::config::Config;
 
 mod api;
-#[cfg(feature = "auth")]
 mod auth;
 mod routes;
 mod server;
@@ -41,7 +40,6 @@ static CONFIG: Lazy<Config> = Lazy::new(|| match Config::new() {
     }
 });
 
-#[cfg(feature = "auth")]
 // Auth Pool is used when the Authentication feature is enabled.
 // This "Pool" is a direct connection to the Auth database.
 pub static AUTHPOOL: Lazy<Pool> = Lazy::new(|| {

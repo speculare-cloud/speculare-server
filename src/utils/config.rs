@@ -13,9 +13,7 @@ pub struct Config {
     pub database_max_connection: u32,
 
     // AUTH POSTGRESQL CONNECTION
-    #[cfg(feature = "auth")]
     pub auth_database_url: String,
-    #[cfg(feature = "auth")]
     #[serde(default = "default_maxconn")]
     pub auth_database_max_connection: u32,
 
@@ -30,14 +28,8 @@ pub struct Config {
     pub key_priv: Option<String>,
     pub key_cert: Option<String>,
 
-    #[cfg(not(feature = "auth"))]
-    pub api_token: String,
-
-    #[cfg(feature = "auth")]
     pub berta_name: String,
-    #[cfg(feature = "auth")]
     pub cookie_secret: String,
-    #[cfg(feature = "auth")]
     pub cookie_domain: Option<String>,
 }
 

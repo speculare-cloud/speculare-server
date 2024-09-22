@@ -1,36 +1,25 @@
-#[cfg(feature = "auth")]
 use actix_session::Session;
 use actix_web::{web, HttpResponse};
 use sproot::apierrors::ApiError;
-#[cfg(not(feature = "auth"))]
-use sproot::models::BaseCrud;
 use sproot::models::ExtCrud;
 use sproot::models::Incidents;
 use sproot::models::MetricsPool;
-#[cfg(feature = "auth")]
 use uuid::Uuid;
 
-#[cfg(feature = "auth")]
 use crate::api::OptSpecificPaged;
 use crate::api::SpecificPaged;
 
 /// GET /api/incidents
 /// Return all incidents
 pub async fn incidents_list(
-    #[cfg(feature = "auth")] session: Session,
+    session: Session,
     metrics: web::Data<MetricsPool>,
-    #[cfg(not(feature = "auth"))] info: web::Query<SpecificPaged>,
-    #[cfg(feature = "auth")] info: web::Query<OptSpecificPaged>,
+    info: web::Query<OptSpecificPaged>,
 ) -> Result<HttpResponse, ApiError> {
     info!("Route GET /api/incidents");
 
     let (size, page) = info.get_size_page()?;
 
-    #[cfg(not(feature = "auth"))]
-    let data = web::block(move || Incidents::get(&mut metrics.pool.get()?, &info.uuid, size, page))
-        .await??;
-
-    #[cfg(feature = "auth")]
     let inner_user = match session.get::<String>("user_id") {
         Ok(Some(inner)) => inner,
         Ok(None) | Err(_) => {
@@ -39,7 +28,6 @@ pub async fn incidents_list(
         }
     };
 
-    #[cfg(feature = "auth")]
     let uuid = match Uuid::parse_str(&inner_user) {
         Ok(uuid) => uuid,
         Err(err) => {
@@ -48,7 +36,6 @@ pub async fn incidents_list(
         }
     };
 
-    #[cfg(feature = "auth")]
     let data = match info.uuid.clone() {
         Some(huuid) => {
             info!("Getting own specific for {}", huuid);

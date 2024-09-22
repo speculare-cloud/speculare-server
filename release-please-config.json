@@ -1,0 +1,21 @@
+{
+	"prerelease": true,
+	"packages": {
+		".": {
+			"release-type": "simple"
+		}
+	},
+	"extra-files": [
+		{
+			"type": "toml",
+			"path": "Cargo.toml",
+			"jsonpath": "package.version"
+		},
+		{
+			"type": "toml",
+			"path": "Cargo.lock",
+			"jsonpath": "$.package[?(@.name.value == 'speculare-server')].version"
+		}
+	],
+	"$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json"
+}

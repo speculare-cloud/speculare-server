@@ -80,6 +80,9 @@ async fn main() -> std::io::Result<()> {
     // Init logger/tracing
     tracing_subscriber::fmt::init();
 
+    // default crypto provider
+    sproot::init_default_crypto();
+
     // Apply the migrations to the database
     apply_migration(&METRICSPOOL);
 

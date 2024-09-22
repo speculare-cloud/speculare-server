@@ -131,9 +131,7 @@ where
 
             match exists {
                 true => {
-                    CHECKSESSIONS_CACHE
-                        .insert(alert.host_uuid.to_owned(), uuid)
-                        .await;
+                    CHECKSESSIONS_CACHE.insert(alert.host_uuid.to_owned(), uuid);
 
                     let encoded_alert = serde_json::to_vec(&alert.0).unwrap();
                     sres.set_payload(super::bytes_to_payload(Bytes::from(encoded_alert)));

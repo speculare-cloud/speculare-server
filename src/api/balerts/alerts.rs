@@ -1,4 +1,3 @@
-#[cfg(feature = "auth")]
 use actix_session::Session;
 use actix_web::{web, HttpResponse};
 use ahash::AHasher;
@@ -138,13 +137,12 @@ pub async fn alerts_count(
 /// GET /api/alerts/test
 /// Return the result of a Alert's query if successful
 pub async fn alerts_test(
-    #[cfg(feature = "auth")] session: Session,
+    session: Session,
     metrics: web::Data<MetricsPool>,
     item: web::Json<AlertsDTO>,
 ) -> Result<HttpResponse, ApiError> {
     info!("Route POST /api/alerts/test");
 
-    #[cfg(feature = "auth")]
     // Restrict access to auth users
     match session.get::<String>("user_id") {
         Ok(None) | Err(_) => {
@@ -159,12 +157,12 @@ pub async fn alerts_test(
     item.hash(&mut hasher);
     let hash = hasher.finish();
 
-    let data = web::block(move || {
-        // Check if the Hash already exists in the Cache
-        if ALERTSHASH_CACHE.get(&hash) == Some(()) {
-            return Ok(String::from("alert is valid and already cached"));
-        }
+    // Check if the Hash already exists in the Cache
+    if ALERTSHASH_CACHE.get(&hash) == Some(()) {
+        return Ok(HttpResponse::Ok().body(String::from("alert is valid and already cached")));
+    }
 
+    let data = web::block(move || {
         let (query, qtype) = match item.construct_query() {
             Ok((q, t)) => (q, t),
             Err(err) => return Err(err),
@@ -219,7 +217,7 @@ pub async fn alerts_test(
     .await??;
 
     // Insert inside the Cache
-    ALERTSHASH_CACHE.insert(hash, ()).await;
+    ALERTSHASH_CACHE.insert(hash, ());
 
     Ok(HttpResponse::Ok().body(data))
 }

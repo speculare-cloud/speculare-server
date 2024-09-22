@@ -10,25 +10,25 @@ sproot = { git = "https://github.com/speculare-cloud/sproot" }
 ahash = "0.8"
 actix-cors = { version = "0.7" }
 actix-session = { version = "0.10", features = ["cookie-session"] }
-actix-web = { version = "4.3", features = ["rustls"] }
-actix-http = { version = "3.3.1" }
-clap = { version = "4.2", features = ["derive"] }
-clap-verbosity-flag = "2.0"
+actix-web = { version = "4.9", features = ["rustls-0_23"] }
+actix-http = { version = "3.9" }
+clap = { version = "4.5", features = ["derive"] }
+clap-verbosity-flag = "2.2"
 chrono = { version = "0.4", features = ["serde"] }
 config = "0.14"
-diesel = { version = "2.0", features = ["postgres", "r2d2", "chrono"] }
-diesel_migrations = "2.0"
+diesel = { version = "2.2", features = ["postgres", "r2d2", "chrono"] }
+diesel_migrations = "2.2"
 evalexpr = "11.3"
 futures-util = "0.3"
 log = "0.4"
 moka = { version = "0.12", features = ["sync"] }
-once_cell = "1.14"
+once_cell = "1.19"
 r2d2 = "0.8"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = {version = "1.0"}
 sys_metrics = { git = "https://github.com/Martichou/sys_metrics" }
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-uuid = { version = "1.1", features = ["v4"] }
+uuid = { version = "1.10", features = ["v4"] }
 
 [features]
 default = []

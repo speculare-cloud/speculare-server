@@ -40,7 +40,7 @@ pub async fn server(pool: Pool) -> std::io::Result<()> {
         ));
 
         info!("Server started as HTTPS on {}", &CONFIG.binding);
-        serve.bind_rustls(&CONFIG.binding, tls_config)?.run()
+        serve.bind_rustls_0_23(&CONFIG.binding, tls_config)?.run()
     };
 
     p.await

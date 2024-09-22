@@ -20,14 +20,18 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: ${{ matrix.job.target }}
     - uses: Swatinem/rust-cache@v2
 
     - name: Build
       run: cargo build --release --all-features
 
-    - name: Add file to release
-      uses: softprops/action-gh-release@v2
+    - name: Upload binaries to release
+      uses: svenstaro/upload-release-action@v2
       with:
-        files: |
-          target/release/speculare-server
-        fail_on_unmatched_files: true
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: target/release/speculare-server
+        asset_name: speculare-server-${{ github.ref_name }}-${{ matrix.job.target }}
+        tag: ${{ github.ref }}
+        overwrite: true

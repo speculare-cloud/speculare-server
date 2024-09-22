@@ -4,10 +4,10 @@ use once_cell::sync::Lazy;
 use std::time::Duration;
 use uuid::Uuid;
 
-pub mod alerthostowned;
-pub mod alertowned;
-pub mod checksessions;
-pub mod sptkvalidator;
+pub mod alert_host_owned;
+pub mod alert_owned;
+pub mod check_sessions;
+pub mod sptk_validator;
 
 static CHECKSESSIONS_CACHE: Lazy<Cache<String, Uuid>> = Lazy::new(|| {
     Cache::builder()

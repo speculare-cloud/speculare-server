@@ -1,8 +1,8 @@
 use actix_web::{guard, web};
 use {
     crate::auth::{
-        alerthostowned::AlertHostOwned, alertowned::AlertOwned, checksessions::CheckSessions,
-        sptkvalidator::SptkValidator,
+        alert_host_owned::AlertHostOwned, alert_owned::AlertOwned, check_sessions::CheckSessions,
+        sptk_validator::SptkValidator,
     },
     sproot::get_session_middleware,
 };
